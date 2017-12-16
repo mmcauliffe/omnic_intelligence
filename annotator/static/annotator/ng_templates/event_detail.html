@@ -1,0 +1,14 @@
+<h1>{{ event.name }}</h1>
+<div class='row text-center'>
+    <div class='col-sm-4 col-sm-offset-4'>
+        <h1>All Matches</h1>
+        <ul class="list-group">
+            <li ng-repeat='m in matches' class="list-group-item">
+                <a ui-sref="match-detail({match_id: m.id })">{{ m.teams[0] }} vs {{ m.teams[1] }}</a>
+                {{ m.wl_id }}
+
+                <span class='badge' ng-click="deleteMatch(m.id)">X</span>
+            </li>
+        </ul>
+    </div>
+</div>

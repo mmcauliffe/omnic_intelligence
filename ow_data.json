@@ -1,0 +1,1262 @@
+[
+{
+    "model": "annotator.map",
+    "pk": 1,
+    "fields": {
+        "name": "Temple of Anubis",
+        "mode": "A"
+    }
+},
+{
+    "model": "annotator.map",
+    "pk": 2,
+    "fields": {
+        "name": "Hanamura",
+        "mode": "A"
+    }
+},
+{
+    "model": "annotator.map",
+    "pk": 3,
+    "fields": {
+        "name": "Volskaya Industries",
+        "mode": "A"
+    }
+},
+{
+    "model": "annotator.map",
+    "pk": 4,
+    "fields": {
+        "name": "Horizon Lunar Colony",
+        "mode": "A"
+    }
+},
+{
+    "model": "annotator.map",
+    "pk": 5,
+    "fields": {
+        "name": "Dorado",
+        "mode": "E"
+    }
+},
+{
+    "model": "annotator.map",
+    "pk": 6,
+    "fields": {
+        "name": "Watchpoint: Gibraltar",
+        "mode": "E"
+    }
+},
+{
+    "model": "annotator.map",
+    "pk": 7,
+    "fields": {
+        "name": "Eichenwalde",
+        "mode": "H"
+    }
+},
+{
+    "model": "annotator.map",
+    "pk": 8,
+    "fields": {
+        "name": "Hollywood",
+        "mode": "H"
+    }
+},
+{
+    "model": "annotator.map",
+    "pk": 9,
+    "fields": {
+        "name": "Route 66",
+        "mode": "E"
+    }
+},
+{
+    "model": "annotator.map",
+    "pk": 10,
+    "fields": {
+        "name": "Ilios",
+        "mode": "C"
+    }
+},
+{
+    "model": "annotator.map",
+    "pk": 11,
+    "fields": {
+        "name": "Lijiang Tower",
+        "mode": "C"
+    }
+},
+{
+    "model": "annotator.map",
+    "pk": 12,
+    "fields": {
+        "name": "Oasis",
+        "mode": "C"
+    }
+},
+{
+    "model": "annotator.map",
+    "pk": 13,
+    "fields": {
+        "name": "Junkertown",
+        "mode": "E"
+    }
+},
+{
+    "model": "annotator.map",
+    "pk": 14,
+    "fields": {
+        "name": "King's Row",
+        "mode": "H"
+    }
+},
+{
+    "model": "annotator.map",
+    "pk": 15,
+    "fields": {
+        "name": "Numbani",
+        "mode": "H"
+    }
+},
+{
+    "model": "annotator.map",
+    "pk": 16,
+    "fields": {
+        "name": "Blizzard World",
+        "mode": "H"
+    }
+},
+{
+    "model": "annotator.map",
+    "pk": 17,
+    "fields": {
+        "name": "Nepal",
+        "mode": "C"
+    }
+},
+{
+    "model": "annotator.hero",
+    "pk": 1,
+    "fields": {
+        "name": "Doomfist",
+        "hero_type": "O"
+    }
+},
+{
+    "model": "annotator.hero",
+    "pk": 2,
+    "fields": {
+        "name": "Genji",
+        "hero_type": "O"
+    }
+},
+{
+    "model": "annotator.hero",
+    "pk": 3,
+    "fields": {
+        "name": "McCree",
+        "hero_type": "O"
+    }
+},
+{
+    "model": "annotator.hero",
+    "pk": 4,
+    "fields": {
+        "name": "Pharah",
+        "hero_type": "O"
+    }
+},
+{
+    "model": "annotator.hero",
+    "pk": 5,
+    "fields": {
+        "name": "Reaper",
+        "hero_type": "O"
+    }
+},
+{
+    "model": "annotator.hero",
+    "pk": 6,
+    "fields": {
+        "name": "Soldier: 76",
+        "hero_type": "O"
+    }
+},
+{
+    "model": "annotator.hero",
+    "pk": 7,
+    "fields": {
+        "name": "Sombra",
+        "hero_type": "O"
+    }
+},
+{
+    "model": "annotator.hero",
+    "pk": 8,
+    "fields": {
+        "name": "Tracer",
+        "hero_type": "O"
+    }
+},
+{
+    "model": "annotator.hero",
+    "pk": 9,
+    "fields": {
+        "name": "Bastion",
+        "hero_type": "D"
+    }
+},
+{
+    "model": "annotator.hero",
+    "pk": 10,
+    "fields": {
+        "name": "Hanzo",
+        "hero_type": "D"
+    }
+},
+{
+    "model": "annotator.hero",
+    "pk": 11,
+    "fields": {
+        "name": "Junkrat",
+        "hero_type": "D"
+    }
+},
+{
+    "model": "annotator.hero",
+    "pk": 12,
+    "fields": {
+        "name": "Mei",
+        "hero_type": "D"
+    }
+},
+{
+    "model": "annotator.hero",
+    "pk": 13,
+    "fields": {
+        "name": "Torbj\u00f6rn",
+        "hero_type": "D"
+    }
+},
+{
+    "model": "annotator.hero",
+    "pk": 14,
+    "fields": {
+        "name": "Widowmaker",
+        "hero_type": "D"
+    }
+},
+{
+    "model": "annotator.hero",
+    "pk": 15,
+    "fields": {
+        "name": "D.Va",
+        "hero_type": "T"
+    }
+},
+{
+    "model": "annotator.hero",
+    "pk": 16,
+    "fields": {
+        "name": "Orisa",
+        "hero_type": "T"
+    }
+},
+{
+    "model": "annotator.hero",
+    "pk": 17,
+    "fields": {
+        "name": "Reinhardt",
+        "hero_type": "T"
+    }
+},
+{
+    "model": "annotator.hero",
+    "pk": 18,
+    "fields": {
+        "name": "Roadhog",
+        "hero_type": "T"
+    }
+},
+{
+    "model": "annotator.hero",
+    "pk": 19,
+    "fields": {
+        "name": "Winston",
+        "hero_type": "T"
+    }
+},
+{
+    "model": "annotator.hero",
+    "pk": 20,
+    "fields": {
+        "name": "Zarya",
+        "hero_type": "T"
+    }
+},
+{
+    "model": "annotator.hero",
+    "pk": 21,
+    "fields": {
+        "name": "Ana",
+        "hero_type": "S"
+    }
+},
+{
+    "model": "annotator.hero",
+    "pk": 22,
+    "fields": {
+        "name": "L\u00facio",
+        "hero_type": "S"
+    }
+},
+{
+    "model": "annotator.hero",
+    "pk": 23,
+    "fields": {
+        "name": "Mercy",
+        "hero_type": "S"
+    }
+},
+{
+    "model": "annotator.hero",
+    "pk": 24,
+    "fields": {
+        "name": "Moira",
+        "hero_type": "S"
+    }
+},
+{
+    "model": "annotator.hero",
+    "pk": 25,
+    "fields": {
+        "name": "Symmetra",
+        "hero_type": "S"
+    }
+},
+{
+    "model": "annotator.hero",
+    "pk": 26,
+    "fields": {
+        "name": "Zenyatta",
+        "hero_type": "S"
+    }
+},
+{
+    "model": "annotator.npc",
+    "pk": 1,
+    "fields": {
+        "name": "Mech",
+        "spawning_hero": 15
+    }
+},
+{
+    "model": "annotator.npc",
+    "pk": 2,
+    "fields": {
+        "name": "Turret",
+        "spawning_hero": 13
+    }
+},
+{
+    "model": "annotator.npc",
+    "pk": 3,
+    "fields": {
+        "name": "Shield generator",
+        "spawning_hero": 25
+    }
+},
+{
+    "model": "annotator.npc",
+    "pk": 4,
+    "fields": {
+        "name": "Teleporter",
+        "spawning_hero": 25
+    }
+},
+{
+    "model": "annotator.npc",
+    "pk": 5,
+    "fields": {
+        "name": "Supercharger",
+        "spawning_hero": 16
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 1,
+    "fields": {
+        "hero": 1,
+        "name": "Primary",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": true,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 2,
+    "fields": {
+        "hero": 1,
+        "name": "Rocket Punch",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 3,
+    "fields": {
+        "hero": 1,
+        "name": "Rising Uppercut",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 4,
+    "fields": {
+        "hero": 1,
+        "name": "Meteor Strike",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": true
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 5,
+    "fields": {
+        "hero": 1,
+        "name": "Seismic Slam",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 6,
+    "fields": {
+        "hero": 2,
+        "name": "Primary",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": true,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 7,
+    "fields": {
+        "hero": 2,
+        "name": "Swift Strike",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 8,
+    "fields": {
+        "hero": 2,
+        "name": "Dragonblade",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": true
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 9,
+    "fields": {
+        "hero": 2,
+        "name": "Deflect",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": true,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 10,
+    "fields": {
+        "hero": 3,
+        "name": "Primary",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": true,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 11,
+    "fields": {
+        "hero": 3,
+        "name": "Flashbang",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 12,
+    "fields": {
+        "hero": 3,
+        "name": "Deadeye",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": true
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 13,
+    "fields": {
+        "hero": 4,
+        "name": "Primary",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 14,
+    "fields": {
+        "hero": 4,
+        "name": "Concussion Blast",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 15,
+    "fields": {
+        "hero": 4,
+        "name": "Barrage",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": true
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 16,
+    "fields": {
+        "hero": 5,
+        "name": "Primary",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": true,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 17,
+    "fields": {
+        "hero": 5,
+        "name": "Death Blossom",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": true
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 18,
+    "fields": {
+        "hero": 6,
+        "name": "Primary",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": true,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 19,
+    "fields": {
+        "hero": 6,
+        "name": "Helix Rockets",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 20,
+    "fields": {
+        "hero": 6,
+        "name": "Tactical Visor",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": true
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 21,
+    "fields": {
+        "hero": 7,
+        "name": "Primary",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": true,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 22,
+    "fields": {
+        "hero": 8,
+        "name": "Primary",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": true,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 23,
+    "fields": {
+        "hero": 8,
+        "name": "Pulse Bomb",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": true
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 24,
+    "fields": {
+        "hero": 9,
+        "name": "Primary",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": true,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 25,
+    "fields": {
+        "hero": 9,
+        "name": "Configuration: Tank",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": true
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 26,
+    "fields": {
+        "hero": 10,
+        "name": "Primary",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": true,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 27,
+    "fields": {
+        "hero": 10,
+        "name": "Sonic Arrow",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": true,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 28,
+    "fields": {
+        "hero": 10,
+        "name": "Scatter Arrow",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": true,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 29,
+    "fields": {
+        "hero": 10,
+        "name": "Dragonstrike",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": true,
+        "ultimate_ability": true
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 30,
+    "fields": {
+        "hero": 11,
+        "name": "Primary",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 31,
+    "fields": {
+        "hero": 11,
+        "name": "Steel Trap",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 32,
+    "fields": {
+        "hero": 11,
+        "name": "Concussion Mine",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 33,
+    "fields": {
+        "hero": 11,
+        "name": "RIP-Tire",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": true
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 34,
+    "fields": {
+        "hero": 12,
+        "name": "Primary",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": true,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 35,
+    "fields": {
+        "hero": 12,
+        "name": "Blizzard",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": true
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 36,
+    "fields": {
+        "hero": 13,
+        "name": "Primary",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": true,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 37,
+    "fields": {
+        "hero": 13,
+        "name": "Forge Hammer",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 38,
+    "fields": {
+        "hero": 13,
+        "name": "Turret",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 39,
+    "fields": {
+        "hero": 14,
+        "name": "Primary",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": true,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 40,
+    "fields": {
+        "hero": 14,
+        "name": "Venom Mine",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 41,
+    "fields": {
+        "hero": 15,
+        "name": "Primary",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": true,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 42,
+    "fields": {
+        "hero": 15,
+        "name": "Boosters",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 43,
+    "fields": {
+        "hero": 15,
+        "name": "Micro Missiles",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 44,
+    "fields": {
+        "hero": 15,
+        "name": "Self-Destruct",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": true
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 45,
+    "fields": {
+        "hero": 16,
+        "name": "Primary",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": true,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 46,
+    "fields": {
+        "hero": 16,
+        "name": "Halt!",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 47,
+    "fields": {
+        "hero": 17,
+        "name": "Primary",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 48,
+    "fields": {
+        "hero": 17,
+        "name": "Charge",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 49,
+    "fields": {
+        "hero": 17,
+        "name": "Fire Strike",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 50,
+    "fields": {
+        "hero": 17,
+        "name": "Earthshatter",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": true
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 51,
+    "fields": {
+        "hero": 18,
+        "name": "Primary",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": true,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 52,
+    "fields": {
+        "hero": 18,
+        "name": "Chain Hook",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 53,
+    "fields": {
+        "hero": 18,
+        "name": "Whole Hog",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": true,
+        "ultimate_ability": true
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 54,
+    "fields": {
+        "hero": 19,
+        "name": "Primary",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 55,
+    "fields": {
+        "hero": 19,
+        "name": "Jump Pack",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 56,
+    "fields": {
+        "hero": 19,
+        "name": "Primal Rage",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": true
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 57,
+    "fields": {
+        "hero": 20,
+        "name": "Primary",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 58,
+    "fields": {
+        "hero": 20,
+        "name": "Graviton Surge",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": true
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 59,
+    "fields": {
+        "hero": 21,
+        "name": "Primary",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 60,
+    "fields": {
+        "hero": 21,
+        "name": "Sleep Dart",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 61,
+    "fields": {
+        "hero": 21,
+        "name": "Biotic Grenade",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 62,
+    "fields": {
+        "hero": 22,
+        "name": "Primary",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": true,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 63,
+    "fields": {
+        "hero": 22,
+        "name": "Soundwave",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 64,
+    "fields": {
+        "hero": 23,
+        "name": "Primary",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": true,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 65,
+    "fields": {
+        "hero": 23,
+        "name": "Resurrect",
+        "revive_ability": true,
+        "damaging_ability": false,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 66,
+    "fields": {
+        "hero": 24,
+        "name": "Primary",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 67,
+    "fields": {
+        "hero": 24,
+        "name": "Biotic Orb",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 68,
+    "fields": {
+        "hero": 24,
+        "name": "Coalescence",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": true
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 69,
+    "fields": {
+        "hero": 25,
+        "name": "Primary",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 70,
+    "fields": {
+        "hero": 25,
+        "name": "Energy Ball",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 71,
+    "fields": {
+        "hero": 25,
+        "name": "Sentry Turret",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 72,
+    "fields": {
+        "hero": 26,
+        "name": "Primary",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": true,
+        "ultimate_ability": false
+    }
+},
+{
+    "model": "annotator.ability",
+    "pk": 74,
+    "fields": {
+        "hero": 15,
+        "name": "Call Mech",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
+}
+]

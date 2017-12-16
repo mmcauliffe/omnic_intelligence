@@ -1,0 +1,30 @@
+{
+  "name": "omnic_intelligence",
+  "version": "1.0.0",
+  "description": "omnic_intelligence",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mmcauliffe/omnic_intelligence.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mmcauliffe/omnic_intelligence/issues"
+  },
+  "homepage": "https://github.com/mmcauliffe/omnic_intelligence#readme",
+  "dependencies": {
+    "angular": "^1.6.7",
+    "angular-animate": "^1.6.7",
+    "angular-aria": "^1.6.7",
+    "angular-cookies": "^1.6.7",
+    "angular-material": "^1.1.5",
+    "angular-messages": "^1.6.7",
+    "angular-ui-router": "^0.4.3",
+    "bootstrap": "^3.3.7",
+    "ui-router": "^1.0.0-alpha.3"
+  }
+}

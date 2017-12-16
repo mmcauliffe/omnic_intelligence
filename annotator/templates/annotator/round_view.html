@@ -1,0 +1,588 @@
+{% extends "annotator/base.html" %}
+{% load static djng_tags sekizai_tags annotator_extras %}
+
+
+{% block main-content %}
+    {% addtoblock "css" %}
+
+        <link rel="stylesheet" href="{% static "annotator/css/round.css" %}"/>{% endaddtoblock %}
+    <!-- Load the Twitch embed script -->
+    {% addtoblock "js" %}
+        <script src="http://player.twitch.tv/js/embed/v1.js"></script>
+        <script>
+            var begin_time = {{ round.begin }};
+            var end_time = {{ round.end }};
+            var left_players = [];
+            var right_players = [];
+
+            function getCookie(name) {
+                var cookieValue = null;
+                if (document.cookie && document.cookie != '') {
+                    var cookies = document.cookie.split(';');
+                    for (var i = 0; i < cookies.length; i++) {
+                        var cookie = jQuery.trim(cookies[i]);
+                        // Does this cookie string begin with the name we want?
+                        if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+            var csrftoken = getCookie('csrftoken');
+
+            function csrfSafeMethod(method) {
+                // these HTTP methods do not require CSRF protection
+                return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+            }
+
+            function sameOrigin(url) {
+                // test that a given url is a same-origin URL
+                // url could be relative or scheme relative or absolute
+                var host = document.location.host; // host + port
+                var protocol = document.location.protocol;
+                var sr_origin = '//' + host;
+                var origin = protocol + sr_origin;
+                // Allow absolute or scheme relative URLs to same origin
+                return (url == origin || url.slice(0, origin.length + 1) == origin + '/') ||
+                    (url == sr_origin || url.slice(0, sr_origin.length + 1) == sr_origin + '/') ||
+                    // or any other URL that isn't scheme relative or absolute i.e relative.
+                    !(/^(\/\/|http:|https:).*/.test(url));
+            }
+
+            $.ajaxSetup({
+                beforeSend: function (xhr, settings) {
+                    if (!csrfSafeMethod(settings.type) && sameOrigin(settings.url)) {
+                        // Send the token to same-origin, relative URLs only.
+                        // Send the token only if the method warrants CSRF protection
+                        // Using the CSRFToken value acquired earlier
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                    }
+                }
+            });
+        </script>
+        <script src="{% static "annotator/js/round.js" %}"></script>
+    {% endaddtoblock %}
+    <div id="annotations" class="main">
+        <div id="teams">
+            <div id="left-team">
+                <form method="POST" class="post-form" id="team1form">
+                    {% csrf_token %}
+                    {{ team_form1.as_p }}
+                    <button type="submit" id="team1submit" class="save btn btn-default">Save</button>
+                </form>
+                {% for f in team1_players_form %}
+                    <form method="POST" class="player-form">
+                        {% csrf_token %}
+                        {{ f.as_p }}
+                    </form>
+                {% endfor %}
+            </div>
+            <div id="right-team">
+                <form method="POST" class="post-form" id="team2form">
+                    {% csrf_token %}
+                    {{ team_form2.as_p }}
+                    <button type="submit" id="team2submit" class="save btn btn-default">Save</button>
+                </form>
+                {% for f in team2_players_form %}
+                    <form method="POST" class="player-form">
+                        {{ f.as_p }}
+                    </form>
+                {% endfor %}
+            </div>
+        </div>
+        <!-- Add a placeholder for the Twitch embed -->
+        <div id="twitch-embed"></div>
+        <div id="player-controls">
+            <button id="seek-backward">Back one second</button>
+            <button id="update-times">Update all times</button>
+            <button id="seek-forward">Forward one second</button>
+        </div>
+    </div>
+    <div id="sidebar" class="sidebar">
+        <ul class="nav nav-tabs">
+            <li class="active"><a data-toggle="tab" href="#switches">Switches</a></li>
+            <li><a data-toggle="tab" href="#kills">Kills</a></li>
+            <li><a data-toggle="tab" href="#deaths">Deaths</a></li>
+            <li><a data-toggle="tab" href="#revives">Revives</a></li>
+            <li><a data-toggle="tab" href="#ults">Ults</a></li>
+            <li><a data-toggle="tab" href="#pauses">Pauses</a></li>
+            <li><a data-toggle="tab" href="#points">Points</a></li>
+        </ul>
+
+        <div class="tab-content">
+            <div id="switches" class="tab-pane fade in active">
+                <h4>Switches</h4>
+                <form method="POST" class="post-form" id="switch-form">
+                    {% csrf_token %}
+                    {{ switch_form.as_p }}
+                    <button type="submit" class="save btn btn-default">Save</button>
+                </form>
+                <table class="table table-striped">
+                    <tr>
+                        <th>Time</th>
+                        <th>Player</th>
+                        <th>New hero</th>
+                        <th>Actions</th>
+                    </tr>
+                    {% for e in round.switch_set.all %}
+                        <tr timepoint="{{ e.time_point|add:round.begin }}">
+                            <td>{{ e.time_point|formatSeconds }}</td>
+                            <td>{{ e.player }}</td>
+                            <td>{{ e.new_hero }}</td>
+                            <td>
+                                <form class="delete-form">
+                                    <input type="hidden" name="event_id" value="{{ e.id }}">
+                                    <input type="hidden" name="event_type" value="switch">
+                                    <input type="submit" class="save btn btn-default" value="Delete event">
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+            <div id="kills" class="tab-pane fade">
+                <h4>Kills</h4>
+                <form method="POST" class="post-form" id="kill-form">
+                    {% csrf_token %}
+                    {{ kill_form.as_p }}
+                    <button type="submit" class="save btn btn-default">Save</button>
+                </form>
+                <table class="table table-striped">
+                    <tr>
+                        <th>Time</th>
+                        <th>Killing player</th>
+                        <th>Killed player</th>
+                        <th>Ability</th>
+                        <th>Was headshot</th>
+                        <th>Actions</th>
+                    </tr>
+                    {% for e in round.kill_set.all %}
+                        <tr timepoint="{{ e.time_point|add:round.begin }}">
+                            <td>{{ e.time_point|formatSeconds }}</td>
+                            <td>{{ e.killing_player }}</td>
+                            <td>{{ e.killed_player }}</td>
+                            <td>{{ e.ability }}</td>
+                            <td>{{ e.headshot }}</td>
+                            <td>
+                                <form class="delete-form">
+                                    <input type="hidden" name="event_id" value="{{ e.id }}">
+                                    <input type="hidden" name="event_type" value="kill">
+                                    <input type="submit" class="save btn btn-default" value="Delete event">
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+                <h4>NPC kills</h4>
+                <form method="POST" class="post-form" id="killnpc-form">
+                    {% csrf_token %}
+                    {{ killnpc_form.as_p }}
+                    <button type="submit" class="save btn btn-default">Save</button>
+                </form>
+                <table class="table table-striped">
+                    <tr>
+                        <th>Time</th>
+                        <th>Killing player</th>
+                        <th>Killed NPC</th>
+                        <th>Ability</th>
+                        <th>Actions</th>
+                    </tr>
+                    {% for e in round.killnpc_set.all %}
+                        <tr timepoint="{{ e.time_point|add:round.begin }}">
+                            <td>{{ e.time_point|formatSeconds }}</td>
+                            <td>{{ e.killing_player }}</td>
+                            <td>{{ e.killed_npc }}</td>
+                            <td>{{ e.ability }}</td>
+                            <td>
+                                <form class="delete-form">
+                                    <input type="hidden" name="event_id" value="{{ e.id }}">
+                                    <input type="hidden" name="event_type" value="npc_kill">
+                                    <input type="submit" class="save btn btn-default" value="Delete event">
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+            <div id="deaths" class="tab-pane fade">
+                <h4>Deaths</h4>
+                <form method="POST" class="post-form" id="death-form">
+                    {% csrf_token %}
+                    {{ death_form.as_p }}
+                    <button type="submit" class="save btn btn-default">Save</button>
+                </form>
+                <table class="table table-striped">
+                    <tr>
+                        <th>Time</th>
+                        <th>Player</th>
+                        <th>Actions</th>
+                    </tr>
+                    {% for e in round.death_set.all %}
+                        <tr timepoint="{{ e.time_point|add:round.begin }}">
+                            <td>{{ e.time_point|formatSeconds }}</td>
+                            <td>{{ e.player }}</td>
+                            <td>
+                                <form class="delete-form">
+                                    <input type="hidden" name="event_id" value="{{ e.id }}">
+                                    <input type="hidden" name="event_type" value="death">
+                                    <input type="submit" class="save btn btn-default" value="Delete event">
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+
+                <h4>NPC Deaths</h4>
+                <form method="POST" class="post-form" id="npcdeath-form">
+                    {% csrf_token %}
+                    {{ npcdeath_form.as_p }}
+                    <button type="submit" class="save btn btn-default">Save</button>
+                </form>
+                <table class="table table-striped">
+                    <tr>
+                        <th>Time</th>
+                        <th>NPC</th>
+                        <th>Actions</th>
+                    </tr>
+                    {% for e in round.npcdeath_set.all %}
+                        <tr timepoint="{{ e.time_point|add:round.begin }}">
+                            <td>{{ e.time_point|formatSeconds }}</td>
+                            <td>{{ e.npc }}</td>
+                            <td>{{ e.side }}</td>
+                            <td>
+                                <form class="delete-form">
+                                    <input type="hidden" name="event_id" value="{{ e.id }}">
+                                    <input type="hidden" name="event_type" value="npc_death">
+                                    <input type="submit" class="save btn btn-default" value="Delete event">
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+            <div id="revives" class="tab-pane fade">
+                <h4>Revives</h4>
+                <form method="POST" class="post-form" id="revive-form">
+                    {% csrf_token %}
+                    {{ revive_form.as_p }}
+                    <button type="submit" class="save btn btn-default">Save</button>
+                </form>
+                <table class="table table-striped">
+                    <tr>
+                        <th>Time</th>
+                        <th>Reviving player</th>
+                        <th>Revived player</th>
+                        <th>Ability</th>
+                        <th>Actions</th>
+                    </tr>
+                    {% for e in round.revive_set.all %}
+                        <tr timepoint="{{ e.time_point|add:round.begin }}">
+                            <td>{{ e.time_point|formatSeconds }}</td>
+                            <td>{{ e.reviving_player }}</td>
+                            <td>{{ e.revived_player }}</td>
+                            <td>{{ e.ability }}</td>
+                            <td>
+                                <form class="delete-form">
+                                    <input type="hidden" name="event_id" value="{{ e.id }}">
+                                    <input type="hidden" name="event_type" value="revive">
+                                    <input type="submit" class="save btn btn-default" value="Delete event">
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+            <div id="ults" class="tab-pane fade">
+                <h4>Ult gains</h4>
+                <form method="POST" class="post-form" id="ultgain-form">
+                    {% csrf_token %}
+                    {{ ultgain_form.as_p }}
+                    <button type="submit" class="save btn btn-default">Save</button>
+                </form>
+                <table class="table table-striped">
+                    <tr>
+                        <th>Time</th>
+                        <th>Player</th>
+                        <th>Actions</th>
+                    </tr>
+                    {% for e in round.ultgain_set.all %}
+                        <tr timepoint="{{ e.time_point|add:round.begin }}">
+                            <td>{{ e.time_point|formatSeconds }}</td>
+                            <td>{{ e.player }}</td>
+                            <td>
+                                <form class="delete-form">
+                                    <input type="hidden" name="event_id" value="{{ e.id }}">
+                                    <input type="hidden" name="event_type" value="ult_gain">
+                                    <input type="submit" class="save btn btn-default" value="Delete event">
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+
+                <h4>Ult uses</h4>
+                <form method="POST" class="post-form" id="ultuse-form">
+                    {% csrf_token %}
+                    {{ ultuse_form.as_p }}
+                    <button type="submit" class="save btn btn-default">Save</button>
+                </form>
+                <table class="table table-striped">
+                    <tr>
+                        <th>Time</th>
+                        <th>Player</th>
+                        <th>Actions</th>
+                    </tr>
+                    {% for e in round.ultuse_set.all %}
+                        <tr timepoint="{{ e.time_point|add:round.begin }}">
+                            <td>{{ e.time_point|formatSeconds }}</td>
+                            <td>{{ e.player }}</td>
+                            <td>
+                                <form class="delete-form">
+                                    <input type="hidden" name="event_id" value="{{ e.id }}">
+                                    <input type="hidden" name="event_type" value="ult_use">
+                                    <input type="submit" class="save btn btn-default" value="Delete event">
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+            <div id="pauses" class="tab-pane fade">
+                <h4>Pauses</h4>
+                <form method="POST" class="post-form" id="pause-form">
+                    {% csrf_token %}
+                    {{ pause_form.as_p }}
+                    <button type="submit" class="save btn btn-default">Save</button>
+                </form>
+                <table class="table table-striped">
+                    <tr>
+                        <th>Time</th>
+                        <th>Actions</th>
+                    </tr>
+                    {% for e in round.pause_set.all %}
+                        <tr timepoint="{{ e.time_point|add:round.begin }}">
+                            <td>{{ e.time_point|formatSeconds }}</td>
+                            <td>
+                                <form class="delete-form">
+                                    <input type="hidden" name="event_id" value="{{ e.id }}">
+                                    <input type="hidden" name="event_type" value=pause">
+                                    <input type="submit" class="save btn btn-default" value="Delete event">
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+                <h4>Unpauses</h4>
+                <form method="POST" class="post-form" id="unpause-form">
+                    {% csrf_token %}
+                    {{ unpause_form.as_p }}
+                    <button type="submit" class="save btn btn-default">Save</button>
+                </form>
+                <table class="table table-striped">
+                    <tr>
+                        <th>Time</th>
+                        <th>Actions</th>
+                    </tr>
+                    {% for e in round.unpause_set.all %}
+                        <tr timepoint="{{ e.time_point|add:round.begin }}">
+                            <td>{{ e.time_point|formatSeconds }}</td>
+                            <td>
+                                <form class="delete-form">
+                                    <input type="hidden" name="event_id" value="{{ e.id }}">
+                                    <input type="hidden" name="event_type" value="unpause">
+                                    <input type="submit" class="save btn btn-default" value="Delete event">
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+            <div id="points" class="tab-pane fade">
+                <h4>Point gains</h4>
+                <form method="POST" class="post-form" id="pointgain-form">
+                    {% csrf_token %}
+                    {{ pointgain_form.as_p }}
+                    <button type="submit" class="save btn btn-default">Save</button>
+                </form>
+                <table class="table table-striped">
+                    <tr>
+                        <th>Time</th>
+                        <th>Point total</th>
+                        <th>Actions</th>
+                    </tr>
+                    {% for e in round.pointgain_set.all %}
+                        <tr timepoint="{{ e.time_point|add:round.begin }}">
+                            <td>{{ e.time_point|formatSeconds }}</td>
+                            <td>{{ e.point_total }}</td>
+                            <td>
+                                <form class="delete-form">
+                                    <input type="hidden" name="event_id" value="{{ e.id }}">
+                                    <input type="hidden" name="event_type" value="point_gain">
+                                    <input type="submit" class="save btn btn-default" value="Delete event">
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+
+
+        </div>
+    </div>
+
+    {% addtoblock "js" %}
+
+        <script>
+            $('tr').on('click', function (event) {
+
+                player.seek($(this).attr("timepoint"));
+            });
+            $('#team1form').on('submit', function (event) {
+                event.preventDefault();
+                $.ajax({
+                    url: "{% url 'annotator:update_team' %}", // the endpoint
+                    type: "POST", // http method
+                    data: {
+                        color: $('#id_color').val(),
+                        side: $('#id_side').val(),
+                        team_id: $('#id_team').val(),
+                        game_id: {{ round.game.id }}
+
+                    }, // data sent with the post request
+
+                    // handle a successful response
+                    success: function (json) {
+                        console.log(json); // log the returned json to the console
+                    },
+
+                    // handle a non-successful response
+                    error: function (xhr, errmsg, err) {
+                        $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: " + errmsg +
+                            " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+                        console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+                    }
+                });
+            });
+            $('#team2form').on('submit', function (event) {
+                event.preventDefault();
+                $.ajax({
+                    url: "{% url 'annotator:update_team' %}", // the endpoint
+                    type: "POST", // http method
+                    data: {
+                        color: $('#team2form #id_color').val(),
+                        side: $('#team2form #id_side').val(),
+                        team_id: $('#team2form #id_team').val(),
+                        game_id: {{ round.game.id }}
+
+                    }, // data sent with the post request
+
+                    // handle a successful response
+                    success: function (json) {
+                        console.log(json); // log the returned json to the console
+                    },
+
+                    // handle a non-successful response
+                    error: function (xhr, errmsg, err) {
+                        $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: " + errmsg +
+                            " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+                        console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+                    }
+                });
+            });
+        </script>
+        <!-- Create a Twitch.Embed object that will render within the "twitch-embed" root element. -->
+        <script type="text/javascript">
+            var player = new Twitch.Player("twitch-embed", {
+                width: 1280,
+                height: 760,
+                video: "{{ twitch_id }}",
+                autoplay: false,
+                time: {{ round.begin }}
+            });
+            console.log(player);
+            console.log(Object.getOwnPropertyNames(player).filter(function (p) {
+                return typeof player[p] === 'function';
+            }));
+            player.addEventListener(Twitch.Player.PAUSE, updateTimes);
+            //player.addEventListener(Twitch.Player.)
+            $('#seek-forward').on('click', function () {
+                player.seek(player.getCurrentTime() + 1);
+            });
+            $('#seek-backward').on('click', function () {
+                player.seek(player.getCurrentTime() - 1)
+            });
+            $('#update-times').on('click', updateTimes);
+            refreshPlayers();
+            updateSelects();
+
+            $("#kill-form select[name='killing_player']").on("change", function () {
+                updateKilledPlayers();
+                var killer = $("#kill-form select[name='killing_player']").val();
+
+                if (killer) {
+                    $.ajax({
+                        url: "{% url 'annotator:get_abilities' %}", // the endpoint
+                        type: "POST", // http method
+                        data: {
+                            player_id: killer,
+                            time_point: $("#kill-form input[name='time_point']").val(),
+                            round_id: {{ round.id }},
+                            damaging: true
+
+                        }, // data sent with the post request
+
+                        // handle a successful response
+                        success: function (json) {
+                            console.log(json); // log the returned json to the console
+                            updateAbilities(json['abilities']);
+                        },
+
+                        // handle a non-successful response
+                        error: function (xhr, errmsg, err) {
+                            $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: " + errmsg +
+                                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+                            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+                        }
+                    });
+                }
+                else {
+                    updateAbilities([]);
+                }
+            });
+
+            $("#revive-form select[name='reviving_player']").on("change", updateRevivees);
+
+            $(".delete-form").each(function () {
+                $(this).on("submit", function (event) {
+                        event.preventDefault();
+                        $.ajax({
+                            url: "{% url 'annotator:delete_event' %}", // the endpoint
+                            type: "POST", // http method
+                            data: {
+                                event_id: $(this).find("input[name='event_id']").val(),
+                                event_type: $(this).find("input[name='event_type']").val(),
+
+                            }, // data sent with the post request
+
+                            // handle a successful response
+                            success: function (json) {
+                                console.log(json); // log the returned json to the console
+                            },
+
+                            // handle a non-successful response
+                            error: function (xhr, errmsg, err) {
+                                $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: " + errmsg +
+                                    " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+                                console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+                            }
+                        });
+                    }
+                );
+            });
+        </script>
+    {% endaddtoblock %}
+
+{% endblock %}
