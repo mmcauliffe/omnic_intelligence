@@ -46,9 +46,11 @@ INSTALLED_APPS = [
     'sekizai',
     'rest_framework',
     'crispy_forms',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -129,9 +131,15 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+#ANGULAR_APP_DIR = os.path.join(BASE_DIR, 'ng-annotator/dist')
+
 STATICFILES_DIRS = [
+    #os.path.join(ANGULAR_APP_DIR),
     ('node_modules', os.path.join(BASE_DIR, 'node_modules')),
 ]
 
 SCRAPE_CACHE_DIRECTORY = r'E:\Data\Overwatch\raw_data\annotations'
 FORM_RENDERER = 'djng.forms.renderers.DjangoAngularBootstrap3Templates'
+CORS_ORIGIN_ALLOW_ALL = True

@@ -85,13 +85,13 @@ class Player(models.Model):
         return self.name
 
     def get_hero_at_timepoint(self, round, time_point):
-        s =Switch.objects.filter(time_point__lte=time_point, round=round, player=self).order_by('-time_point').prefetch_related('new_hero', 'new_hero__ability_set').first()
+        s = Switch.objects.filter(time_point__lte=time_point, round=round, player=self).order_by(
+            '-time_point').prefetch_related('new_hero', 'new_hero__ability_set').first()
         if s is not None:
             return s.new_hero
 
     class Meta:
         ordering = ['name', 'wl_id']
-
 
 
 class Team(models.Model):
@@ -133,8 +133,16 @@ class Match(models.Model):
             return self.local_location
         return self.vod
 
+    @property
+    def vod_link(self):
+        if self.vod is None:
+            return None, None
+        m = re.match('https://www\.twitch\.tv/videos/(\d+)[?]?.*', self.vod)
+        if m is not None:
+            return 'twitch', m.groups()[0]
+
     def get_twitch_id(self):
-        m = re.match('https://www\.twitch\.tv/videos/(\d+)[?]?.*',self.vod)
+        m = re.match('https://www\.twitch\.tv/videos/(\d+)[?]?.*', self.vod)
         if m is not None:
             return m.groups()[0]
 
@@ -145,14 +153,19 @@ class Match(models.Model):
 class Game(models.Model):
     game_number = models.IntegerField()
     match = models.ForeignKey(Match, on_delete=models.CASCADE)
-    teams = models.ManyToManyField(Team, through='TeamParticipation')
-    left_points = models.IntegerField()
-    left_subpoints = models.CharField(max_length=128)
-    right_points = models.IntegerField()
-    right_subpoints = models.CharField(max_length=128)
+    left_team = models.OneToOneField('TeamParticipation', on_delete=models.CASCADE, related_name='left_team')
+    right_team = models.OneToOneField('TeamParticipation', on_delete=models.CASCADE, related_name='right_team')
     map = models.ForeignKey(Map, on_delete=models.CASCADE)
     vod = models.URLField(null=True, blank=True)
     local_location = models.CharField(max_length=256, null=True, blank=True)
+
+    @property
+    def vod_link(self):
+        if self.vod is None:
+            return self.match.vod_link
+        m = re.match('https://www\.twitch\.tv/videos/(\d+)[?]?.*', self.vod)
+        if m is not None:
+            return 'twitch', m.groups()[0]
 
     def get_video_link(self):
         if self.local_location is not None and os.path.exists(self.local_location):
@@ -162,7 +175,7 @@ class Game(models.Model):
     def get_twitch_id(self):
         if self.vod is None:
             return self.match.get_twitch_id()
-        m = re.match('https://www\.twitch\.tv/videos/(\d+)[?]?.*',self.vod)
+        m = re.match('https://www\.twitch\.tv/videos/(\d+)[?]?.*', self.vod)
         if m is not None:
             return m.groups()[0]
 
@@ -183,13 +196,13 @@ class TeamParticipation(models.Model):
         ('K', 'Black'),
     )
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
-    game = models.ForeignKey(Game, on_delete=models.CASCADE)
     color = models.CharField(max_length=1, choices=COLOR_CHOICES, default=BLUE)
-    side = models.CharField(max_length=1, choices=SIDE_CHOICES, default=NEITHER)
+    points = models.IntegerField(null=True, blank=True)
+    subpoints = models.CharField(max_length=128, null=True, blank=True)
     players = models.ManyToManyField(Player, through='PlayerParticipation')
+
     class Meta:
-        ordering = ['side']
-        unique_together = (("game", "side"),)
+        ordering = ['points', 'subpoints']
 
 
 class PlayerParticipation(models.Model):
@@ -211,6 +224,14 @@ class Round(models.Model):
     vod = models.URLField(null=True, blank=True)
     local_location = models.CharField(max_length=256, null=True, blank=True)
 
+    @property
+    def vod_link(self):
+        if self.vod is None:
+            return self.game.vod_link
+        m = re.match('https://www\.twitch\.tv/videos/(\d+)[?]?.*', self.vod)
+        if m is not None:
+            return 'twitch', m.groups()[0]
+
     def get_video_link(self):
         if self.local_location is not None and os.path.exists(self.local_location):
             return self.local_location
@@ -219,7 +240,7 @@ class Round(models.Model):
     def get_twitch_id(self):
         if self.vod is None:
             return self.game.get_twitch_id()
-        m = re.match('https://www\.twitch\.tv/videos/(\d+)[?]?.*',self.vod)
+        m = re.match('https://www\.twitch\.tv/videos/(\d+)[?]?.*', self.vod)
         if m is not None:
             return m.groups()[0]
 
@@ -236,6 +257,30 @@ class Pause(models.Model):
 
 
 class Unpause(models.Model):
+    time_point = models.IntegerField()
+    round = models.ForeignKey(Round, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = (("round", "time_point"),)
+
+
+class ReplayStart(models.Model):
+    time_point = models.IntegerField()
+    round = models.ForeignKey(Round, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = (("round", "time_point"),)
+
+
+class ReplayEnd(models.Model):
+    time_point = models.IntegerField()
+    round = models.ForeignKey(Round, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = (("round", "time_point"),)
+
+
+class OvertimeStart(models.Model):
     time_point = models.IntegerField()
     round = models.ForeignKey(Round, on_delete=models.CASCADE)
 
@@ -284,6 +329,7 @@ class Death(models.Model):
     def __str__(self):
         return str(self.player) + ' ' + str(self.time_point)
 
+
 class NPCDeath(models.Model):
     time_point = models.IntegerField()
     round = models.ForeignKey(Round, on_delete=models.CASCADE)
@@ -327,6 +373,10 @@ class Kill(models.Model):
         unique_together = (("round", "time_point", "killing_player", "killed_player"),)
         ordering = ['round', 'time_point', 'killing_player', 'killed_player']
 
+    def save(self, *args, **kwargs):
+        super(Kill, self).save(*args, **kwargs)  # Call the "real" save() method.
+        d = Death.objects.get_or_create(time_point=self.time_point, player=self.killed_player, round=self.round)
+
 
 class KillNPC(models.Model):
     time_point = models.IntegerField()
@@ -338,6 +388,14 @@ class KillNPC(models.Model):
     class Meta:
         unique_together = (("round", "time_point", "killing_player", "killed_npc"),)
         ordering = ['round', 'time_point', 'killing_player', 'killed_npc']
+
+    def save(self, *args, **kwargs):
+        super(KillNPC, self).save(*args, **kwargs)  # Call the "real" save() method.
+        if self.round.game.left_team.players.filter(id=self.killing_player.id).count() > 0:
+            side = 'R'
+        else:
+            side = 'L'
+        d = NPCDeath.objects.get_or_create(time_point=self.time_point, npc=self.killed_npc, round=self.round, side=side)
 
 
 class Revive(models.Model):

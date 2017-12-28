@@ -1,0 +1,119 @@
+<div class="container-fluid">
+
+    <div class="col-md-9">
+        <div ng-switch on="vod_type">
+            <div ng-switch-when='null'></div>
+            <div ng-switch-when="twitch">
+        <div id="twitch-embed" data-ng-init="initPlayer()"></div>
+                <div id="player-controls">
+                    <button ng-click="seekBackward()">Back one second</button>
+                    <button ng-click="seekForward()">Forward one second</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="sidebar-nav pull-right">
+            <div class='row text-center'>
+                <div class='col'>
+                    <h1>Add a game</h1>
+                    <label>Game number: <input type="text" ng-model="game.game_number" class='form-control'/></label>
+
+                    <label>Map: <select ng-model="game.map" class="'form-control"
+                                        ng-options="map.id as map.name for map in maps">
+                        <option value="">Select Map</option>
+
+                    </select></label>
+
+                    <label>VOD URL: <input type="text" ng-model="game.vod" class='form-control'/></label>
+                    <button class='btn btn-success btn-lg' ng-click="saveGame()">Save</button>
+                </div>
+            </div>
+            <div class='row text-center'>
+                <div class="col">
+                    <h3>Left team</h3>
+                    <label>Team: <select ng-model="game.left_team.team" class="'form-control"
+                                         ng-options="team.id as team.name for team in teams">
+                        <option value="">Select Team</option>
+
+                    </select></label>
+
+                    <label>Color: <select ng-model="game.left_team.color" class="'form-control"
+                                          ng-options="color.id as color.name for color in colors"
+                                          ng-init="game.left_team.color='B'">
+                        <option value="">Select team color</option>
+
+                    </select></label>
+                    <label>Points: <input type="text" ng-model="game.left.points" class='form-control'
+                                          ng-required="false"/></label>
+                    <label>Subpoints: <input type="text" ng-model="game.left.subpoints" class='form-control'
+                                             ng-required="false"/></label>
+                    <ul>
+                        <li ng-repeat="i in range(player_count) track by $index"><label>Player {{ $index + 1 }}:<select
+                                ng-model="game.left_team.players[$index]" class="'form-control"
+                                ng-options="player.id as player.name for player in players">
+                            <option value="">Select player</option>
+
+                        </select></label></li>
+                    </ul>
+                </div>
+                <div class="col">
+                    <h3>Right team</h3>
+                    <label>Team: <select ng-model="game.right_team.team" class="'form-control"
+                                         ng-options="team.id as team.name for team in teams">
+                        <option value="">Select Team</option>
+
+                    </select></label>
+
+                    <label>Color: <select ng-model="game.right_team.color" class="'form-control"
+                                          ng-options="color.id as color.name for color in colors"
+                                          ng-init="game.right_team.color='R'">
+                        <option value="">Select team color</option>
+
+                    </select></label>
+                    <label>Points: <input type="text" ng-model="game.right.points" class='form-control'
+                                          ng-required="false"/></label>
+                    <label>Subpoints: <input type="text" ng-model="game.right.subpoints" class='form-control'
+                                             ng-required="false"/></label>
+                    <ul>
+                        <li ng-repeat="i in range(player_count) track by $index"><label>Player {{ $index + 1 }}:<select
+                                ng-model="game.right_team.players[$index]" class="'form-control"
+                                ng-options="player.id as player.name for player in players">
+                            <option value="">Select player</option>
+
+                        </select></label></li>
+                    </ul>
+
+                </div>
+            </div>
+            <div class='row text-center'>
+                <div class='col'>
+                    <h1>Add a round</h1>
+                    <label>Round number: <input type="text" ng-model="newRound.round_number"
+                                                class='form-control'/></label>
+                    <label>Begin: <input type="text" ng-model="newRound.begin" class='form-control'/>
+                        <button ng-click="updateBegin()">Update from current timestamp</button>
+                    </label>
+                    <label>End: <input type="text" ng-model="newRound.end" class='form-control'/>
+                        <button ng-click="updateEnd()">Update from current timestamp</button>
+                    </label>
+                    <label>Attacking side: <select ng-model="newRound.attacking_side" class="'form-control"
+                                                   ng-options="side.id as side.name for side in sides">
+                        <option value="">Select attacking side</option>
+
+                    </select></label>
+                    <button class='btn btn-success btn-lg' ng-click="addRound()">Add</button>
+                    <h1>Rounds</h1>
+                    <ul class="list-group">
+                        <li ng-repeat='r in rounds' class="list-group-item">
+                            <a ui-sref="round-detail({round_id: r.id })">Round {{ r.round_number }}</a>
+
+                            <span class='badge' ng-click="deleteRound(r.id)">X</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,6 +1,7 @@
 <h1>{{ event.name }}</h1>
 <div class='row text-center'>
     <div class='col-sm-4 col-sm-offset-4'>
+        <button ui-sref="add-match({event_id: event.id})" class='btn btn-primary btn-lg' style='margin-bottom:20px;'>Add Match</button>
         <h1>All Matches</h1>
         <ul class="list-group">
             <li ng-repeat='m in matches' class="list-group-item">

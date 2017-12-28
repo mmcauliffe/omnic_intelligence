@@ -7,12 +7,11 @@
                 <input type="text" ng-model="newEvent.name" placeholder="title" class='form-control'/>
                 <input type="text" ng-model="newEvent.wl_id" placeholder="title" class='form-control'/>
                 <button class='btn btn-success btn-lg' ng-click="addEvent()">Add</button>
-        <button ui-sref="add-todo" class='btn btn-primary btn-lg' style='margin-bottom:20px;'>Add Todo</button>
             </div>
         </div>
         <ul class="list-group">
             <li ng-repeat='event in events' class="list-group-item">
-                <a ui-sref="events-detail({event_id: event.id })">{{ event.name }}</a>
+                <a ui-sref="event-detail({event_id: event.id })">{{ event.name }}</a>
                 {{ event.wl_id }}
 
                 <span class='badge' ng-click="deleteEvent(event.id)">X</span>

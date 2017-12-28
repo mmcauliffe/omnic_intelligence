@@ -1,45 +1,42 @@
 from django.conf.urls import url, include
+from django.contrib.staticfiles.views import serve
+from django.views.generic import RedirectView
 from . import views
 from rest_framework import routers
-from .api import EventViewSet, GameViewSet, MatchViewSet, RoundViewSet, SwitchViewSet, DeathViewSet, UnpauseViewSet, \
-    UltUseViewSet, UltGainViewSet, ReviveViewSet, PointGainViewSet, PointFlipViewSet, PauseViewSet, NPCDeathViewSet, \
-    KillViewSet, KillNPCViewSet
+from . import api
 
 app_name = 'annotator'
 
-event_router = routers.DefaultRouter()
-event_router.register(r'events', EventViewSet, base_name='events')
-event_router.register(r'games', GameViewSet, base_name='games')
-event_router.register(r'matches', MatchViewSet, base_name='matches')
-event_router.register(r'rounds', RoundViewSet, base_name='rounds')
-event_router.register(r'switches', SwitchViewSet, base_name='switches')
-event_router.register(r'deaths', DeathViewSet, base_name='deaths')
-event_router.register(r'unpauses', UnpauseViewSet, base_name='unpauses')
-event_router.register(r'ultuses', UltUseViewSet, base_name='ultuses')
-event_router.register(r'ultgains', UltGainViewSet, base_name='ultgains')
-event_router.register(r'revives', ReviveViewSet, base_name='revives')
-event_router.register(r'pointgains', PointGainViewSet, base_name='pointgains')
-event_router.register(r'pointflips', PointFlipViewSet, base_name='pointflips')
-event_router.register(r'pauses', PauseViewSet, base_name='pauses')
-event_router.register(r'npcdeaths', NPCDeathViewSet, base_name='switches')
-event_router.register(r'kills', KillViewSet, base_name='kill')
-event_router.register(r'killnpcs', KillNPCViewSet, base_name='killnpcs')
+api_router = routers.DefaultRouter()
+api_router.register(r'heroes', api.HeroViewSet, base_name='heroes')
+api_router.register(r'maps', api.MapViewSet, base_name='maps')
+api_router.register(r'npcs', api.NPCViewSet, base_name='npcs')
+api_router.register(r'events', api.EventViewSet, base_name='events')
+api_router.register(r'games', api.GameViewSet, base_name='games')
+api_router.register(r'players', api.PlayerViewSet, base_name='players')
+api_router.register(r'teams', api.TeamViewSet, base_name='teams')
+api_router.register(r'team_colors', api.TeamColorViewSet, base_name='team_colors')
+api_router.register(r'sides', api.SideViewSet, base_name='sides')
+api_router.register(r'matches', api.MatchViewSet, base_name='matches')
+api_router.register(r'rounds', api.RoundViewSet, base_name='rounds')
+api_router.register(r'switches', api.SwitchViewSet, base_name='switches')
+api_router.register(r'deaths', api.DeathViewSet, base_name='deaths')
+api_router.register(r'unpauses', api.UnpauseViewSet, base_name='unpauses')
+api_router.register(r'ultuses', api.UltUseViewSet, base_name='ultuses')
+api_router.register(r'ultgains', api.UltGainViewSet, base_name='ultgains')
+api_router.register(r'revives', api.ReviveViewSet, base_name='revives')
+api_router.register(r'pointgains', api.PointGainViewSet, base_name='pointgains')
+api_router.register(r'pointflips', api.PointFlipViewSet, base_name='pointflips')
+api_router.register(r'pauses', api.PauseViewSet, base_name='pauses')
+api_router.register(r'npcdeaths', api.NPCDeathViewSet, base_name='switches')
+api_router.register(r'kills', api.KillViewSet, base_name='kill')
+api_router.register(r'killnpcs', api.KillNPCViewSet, base_name='killnpcs')
+api_router.register(r'replaystarts', api.ReplayStartViewSet, base_name='replaystarts')
+api_router.register(r'replayends', api.ReplayEndViewSet, base_name='replayends')
+api_router.register(r'overtimestarts', api.OvertimeStartViewSet, base_name='overtimestarts')
 
 urlpatterns = [
     url(r'^$', views.index, name='index'),
     # url(r'^import_annotations/$', views.import_annotations, name='import_annotations'),
-    # url(r'match/(?P<match_id>\d+)/', views.MatchInspector.as_view(), name='inspect_match'),
-    # url(r'game/(?P<game_id>\d+)/', views.GameInspector.as_view(), name='inspect_game'),
-    # url(r'round/(?P<round_id>\d+)/', views.RoundInspector.as_view(), name='inspect_round'),
-    # url(r'update_teams/', views.update_team, name='update_team'),
-    # url(r'delete_event/', views.delete_event, name='delete_event'),
-    # url(r'get_abilities/', views.get_current_hero_abilities, name='get_abilities'),
-    # url(r'^crud/switch/?$', views.SwitchCRUDView.as_view(), name='switch_crud_view'),
-    # url(r'^rounds/(?P<pk>\d+)/posts$', SwitchList.as_view(), name='switch-list'),
-    # url(r'^rounds/(?P<pk>\d+)$', RoundDetail.as_view(), name='round-detail'),
-    # url(r'^rounds/$', RoundList.as_view(), name='round-list'),
-    # url(r'^matches/(?P<pk>\d+)$', MatchDetail.as_view(), name='match-detail'),
-    # url(r'^matches/$', MatchList.as_view(), name='match-list')
-    # url('^events/', views.events_index,name='events_view'),
-    url('^api/', include(event_router.urls)),
+    url('^api/', include(api_router.urls)),
 ]

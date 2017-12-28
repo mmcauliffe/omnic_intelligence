@@ -12,21 +12,11 @@ import re
 from .utils import scrape_wl
 from .models import Event, Match, Player, Team, Map, Game, Round, TeamParticipation, PlayerParticipation, Pause, \
     Unpause, Switch, Kill, Revive, UltGain, UltUse, PointGain, PointFlip, Hero, Death, KillNPC, NPC, NPCDeath
-from .forms import TeamForm, PlayerForm, SwitchForm, DeathForm, KillForm, KillNPCForm, NPCDeathForm, PauseForm, \
-    PointFlipForm, PointGainForm, UltGainForm, UltUseForm, UnpauseForm, ReviveForm
 
-from .forms import MatchForm
 
 def events_index(request):
     return render(request, 'annotator/event_view.html')
 
-class MatchFormView(TemplateView):
-    template_name = "annotator/new_match.html"
-
-    def get_context_data(self, **kwargs):
-        context = super(MatchFormView, self).get_context_data(**kwargs)
-        context.update(MatchForm=MatchForm())
-        return context
 
 
 def transform_wl_heroes(hero):
@@ -420,112 +410,6 @@ def import_annotations(request):
     return HttpResponse(status=200)
 
 
-class MatchInspector(TemplateView):
-    template_name = 'annotator/match_view.html'
-
-    def get_context_data(self, **kwargs):
-        context = super(MatchInspector, self).get_context_data(**kwargs)
-        m = Match.objects.prefetch_related('game_set').get(pk=self.kwargs.get('match_id', None))
-        print(m.game_set.all())
-        context['match'] = m
-
-        return context
 
 
-class GameInspector(TemplateView):
-    template_name = 'annotator/game_view.html'
 
-    def get_context_data(self, **kwargs):
-        context = super(GameInspector, self).get_context_data(**kwargs)
-
-        context['game'] = Game.objects.get(pk=context.get('game_id', None))
-        return context
-
-
-class RoundInspector(TemplateView):
-    template_name = 'annotator/round_view.html'
-
-    def get_context_data(self, **kwargs):
-        context = super(RoundInspector, self).get_context_data(**kwargs)
-
-        r = Round.objects.prefetch_related('switch_set', 'kill_set', 'npcdeath_set', 'killnpc_set',
-                                           'death_set').get(pk=context.get('round_id', None))
-
-        context['switch_form'] = SwitchForm()
-        context['death_form'] = DeathForm()
-        context['npcdeath_form'] = NPCDeathForm()
-        context['kill_form'] = KillForm()
-        context['killnpc_form'] = KillNPCForm()
-        context['ultgain_form'] = UltGainForm()
-        context['ultuse_form'] = UltUseForm()
-        context['pause_form'] = PauseForm()
-        context['unpause_form'] = UnpauseForm()
-        context['pointgain_form'] = PointGainForm()
-        context['pointflip_form'] = PointFlipForm()
-        context['revive_form'] = ReviveForm()
-
-        context['round'] = r
-        context['twitch_id'] = r.get_twitch_id()
-        team_participations = r.game.teamparticipation_set.all()
-        context['team_form1'] = TeamForm(instance=team_participations[0])
-        context['team1_players_form'] = [PlayerForm(instance=x, initial={'order': i}) for i, x in
-                                         enumerate(team_participations[0].playerparticipation_set.all())]
-        context['team_form2'] = TeamForm(instance=team_participations[1])
-        context['team2_players_form'] = [PlayerForm(instance=x, initial={'order': i}) for i, x in
-                                         enumerate(team_participations[1].playerparticipation_set.all())]
-        return context
-
-
-def update_team(request):
-    if request.method == 'POST':
-        game_id = request.POST['game_id']
-        side = request.POST['side']
-        team_id = request.POST['team_id']
-        color = request.POST['color']
-        print(request.POST)
-        try:
-            p = TeamParticipation.objects.get(game__pk=game_id, side=side)
-            p.team_id = team_id
-            p.color = color
-        except TeamParticipation.DoesNotExist:
-            p = TeamParticipation(game_id=game_id, team_id=team_id, side=side, color=color)
-        p.save()
-        return JsonResponse({'success': True})
-
-
-def delete_event(request):
-    if request.method == 'POST':
-        event_id = request.POST['event_id']
-        event_type = request.POST['event_type']
-        types = {'switch': Switch,
-                 'kill': Kill,
-                 'killnpc': KillNPC,
-                 'death': Death,
-                 'npcdeath': NPCDeath,
-                 'revive': Revive,
-                 'ult_gain': UltGain,
-                 'ult_use': UltUse,
-                 'pause': Pause,
-                 'unpause':Unpause,
-                 'point_gain': PointGain,
-                 'point_flip': PointFlip}
-        types[event_type].objects.get(pk=event_id).delete()
-        return JsonResponse({'success': True})
-
-def get_current_hero_abilities(request):
-    if request.POST:
-        player = Player.objects.get(pk=request.POST['player_id'])
-        round = Round.objects.get(pk=request.POST['round_id'])
-        damaging = request.POST.get('damaging', False)
-        damaging = damaging == 'true'
-        reviving = request.POST.get('reviving', False)
-        reviving = reviving == 'true'
-        time_point = int(request.POST['time_point'])
-        hero = player.get_hero_at_timepoint(round, time_point)
-        abilities = [str(x.pk) for x in hero.ability_set.filter(damaging_ability = damaging, revive_ability=reviving).all()]
-        return JsonResponse({'success':True, 'abilities': abilities})
-
-from djng.views.crud import NgCRUDView
-
-class SwitchCRUDView(NgCRUDView):
-    model = Switch

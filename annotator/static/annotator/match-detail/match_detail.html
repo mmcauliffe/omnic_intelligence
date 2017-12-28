@@ -1,6 +1,7 @@
 <h1>{{ match.teams[0] }} vs {{ match.teams[1] }}</h1>
 <div class='row text-center'>
     <div class='col-sm-4 col-sm-offset-4'>
+        <button ui-sref="add-game({match_id: match.id})" class='btn btn-primary btn-lg' style='margin-bottom:20px;'>Add Game</button>
         <h1>All Games</h1>
         <ul class="list-group">
             <li ng-repeat='g in games' class="list-group-item">

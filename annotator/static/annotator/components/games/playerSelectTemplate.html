@@ -1,0 +1,3 @@
+<div>
+      Player {{index+1}}: <select ng-change="onChange(index)" ng-options='player.id as player.name for player in  players | filter:getValues' ng-model='player'><option value="">-- Select one --</option></select>
+    </div>
