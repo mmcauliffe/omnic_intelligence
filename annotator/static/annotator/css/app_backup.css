@@ -1,0 +1,240 @@
+
+div#annotations {
+    background-color: aliceblue;
+    width: 75%;
+    height: 100%;
+    float: left;
+    min-width: 1280px;
+}
+
+div#sidebar {
+    background-color: aliceblue;
+    width: 25%;
+    height: 100%;
+    float: right;
+    overflow: auto;
+}
+
+form {
+    display: block;
+}
+
+.player-form {
+    float: left;
+}
+
+#right-team {
+    position: relative;
+    float: right;
+    width: 50%;
+}
+
+#left-team {
+    position: relative;
+    width: 50%;
+    float: left;
+}
+main {
+    height: 85%;
+}
+
+
+main .container-fluid{
+    height: 100%;
+}
+
+main .col-md-3{
+    height: 100%;
+    overflow-y: hidden;
+    overflow-x: visible;
+}
+
+main .col-md-4{
+    height: 100%;
+    overflow-y: hidden;
+    overflow-x: visible;
+}
+main .row{
+    height: 100%;
+    padding: 20px;
+    background-color: aliceblue;
+    overflow-y: hidden;
+    overflow-x: visible;
+}
+.main {
+    overflow: hidden;
+}
+
+header.navbar {
+    background-color: #1b2b3a;
+}
+
+.annotation-listing{
+    height: 70%;
+}
+
+.kill-listing{
+    height: 29%;
+}
+
+md-tabs {
+    height: 100%;
+    overflow-y: hidden;
+    overflow-x: visible;
+}
+md-content{
+    height:90%;
+    overflow-y: hidden;
+    overflow-x: visible;
+}
+md-tab-content div{
+    height:100%;
+}
+.sidebar-nav {
+    background-color: aliceblue;
+    height:100%;
+    width: 99%;
+    overflow-y: hidden;
+    overflow-x: visible;
+}
+.sidebar-nav .tabs {
+    height:76%;
+    width: 100%;
+    overflow-y: hidden;
+    overflow-x: visible;
+}
+
+.scroll-container {
+    height: 100%;
+    overflow: hidden;
+}
+tr {
+    width: 100%;
+    display: inline-table;
+    table-layout: fixed;
+}
+
+table{
+    max-height:100%;              // <-- Select the height of the table
+        table-layout:fixed;
+}
+tbody{
+    overflow-y: scroll;
+    height: 85%;            //  <-- Select the height of the body
+    width: 100%;
+    position: absolute;
+    background-color: aliceblue;
+}
+
+.annotation-table tr th:nth-child(1){
+   width: 30px;
+ }
+.annotation-table tr td:nth-child(1){
+   width: 30px;
+ }
+
+.kill-table {
+    height: 300px;
+}
+
+.pause-table {
+    display: block;
+    height: 100px;
+}
+.pause-table tbody {
+    height: 100px;
+}
+
+.kill-table tbody {
+    max-height:25%;
+ }
+
+.statuses {
+    display: table-row;
+    width: 1280px;
+}
+
+.team {
+    display: table-cell;
+}
+
+.player {
+    display: table-cell;
+    height: 80px;
+    width: 67px;
+    padding-left: 4px;
+    padding-right: 4px;
+}
+.offset {
+    width:30px;
+}
+.left{
+}
+.right {
+}
+.mid {
+    width:392px;
+}
+
+.checkmark {
+    display:inline-block;
+    width: 22px;
+    height:22px;
+    background: #FF8201;
+    border-radius:50%;
+    -ms-transform: rotate(45deg); /* IE 9 */
+    -webkit-transform: rotate(45deg); /* Chrome, Safari, Opera */
+    transform: rotate(45deg);
+}
+
+.checkmark:before{
+    content:"";
+    position: absolute;
+    width:3px;
+    height:9px;
+    background-color:#fff;
+    left:11px;
+    top:6px;
+}
+
+.checkmark:after{
+    content:"";
+    position: absolute;
+    width:3px;
+    height:3px;
+    background-color:#fff;
+    left:8px;
+    top:12px;
+}
+
+.controls {
+    font-size: 24pt;
+    padding: 10px;
+}
+.controls-container {
+    width: 1280px;
+}
+
+.team-col {
+    display: flow;
+    max-width: 50%;
+    margin: 0;
+}
+.hero-icon{
+    width: 24px;
+    height: 20px;
+    box-sizing: content-box;
+    background-size: 52px auto;
+    background-position: -12px -14px;
+    background-repeat: no-repeat;
+    border-width: 2px;
+    border-style: solid;
+    border-radius: 2px;
+    display: inline-block;
+    vertical-align: middle;
+    position: relative;
+}
+.dropdown-menu {
+    position: absolute;
+}
+

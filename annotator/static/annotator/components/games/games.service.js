@@ -1,8 +1,8 @@
 
 
 angular.module('annotator.games')
-.service('Games', function ($http, BASE_URL) {
-    var base_url = BASE_URL + 'games/';
+.service('Games', function ($http, __env) {
+    var base_url = __env.apiUrl + 'games/';
     var Games = {};
 
     Games.all = function () {
@@ -12,6 +12,8 @@ angular.module('annotator.games')
     Games.one = function (id) {
         return $http.get(base_url + id + '/');
     };
+
+    Games
 
     Games.rounds = function (id) {
         return $http.get(base_url + id + '/rounds/');
@@ -43,7 +45,7 @@ angular.module('annotator.games')
     };
 
     Games.addRound = function (newRound) {
-        return $http.post(BASE_URL + 'rounds/', newRound);
+        return $http.post(__env.apiUrl + 'rounds/', newRound);
     };
 
     return Games;

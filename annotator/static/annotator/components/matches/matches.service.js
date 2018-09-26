@@ -1,7 +1,7 @@
 
 angular.module('annotator.matches')
-.service('Matches', function ($http, BASE_URL) {
-    var base_url = BASE_URL + 'matches/';
+.service('Matches', function ($http, __env) {
+    var base_url = __env.apiUrl + 'matches/';
     var Matches = {};
 
     Matches.all = function () {
@@ -17,7 +17,7 @@ angular.module('annotator.matches')
     };
 
     Matches.update = function (updatedMatch) {
-        return $http.put(base_url + updatedMatch.id, updatedMatch);
+        return $http.put(base_url + updatedMatch.id  + '/', updatedMatch);
     };
 
     Matches.delete = function (id) {
@@ -29,6 +29,16 @@ angular.module('annotator.matches')
     };
 
     Matches.addGame = function (newGame) {
+        var data = {};
+        data.game_number = newGame.game_number;
+        data.left_team = {};
+        data.left_team.color = newGame.left_team.color;
+        data.left_team.team = newGame.left_team.team;
+        data.right_team = {};
+        data.right_team.color = newGame.right_team.color;
+        data.right_team.team = newGame.right_team.team;
+        data.map = newGame.map;
+        data.match = newGame.match;
         var left_players = [];
         var right_players = [];
         for (i = 0; i < 6; i++) {
@@ -39,17 +49,22 @@ angular.module('annotator.matches')
                 right_players.push({'player_index': i, 'player': newGame.right_team.players[i]});
             }
         }
-        newGame.left_team.players = left_players;
-        newGame.right_team.players = right_players;
-        return $http.post(BASE_URL + 'games/', newGame);
+        data.left_team.players = left_players;
+        data.right_team.players = right_players;
+        console.log(data)
+        return $http.post(__env.apiUrl + 'games/', data);
     };
 
     Matches.teams = function (id) {
         return $http.get(base_url + id + '/teams/');
     };
 
+    Matches.film_formats = function () {
+        return $http.get(__env.apiUrl + 'film_formats/')
+    };
+
     Matches.players = function (id) {
-        return $http.get(BASE_URL + 'players/');
+        return $http.get(__env.apiUrl + 'players/');
     };
 
 

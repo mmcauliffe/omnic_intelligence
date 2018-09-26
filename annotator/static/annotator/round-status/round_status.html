@@ -1,0 +1,105 @@
+<div class="row text-center">
+    <div class="col-md-12 scroll-container">
+        <input type="text" class="form-control" placeholder="Search..." ng-model="searchText"
+               dl-enter-key="refreshSearch();">
+
+        <ul ng-if="numPages" class="pagination">
+            <li ng-class="{disabled:currentPage === 1}">
+                <a ng-click="first()">First</a>
+            </li>
+            <li ng-class="{disabled:currentPage === 1}">
+                <a ng-click="previous()">Previous</a>
+            </li>
+            <li ng-repeat="page in pages  track by $index" ng-class="{active:currentPage === page, disabled:page === '...'}">
+                <a ng-click="refreshPagination(page)">{{ page }}</a>
+            </li>
+            <li ng-class="{disabled:currentPage === numPages}">
+                <a ng-click="next()">Next</a>
+            </li>
+            <li ng-class="{disabled:currentPage === numPages}">
+                <a ng-click="last()">Last</a>
+            </li>
+        </ul>
+        <table class="table table-bordered table-striped round-table">
+
+            <thead>
+            <tr>
+                <td ng-click="refreshOrdering('game__match__event__name')">
+
+                    Event
+                    <span ng-show="ordering == 'game__match__event__name'" class="fa fa-caret-down"></span>
+                    <span ng-show="ordering == '-game__match__event__name'" class="fa fa-caret-up"></span>
+                </td>
+                <td ng-click="refreshOrdering('game__match__wl_id')">
+                    Match
+                    <span ng-show="ordering == 'game__match__wl_id'" class="fa fa-caret-down"></span>
+                    <span ng-show="ordering == '-game__match__wl_id'" class="fa fa-caret-up"></span>
+                </td>
+                <td ng-click="refreshOrdering('game__game_number')">
+                    Game
+                    <span ng-show="ordering == 'game__game_number'" class="fa fa-caret-down"></span>
+                    <span ng-show="ordering == '-game__game_number'" class="fa fa-caret-up"></span>
+                </td>
+                <td>
+                    Map
+                </td>
+                <td ng-click="refreshOrdering('round_number')">
+                    Round
+                    <span ng-show="ordering == 'round_number'" class="fa fa-caret-down"></span>
+                    <span ng-show="ordering == '-round_number'" class="fa fa-caret-up"></span>
+                </td>
+                <td ng-click="refreshOrdering('attacking_side')">
+                    Attacking Side
+                    <span ng-show="ordering == 'attacking_side'" class="fa fa-caret-down"></span>
+                    <span ng-show="ordering == '-attacking_side'" class="fa fa-caret-up"></span>
+                </td>
+                <td>
+                    VOD
+                </td>
+                <td ng-click="refreshOrdering('stream_vod__broadcast_date')">
+                    Date
+                    <span ng-show="ordering == 'stream_vod__broadcast_date'" class="fa fa-caret-down"></span>
+                    <span ng-show="ordering == '-stream_vod__broadcast_date'" class="fa fa-caret-up"></span>
+                </td>
+                <td>Heroes used</td>
+                <td>
+                    Duration
+                </td>
+                <td ng-click="refreshOrdering('annotation_status')">
+                    Annotation status
+                    <span ng-show="ordering == 'annotation_status'" class="fa fa-caret-down"></span>
+                    <span ng-show="ordering == '-annotation_status'" class="fa fa-caret-up"></span>
+                </td>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="round in rounds">
+                <td>
+
+                    <a ui-sref="event-detail({event_id: round.game.match.event.id })">{{ round.game.match.event.name }}</a>
+                </td>
+                <td>
+
+                    <a ui-sref="match-detail({match_id: round.game.match.id })">{{ round.game.match.teams[0] }} vs {{ round.game.match.teams[1] }} ({{ round.game.match.wl_id }})</a>
+                </td>
+                <td>
+                    <a ui-sref="game-detail({game_id: round.game.id })">Game {{ round.game.game_number }}</a>
+
+                </td>
+                <td> {{ round.game.map.name }}</td>
+                <td>
+                    <a ui-sref="round-detail({round_id: round.id })">Round {{ round.round_number }}</a></td>
+                <td> {{ round.attacking_side }}</td>
+                <td> <a href="{{ round.stream_vod.url }}">{{ round.stream_vod.title }} ({{ round.stream_vod.id }})</a></td>
+                <td>{{ round.stream_vod.broadcast_date }}</td>
+                <td><span class="hero-icon" ng-repeat="hero in round.heroes_used" class="hero-icon" style="background-image: url(https://www.winstonslab.com/pics/heroes/{{ hero }}-icon-portrait.png)"></span></td>
+                <td>{{ round.duration }}</td>
+                <td> {{ round.annotation_status }}</td>
+            </tr>
+            </tbody>
+
+        </table>
+
+
+    </div>
+</div>

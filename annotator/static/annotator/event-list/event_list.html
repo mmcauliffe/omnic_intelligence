@@ -1,7 +1,6 @@
-<div class='row text-center'>
-    <div class='col-sm-4 col-sm-offset-4'>
+<div class='row text-center' style="max-height: 26%">
         <h1>All Events</h1>
-        <div class='row text-center'>
+        <div class='row text-center' style="max-height: 100%">
             <div class='col-sm-4 col-sm-offset-4'>
                 <h1>Add an event</h1>
                 <input type="text" ng-model="newEvent.name" placeholder="title" class='form-control'/>
@@ -9,13 +8,29 @@
                 <button class='btn btn-success btn-lg' ng-click="addEvent()">Add</button>
             </div>
         </div>
-        <ul class="list-group">
-            <li ng-repeat='event in events' class="list-group-item">
-                <a ui-sref="event-detail({event_id: event.id })">{{ event.name }}</a>
-                {{ event.wl_id }}
+</div>
+<div class='row text-center' style="max-height: 74%">
+    <div class='col-md-12 scroll_container' style="max-height: 100%">
+        <table class="table table-bordered table-striped round-table">
 
-                <span class='badge' ng-click="deleteEvent(event.id)">X</span>
-            </li>
-        </ul>
+            <thead>
+            <tr>
+            <td ng-click="refreshOrdering('event__name')">
+
+                    Event
+                    <span ng-show="ordering == 'event__name'" class="fa fa-caret-down"></span>
+                    <span ng-show="ordering == 'event__name'" class="fa fa-caret-up"></span>
+                </td>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="event in events">
+                <td>
+                    <a ui-sref="event-detail({event_id: event.id })">{{ event.name }} ({{ event.wl_id }})</a>
+                </td>
+            </tr>
+            </tbody>
+
+        </table>
     </div>
 </div>

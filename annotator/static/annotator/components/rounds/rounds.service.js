@@ -1,10 +1,14 @@
 angular.module('annotator.rounds')
-    .service('Rounds', function ($http, BASE_URL) {
-        var base_url = BASE_URL + 'rounds/';
+    .service('Rounds', function ($http, __env) {
+        var base_url = __env.apiUrl + 'rounds/';
         var Rounds = {};
 
         Rounds.all = function () {
             return $http.get(base_url);
+        };
+
+        Rounds.annotation_sources = function(){
+            return $http.get(__env.apiUrl + 'annotationsources/');
         };
 
         Rounds.one = function (id) {
@@ -15,8 +19,15 @@ angular.module('annotator.rounds')
             return $http.get(base_url + id + '/players/');
         };
 
-        Rounds.switches = function (id) {
-            return $http.get(base_url + id + '/switches/');
+        Rounds.player_states = function(id){
+            return $http.get(base_url + id + '/player_states/');
+        };
+
+        Rounds.statuses = function(id, time_point){
+            return $http.get(base_url + id + '/statuses_at_time/', {
+                params: {
+                time_point: time_point}
+            });
         };
 
         Rounds.hero_at_time = function (id, player_id, time_point) {
@@ -26,192 +37,37 @@ angular.module('annotator.rounds')
             });
         };
 
-        Rounds.ult_at_time = function (id, player_id, time_point) {
-            return $http.get(base_url + id + '/ult_at_time/', {
+        Rounds.killfeed_at_time = function (id, time_point) {
+            return $http.get(base_url + id + '/killfeed_at_time/', {
+                params: {time_point: time_point}
+            });
+        };
+
+        Rounds.alive_at_time = function (id, player_id, time_point) {
+            return $http.get(base_url + id + '/alive_at_time/', {
                 params: {player_id: player_id,
                 time_point: time_point}
             });
         };
 
-        Rounds.addSwitch = function (newSwitch) {
-            return $http.post(BASE_URL + 'switches/', newSwitch);
+        Rounds.getAllRoundEvents = function(id, type_identifier){
+            return $http.get(base_url + id + '/'+ type_identifier +'/');
         };
 
-        Rounds.deleteSwitch = function (id) {
-            return $http.delete(BASE_URL + 'switches/' + id + "/")
+        Rounds.addRoundEvent = function (newEvent, type_identifier){
+            return $http.post(__env.apiUrl + type_identifier +'/', newEvent);
         };
 
-        Rounds.deaths = function (id) {
-            return $http.get(base_url + id + '/deaths/');
+        Rounds.updateRoundEvent = function(id, updatedEvent, type_identifier){
+            return $http.put(__env.apiUrl + type_identifier +'/' + id + "/", updatedEvent);
         };
 
-        Rounds.addDeath = function (newDeath) {
-            return $http.post(BASE_URL + 'deaths/', newDeath);
+        Rounds.deleteRoundEvent = function (id, type_identifier) {
+            return $http.delete(__env.apiUrl + type_identifier +'/' + id + "/")
         };
-
-        Rounds.deleteDeath = function (id) {
-            return $http.delete(BASE_URL + 'deaths/' + id + "/")
-        };
-
-        Rounds.npcdeaths = function (id) {
-            return $http.get(base_url + id + '/npcdeaths/');
-        };
-
-        Rounds.addNPCDeath = function (newNPCDeath) {
-            return $http.post(BASE_URL + 'npcdeaths/', newNPCDeath);
-        };
-
-        Rounds.deleteNPCDeath = function (id) {
-            return $http.delete(BASE_URL + 'npcdeaths/' + id + "/")
-        };
-
-        Rounds.kills = function (id) {
-            return $http.get(base_url + id + '/kills/');
-        };
-
-        Rounds.addKill = function (newKill) {
-            return $http.post(BASE_URL + 'kills/', newKill);
-        };
-
-        Rounds.deleteKill = function (id) {
-            return $http.delete(BASE_URL + 'kills/' + id + "/")
-        };
-
-        Rounds.killnpcs = function (id) {
-            return $http.get(base_url + id + '/killnpcs/');
-        };
-
-        Rounds.addKillNPC = function (newKillNPC) {
-            return $http.post(BASE_URL + 'killnpcs/', newKillNPC);
-        };
-
-        Rounds.deleteKillNPC = function (id) {
-            return $http.delete(BASE_URL + 'killnpcs/' + id + "/")
-        };
-
-        Rounds.revives = function (id) {
-            return $http.get(base_url + id + '/revives/');
-        };
-
-        Rounds.addRevive = function (newRevive) {
-            return $http.post(BASE_URL + 'revives/', newRevive);
-        };
-
-        Rounds.deleteRevive = function (id) {
-            return $http.delete(BASE_URL + 'revives/' + id + "/")
-        };
-
-        Rounds.ultuses = function (id) {
-            return $http.get(base_url + id + '/ultuses/');
-        };
-
-        Rounds.addUltUse = function (newUltUse) {
-            return $http.post(BASE_URL + 'ultuses/', newUltUse);
-        };
-
-        Rounds.deleteUltUse = function (id) {
-            return $http.delete(BASE_URL + 'ultuses/' + id + "/")
-        };
-
-        Rounds.ultgains = function (id) {
-            return $http.get(base_url + id + '/ultgains/');
-        };
-
-        Rounds.addUltGain = function (newUltGain) {
-            return $http.post(BASE_URL + 'ultgains/', newUltGain);
-        };
-
-        Rounds.deleteUltGain = function (id) {
-            return $http.delete(BASE_URL + 'ultgains/' + id + "/")
-        };
-
-        Rounds.pauses = function (id) {
-            return $http.get(base_url + id + '/pauses/');
-        };
-
-        Rounds.addPause = function (newPause) {
-            return $http.post(BASE_URL + 'pauses/', newPause);
-        };
-
-        Rounds.deletePause = function (id) {
-            return $http.delete(BASE_URL + 'pauses/' + id + "/")
-        };
-
-        Rounds.unpauses = function (id) {
-            return $http.get(base_url + id + '/unpauses/');
-        };
-
-        Rounds.addUnpause = function (newUnpause) {
-            return $http.post(BASE_URL + 'unpauses/', newUnpause);
-        };
-
-        Rounds.deleteUnpause = function (id) {
-            return $http.delete(BASE_URL + 'unpauses/' + id + "/")
-        };
-
-        Rounds.replaystarts = function (id) {
-            return $http.get(base_url + id + '/replaystarts/');
-        };
-
-        Rounds.addReplayStart = function (newReplayStart) {
-            return $http.post(BASE_URL + 'replaystarts/', newReplayStart);
-        };
-
-        Rounds.deleteReplayStart = function (id) {
-            return $http.delete(BASE_URL + 'replaystarts/' + id + "/")
-        };
-
-        Rounds.replayends = function (id) {
-            return $http.get(base_url + id + '/replayends/');
-        };
-
-        Rounds.addReplayEnd = function (newReplayEnd) {
-            return $http.post(BASE_URL + 'replayends/', newReplayEnd);
-        };
-
-        Rounds.deleteReplayEnd = function (id) {
-            return $http.delete(BASE_URL + 'replayends/' + id + "/")
-        };
-
-        Rounds.pointgains = function (id) {
-            return $http.get(base_url + id + '/pointgains/');
-        };
-
-        Rounds.addPointGain = function (newPointGain) {
-            return $http.post(BASE_URL + 'pointgains/', newPointGain);
-        };
-
-        Rounds.deletePointGain = function (id) {
-            return $http.delete(BASE_URL + 'pointgains/' + id + "/")
-        };
-
-        Rounds.pointflips = function (id) {
-            return $http.get(base_url + id + '/pointflips/');
-        };
-
-        Rounds.addPointFlip = function (newPointFlip) {
-            return $http.post(BASE_URL + 'pointflips/', newPointFlip);
-        };
-
-        Rounds.deletePointFlip = function (id) {
-            return $http.delete(BASE_URL + 'pointflips/' + id + "/")
-        };
-
-        Rounds.overtimestarts = function (id) {
-            return $http.get(base_url + id + '/overtimestarts/');
-        };
-
-        Rounds.addOvertimeStart = function (newOvertimeStart) {
-            return $http.post(BASE_URL + 'overtimestarts/', newOvertimeStart);
-        };
-
-        Rounds.deleteOvertimeStart = function (id) {
-            return $http.delete(BASE_URL + 'overtimestarts/' + id + "/")
-        };
-
 
         Rounds.update = function (updatedRound) {
-            return $http.put(base_url + updatedRound.id, updatedRound);
+            return $http.put(base_url + updatedRound.id  + '/', updatedRound);
         };
 
         Rounds.delete = function (id) {
@@ -220,6 +76,14 @@ angular.module('annotator.rounds')
 
         Rounds.addOne = function (newRound) {
             return $http.post(base_url, newRound)
+        };
+
+        Rounds.downloadOne = function(id){
+            return $http.post(base_url + id + '/download/', {})
+        };
+
+        Rounds.exportOne = function(id){
+            return $http.post(base_url + id + '/export/', {})
         };
 
         return Rounds;

@@ -1,53 +1,88 @@
+var env = {};
+
+// Import variables if present (from env.js)
+if (window) {
+    Object.assign(env, window.__env);
+}
+
 var app = angular.module('annotator', [
+    'long2know',
+    'ngResource',
     'ui.router',
+    'ui.bootstrap',
     'ngCookies',
     'ngMaterial',
     'eventList',
     'eventDetail',
     'matchDetail',
     'gameDetail',
-    'roundDetail'
+    'roundDetail',
+    'roundStatus',
+    'navbar',
+    'login',
+    'logout'
 ]).run(
     function ($http, $cookies) {
-        $http.defaults.headers.post['X-CSRFToken'] = $cookies.csrftoken;
+        $http.defaults.headers.post['X-CSRFToken'] = $cookies.get('csrftoken');
         // Add the following two lines
         $http.defaults.xsrfCookieName = 'csrftoken';
         $http.defaults.xsrfHeaderName = 'X-CSRFToken';
     });
 
 
-app.constant('BASE_URL', 'http://127.0.0.1:8000/annotator/api/');
+app.constant('__env', env);
 
 app.config(function ($stateProvider, $urlRouterProvider) {
     $stateProvider
-        .state('event-list', {
+        .state('home', {
             url: '/',
-            templateUrl: '/static/annotator/event-list/event_list.html',
+            template: '<div></div>'
+        })
+        .state('event-list', {
+            url: '/events',
+            templateUrl: static('annotator/event-list/event_list.html'),
             controller: 'EventListCtrl'
         }).state('event-detail', {
-        url: '/:event_id',
-        templateUrl: '/static/annotator/event-detail/event_detail.html',
+        url: '/events/{event_id:int}',
+        templateUrl: static('annotator/event-detail/event_detail.html'),
         controller: 'EventDetailCtrl'
     }).state('match-detail', {
         url: '/matches/:match_id',
-        templateUrl: '/static/annotator/match-detail/match_detail.html',
+        templateUrl: static('annotator/match-detail/match_detail.html'),
         controller: 'MatchDetailCtrl'
     }).state('game-detail', {
         url: '/games/:game_id',
-        templateUrl: '/static/annotator/game-detail/game_detail.html',
+        templateUrl: static('annotator/game-detail/game_detail.html'),
         controller: 'GameDetailCtrl'
     }).state('round-detail', {
         url: '/round/:round_id',
-        templateUrl: '/static/annotator/round-detail/round_detail.html',
+        templateUrl: static('annotator/round-detail/round_detail.html'),
         controller: 'RoundDetailCtrl'
     }).state('add-match', {
         url: '/:event_id/add_match',
-        templateUrl: '/static/annotator/event-detail/add_match.html',
+        templateUrl: static('annotator/event-detail/add_match.html'),
         controller: 'EventDetailCtrl'
-    }).state('add-game', {
-        url: '/matchs/:match_id/add_game',
-        templateUrl: '/static/annotator/match-detail/add_game.html',
-        controller: 'MatchDetailCtrl'
+    }).state('round-status', {
+        url: '/rounds',
+        templateUrl: static('annotator/round-status/round_status.html'),
+        controller: 'RoundStatusCtrl'
+    }).state('heroes', {
+        url: '/heroes',
+        templateUrl: static('annotator/heroes/heroes.html'),
+        controller: 'HeroesCtrl'
+    }).state('check', {
+        url: '/check'
+    })
+        .state('login', {
+            url: '/login',
+            templateUrl: static('annotator/login/login.html'),
+            controller: 'LoginCtrl',
+            resolve: {}
+        }).state('logout', {
+        url: '/logout',
+        templateUrl: static('annotator/logout/logout.html'),
+        controller: 'LogoutCtrl',
+        resolve: {}
     });
 
     $urlRouterProvider.otherwise('/');

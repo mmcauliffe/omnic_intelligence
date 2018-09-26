@@ -1,7 +1,7 @@
 
 angular.module('annotator.events')
-    .service('Events', function ($http, BASE_URL) {
-    var base_url = BASE_URL + 'events/';
+    .service('Events', function ($http, __env) {
+    var base_url = __env.apiUrl + 'events/';
     var Events = {};
 
     Events.all = function () {
@@ -17,7 +17,7 @@ angular.module('annotator.events')
     };
 
     Events.update = function (updatedEvent) {
-        return $http.put(base_url + updatedEvent.id, updatedEvent);
+        return $http.put(base_url + updatedEvent.id + '/', updatedEvent);
     };
 
     Events.delete = function (id) {
@@ -29,7 +29,11 @@ angular.module('annotator.events')
     };
 
     Events.addMatch = function (newMatch) {
-        return $http.post(BASE_URL + 'matches/', newMatch)
+        return $http.post(__env.apiUrl + 'matches/', newMatch)
+    };
+
+    Events.spectatorModes = function(){
+        return $http.get(__env.apiUrl + 'spectator_modes/')
     };
 
     return Events;

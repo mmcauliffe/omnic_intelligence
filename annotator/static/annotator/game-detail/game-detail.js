@@ -3,7 +3,12 @@ angular.module('gameDetail', ['annotator.games',
     'annotator.matches',
     'annotator.teams',
     'annotator.maps'])
-.controller('GameDetailCtrl', function ($scope, Games, Matches, Teams, Maps, $state, $stateParams) {
+    .filter('secondsToDateTime', [function () {
+        return function (seconds) {
+            return new Date(1970, 0, 1).setSeconds(seconds);
+        };
+    }])
+.controller('GameDetailCtrl', function ($scope, Games, Matches, Teams, Maps, Rounds, $state, $stateParams) {
     console.log($stateParams);
     $scope.player_count = 6;
     $scope.range = function (num) {
@@ -12,16 +17,24 @@ angular.module('gameDetail', ['annotator.games',
     $scope.newRound = {};
     $scope.addRound = function () {
         $scope.newRound.game = $scope.game.id;
-        Games.addRound($scope.newRound);
-        $scope.newRound = {};
-        Games.rounds($stateParams.game_id).then(function (res) {
-            $scope.rounds = res.data;
+        Games.addRound($scope.newRound).then(function(res){
+            $scope.newRound = {};
+            Games.rounds($stateParams.game_id).then(function (res) {
+                $scope.rounds = res.data;
+            });
+            $scope.next_round_number = $scope.next_round_number + 1;
+            $scope.newRound.round_number = $scope.next_round_number;
         });
-        $scope.next_round_number = $scope.next_round_number + 1;
-        $scope.newRound.round_number = $scope.next_round_number;
     };
 
-    $scope.initPlayer = function () {
+    $scope.deleteRound = function (id){
+        Rounds.delete(id);
+        $scope.rounds = $scope.rounds.filter(function (r) {
+            return r.id !== id;
+        })
+    };
+
+    $scope.initTwitchPlayer = function () {
         $scope.twitch_player = new Twitch.Player("twitch-embed", {
             width: 1280,
             height: 760,
@@ -31,19 +44,66 @@ angular.module('gameDetail', ['annotator.games',
         });
     };
 
-    $scope.seekForward = function () {
-        $scope.twitch_player.seek($scope.twitch_player.getCurrentTime() + 1);
+    $scope.initYoutubePlayer = function (){
+        $scope.youtube_player = new YT.Player('youtube-embed', {
+          height: '760',
+          width: '1280',
+          videoId: $scope.vod_link
+        });
     };
-    $scope.seekBackward = function () {
-        $scope.twitch_player.seek($scope.twitch_player.getCurrentTime() - 1);
+
+
+    $scope.seekTo = function(time){
+        if ($scope.vod_type === 'twitch'){
+            $scope.twitch_player.seek(time);
+        }
+        else if ($scope.vod_type === 'youtube'){
+            $scope.youtube_player.seekTo(time);
+        }
+    };
+
+    $scope.seekForward = function (amount) {
+        var time = 0;
+        if ($scope.vod_type === 'twitch'){
+            time = $scope.twitch_player.getCurrentTime();
+        }
+        else if ($scope.vod_type === 'youtube'){
+            time = $scope.youtube_player.getCurrentTime();
+        }
+        $scope.seekTo(time + amount);
+    };
+    $scope.seekBackward = function (amount) {
+        var time = 0;
+        if ($scope.vod_type === 'twitch'){
+            time = $scope.twitch_player.getCurrentTime();
+        }
+        else if ($scope.vod_type === 'youtube'){
+            time = $scope.youtube_player.getCurrentTime();
+        }
+        $scope.seekTo(time - amount);
     };
 
     $scope.updateBegin = function () {
-        $scope.newRound.begin = Math.round($scope.twitch_player.getCurrentTime());
+        var time;
+        if ($scope.vod_type === 'twitch'){
+            time = $scope.twitch_player.getCurrentTime();
+        }
+        else if ($scope.vod_type === 'youtube'){
+            time = $scope.youtube_player.getCurrentTime();
+        }
+
+        $scope.newRound.begin = Math.round(time);
     };
 
     $scope.updateEnd = function () {
-        $scope.newRound.end = Math.round($scope.twitch_player.getCurrentTime());
+        var time;
+        if ($scope.vod_type === 'twitch'){
+            time = $scope.twitch_player.getCurrentTime();
+        }
+        else if ($scope.vod_type === 'youtube'){
+            time = $scope.youtube_player.getCurrentTime();
+        }
+        $scope.newRound.end = Math.round(time);
     };
 
     $scope.updateAvailablePlayers = function () {
@@ -83,8 +143,7 @@ angular.module('gameDetail', ['annotator.games',
 
     Games.one($stateParams.game_id).then(function (res) {
         $scope.game = res.data;
-        $scope.vod_type = $scope.game.vod_link[0];
-        $scope.vod_link = $scope.game.vod_link[1];
+        console.log($scope.game );
 
         Matches.players($scope.game.match).then(function (res) {
             $scope.players = res.data;
@@ -111,6 +170,7 @@ angular.module('gameDetail', ['annotator.games',
     });
     Teams.colors().then(function (res) {
         $scope.colors = res.data;
+        console.log($scope.colors)
     });
     Games.rounds($stateParams.game_id).then(function (res) {
         $scope.rounds = res.data;

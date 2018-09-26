@@ -1,7 +1,7 @@
 
 angular.module('annotator.heroes')
-.service('Heroes', function ($http, BASE_URL) {
-    var base_url = BASE_URL + 'heroes/';
+.service('Heroes', function ($http, __env) {
+    var base_url = __env.apiUrl + 'heroes/';
     var Heroes = {};
     Heroes.all = function () {
         return $http.get(base_url);

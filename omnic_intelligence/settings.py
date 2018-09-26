@@ -25,11 +25,11 @@ SECRET_KEY = 'q6#*lq-b4rjb7(2j&#hz!ao-%_9=2xm)q*ralk#6)ioys*^)j4'
 DEBUG = True
 
 ALLOWED_HOSTS = []
-#PWD = os.path.dirname(os.path.realpath(__file__))  # project root path
+# PWD = os.path.dirname(os.path.realpath(__file__))  # project root path
 
-#STATICFILES_DIRS = (
+# STATICFILES_DIRS = (
 #    os.path.join(PWD, '../oi/static'),  # or project_static, whatever
-#)
+# )
 
 # Application definition
 
@@ -42,10 +42,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'oi',
     'annotator',
-    'djng',
     'sekizai',
     'rest_framework',
-    'crispy_forms',
+    'rest_framework.authtoken',
     'corsheaders',
 ]
 
@@ -133,13 +132,93 @@ STATIC_URL = '/static/'
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-#ANGULAR_APP_DIR = os.path.join(BASE_DIR, 'ng-annotator/dist')
+# ANGULAR_APP_DIR = os.path.join(BASE_DIR, 'ng-annotator/dist')
 
 STATICFILES_DIRS = [
-    #os.path.join(ANGULAR_APP_DIR),
+    # os.path.join(ANGULAR_APP_DIR),
     ('node_modules', os.path.join(BASE_DIR, 'node_modules')),
 ]
+REST_FRAMEWORK = {
+    'COERCE_DECIMAL_TO_STRING': False,
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    )
+}
 
 SCRAPE_CACHE_DIRECTORY = r'E:\Data\Overwatch\raw_data\annotations'
-FORM_RENDERER = 'djng.forms.renderers.DjangoAngularBootstrap3Templates'
+TRAINING_DIRECTORY = r'E:\Data\Overwatch\training_data'
 CORS_ORIGIN_ALLOW_ALL = True
+
+# Video settings
+
+VIDEO_HEIGHT = 780
+
+VIDEO_WIDTH = 1280
+
+BOX_PARAMETERS = {
+    'REGULAR': {
+        'MID': {
+            'HEIGHT': 140,
+            'WIDTH': 300,
+            'X': 490,
+            'Y': 45},
+
+        'KILL_FEED': {
+            'Y': 115,
+            'X': 1020,
+            'WIDTH': 210,
+            'HEIGHT': 205
+        },
+        'KILL_FEED_SLOT': {
+            'Y': 115,
+            'X': 1020,
+            'WIDTH': 210,
+            'HEIGHT': 32,
+            'MARGIN': 2
+        },
+        'LEFT': {
+            'Y': 40,
+            'X': 30,
+            'WIDTH': 67,
+            'HEIGHT': 67,
+            'MARGIN': 4,
+        },
+        'RIGHT': {
+            'Y': 40,
+            'X': 830,
+            'WIDTH': 67,
+            'HEIGHT': 67,
+            'MARGIN': 4,
+        }
+    },
+    'APEX': { # Black borders around video feed
+        'MID': {
+            'HEIGHT': 140,
+            'WIDTH': 300,
+            'X': 490,
+            'Y': 45},
+
+        'KILL_FEED': {
+            'Y': 115,
+            'X': 950,
+            'WIDTH': 270,
+            'HEIGHT': 205
+        },
+        'LEFT': {
+            'Y': 45,
+            'X': 51,
+            'WIDTH': 67,
+            'HEIGHT': 55,
+            'MARGIN': 1,
+        },
+        'RIGHT': {
+            'Y': 45,
+            'X': 825,
+            'WIDTH': 67,
+            'HEIGHT': 55,
+            'MARGIN': 1,
+        }
+    }
+}

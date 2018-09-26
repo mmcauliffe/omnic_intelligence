@@ -1,27 +1,129 @@
+tr {
+    width: 100%;
+    display: inline-table;
+    table-layout: fixed;
+}
 
-div#annotations {
+main {
+    height:85%;
     background-color: aliceblue;
-    width: 75%;
-    height: 100%;
-    float: left;
-    min-width: 1280px;
 }
 
-div#sidebar {
-    background-color: aliceblue;
-    width: 25%;
-    height: 100%;
-    float: right;
-    overflow: auto;
+
+header.navbar {
+    background-color: #1b2b3a;
 }
 
-form {
-    display: block;
+
+.table-fixed thead {
+  width: 97.7%;
+}
+.table-fixed tbody {
+  height: 230px;
+  overflow-y: auto;
+  width: 100%;
+}
+.table-fixed thead, .table-fixed tbody, .table-fixed tr, .table-fixed td, .table-fixed th {
+  display: block;
+}
+.table-fixed tbody td, .table-fixed thead > tr> th {
+  float: left;
+  border-bottom-width: 0;
+    height: 35px;
 }
 
-.player-form {
-    float: left;
+.table-striped>tbody>tr:nth-child(odd),
+.table-striped>tbody>tr:nth-child(odd) {
+   background-color: #88a9c7;
+ }
+
+.table-fixed thead > tr> th {
+    background-color: #FF8201;
+
 }
+
+.annotation-table tr th:nth-child(1){
+   width: 30px;
+ }
+.annotation-table tr td:nth-child(1){
+   width: 30px;
+ }
+
+.annotation-listing{
+    height: 70%;
+}
+
+.kill-listing{
+    height: 29%;
+}
+
+
+.statuses {
+    display: table-row;
+    width: 1280px;
+}
+
+.team {
+    display: table-cell;
+}
+
+.player {
+    display: table-cell;
+    height: 80px;
+    width: 67px;
+    padding-left: 4px;
+    padding-right: 4px;
+}
+.offset {
+    width:30px;
+}
+.left{
+}
+.right {
+}
+.mid {
+    width:392px;
+}
+
+.checkmark {
+    display:inline-block;
+    width: 22px;
+    height:22px;
+    background: #FF8201;
+    border-radius:50%;
+    -ms-transform: rotate(45deg); /* IE 9 */
+    -webkit-transform: rotate(45deg); /* Chrome, Safari, Opera */
+    transform: rotate(45deg);
+}
+
+.checkmark:before{
+    content:"";
+    position: absolute;
+    width:3px;
+    height:9px;
+    background-color:#fff;
+    left:11px;
+    top:6px;
+}
+
+.checkmark:after{
+    content:"";
+    position: absolute;
+    width:3px;
+    height:3px;
+    background-color:#fff;
+    left:8px;
+    top:12px;
+}
+
+.controls {
+    font-size: 24pt;
+    padding: 10px;
+}
+.controls-container {
+    width: 1280px;
+}
+
 
 #right-team {
     position: relative;
@@ -35,10 +137,121 @@ form {
     float: left;
 }
 
+.container-fluid{
+    height:100%;
+}
+
+.col-md-4, .col-md-8, .col-md-12{
+    height: 100%;
+    overflow-y: hidden;
+    overflow-x: visible;
+}
+.sidebar-nav {
+    background-color: aliceblue;
+    height:100%;
+    width: 99%;
+    overflow-y: hidden;
+    overflow-x: visible;
+}
+.sidebar-nav .tabs {
+    height:76%;
+    width: 100%;
+    overflow-y: hidden;
+    overflow-x: visible;
+}
+
+md-tabs {
+    height: 100%;
+    overflow-y: hidden;
+    overflow-x: visible;
+}
+md-content{
+    height:90%;
+    overflow-y: hidden;
+    overflow-x: visible;
+}
+md-tab-content div{
+    height:100%;
+}
+
+.annotation-table tr {
+    width: 100%;
+    display: inline-table;
+    table-layout: fixed;
+}
+
+.annotation-table{
+    max-height:100%;              // <-- Select the height of the table
+        table-layout:fixed;
+}
+.annotation-table tbody{
+    overflow-y: scroll;
+    height: 85%;            //  <-- Select the height of the body
+    width: 100%;
+    position: absolute;
+    background-color: aliceblue;
+}
+.switch-table tbody{
+    height: 83%;            //  <-- Select the height of the body
+}
+
+.round-table tr {
+    width: 100%;
+    display: inline-table;
+    table-layout: fixed;
+}
+
+.round-table{
+    height:85%;              // <-- Select the height of the table
+        table-layout:fixed;
+}
+.round-table tbody{
+    overflow-y: scroll;
+    height: 80%;            //  <-- Select the height of the body
+    width: 100%;
+    position: absolute;
+    background-color: aliceblue;
+}
+
+.annotation-table tr th:nth-child(1){
+   width: 30px;
+ }
+.annotation-table tr td:nth-child(1){
+   width: 30px;
+ }
+
+.kill-table {
+    height: 250px;
+}
+
+.pause-table {
+    display: block;
+    height: 100px;
+}
+.pause-table tbody {
+    height: 100px;
+}
+
+.kill-table tbody {
+    max-height:25%;
+ }
 main .row{
+    height: 100%;
+    padding: 10px;
     background-color: aliceblue;
     overflow: hidden;
 }
-.main {
-    overflow: hidden;
+.hero-icon{
+    width: 24px;
+    height: 20px;
+    box-sizing: content-box;
+    background-size: 52px auto;
+    background-position: -12px -14px;
+    background-repeat: no-repeat;
+    border-width: 2px;
+    border-style: solid;
+    border-radius: 2px;
+    display: inline-block;
+    vertical-align: middle;
+    position: relative;
 }

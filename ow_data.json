@@ -1258,5 +1258,17 @@
         "headshot_capable": false,
         "ultimate_ability": false
     }
+},
+{
+    "model": "annotator.ability",
+    "pk": 75,
+    "fields": {
+        "hero": 11,
+        "name": "Total Mayhem",
+        "revive_ability": false,
+        "damaging_ability": true,
+        "headshot_capable": false,
+        "ultimate_ability": false
+    }
 }
 ]

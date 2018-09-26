@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from . import models
+from django.contrib.auth.models import User, Group
+from django.db.models import Sum, F
 
 
 class HeroSerializer(serializers.ModelSerializer):
@@ -8,16 +10,35 @@ class HeroSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class MapSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Map
-        fields = '__all__'
-
-
 class AbilitySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Ability
         fields = '__all__'
+
+
+class HeroSummarySerializer(serializers.ModelSerializer):
+    abilities = serializers.SerializerMethodField()
+    play_time = serializers.SerializerMethodField()
+    class Meta:
+        model = models.Hero
+        fields = ('id', 'name', 'abilities', 'play_time')
+
+    def get_abilities(self, obj):
+        return AbilitySerializer(obj.ability_set.all(), many=True).data
+
+    def get_play_time(self, obj):
+        return obj.switch_set.aggregate(total=Sum(F('end_time_point') - F('time_point')))['total']
+
+
+class MapSerializer(serializers.ModelSerializer):
+    mode = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.Map
+        fields = '__all__'
+
+    def get_mode(self, obj):
+        return obj.get_mode_display()
 
 
 class NPCSerializer(serializers.ModelSerializer):
@@ -46,10 +67,14 @@ class PlayerParticipationSerializer(serializers.ModelSerializer):
 
 class TeamParticipationSerializer(serializers.ModelSerializer):
     players = PlayerParticipationSerializer(source='playerparticipation_set', many=True)
+    color = serializers.SerializerMethodField()
 
     class Meta:
         model = models.TeamParticipation
         fields = '__all__'
+
+    def get_color(self, obj):
+        return obj.get_color_display()
 
 
 class EventSerializer(serializers.ModelSerializer):
@@ -58,14 +83,36 @@ class EventSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class GameSerializer(serializers.ModelSerializer):
+class MatchSerializer(serializers.ModelSerializer):
+    event = EventSerializer()
+    teams = serializers.StringRelatedField(many=True)
+
+    start_time = serializers.DecimalField(10, 1)
+
+    class Meta:
+        model = models.Match
+        fields = ('id', 'event', 'teams',  'wl_id', 'start_time')
+
+
+class GameDisplaySerializer(serializers.ModelSerializer):
+    match = MatchSerializer()
+    map = MapSerializer()
     left_team = TeamParticipationSerializer()
     right_team = TeamParticipationSerializer()
-    vod_link = serializers.ReadOnlyField()
 
     class Meta:
         model = models.Game
-        fields = ('id', 'game_number', 'match', 'left_team', 'right_team', 'map', 'vod', 'vod_link')
+        fields = ('id', 'game_number', 'match', 'left_team', 'right_team', 'map')
+
+
+
+class GameSerializer(serializers.ModelSerializer):
+    left_team = TeamParticipationSerializer()
+    right_team = TeamParticipationSerializer()
+
+    class Meta:
+        model = models.Game
+        fields = ('id', 'game_number', 'match', 'left_team', 'right_team', 'map')
 
     def create(self, validated_data):
         left_team_data = validated_data.pop('left_team')
@@ -124,18 +171,84 @@ class GameSerializer(serializers.ModelSerializer):
         return instance
 
 
-class MatchSerializer(serializers.ModelSerializer):
-    # teams = serializers.StringRelatedField(many=True)
-
+class StreamChannelSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.Match
+        model = models.StreamChannel
         fields = '__all__'
 
 
-class RoundSerializer(serializers.ModelSerializer):
+class StreamVodSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.StreamVod
+        fields = ('id', 'title', 'url', 'broadcast_date', 'vod_link', 'film_format')
+
+
+class VodDisplaySerializer(serializers.ModelSerializer):
+    channel = StreamChannelSerializer()
+    class Meta:
+        model = models.StreamVod
+        fields = ('id', 'title', 'url', 'broadcast_date', 'vod_link', 'film_format', 'sequences', 'channel')
+
+
+class RoundDisplaySerializer(serializers.ModelSerializer):
+    game = GameDisplaySerializer()
+    spectator_mode = serializers.SerializerMethodField()
+    stream_vod = VodDisplaySerializer()
+
     class Meta:
         model = models.Round
-        fields = ('id', 'round_number', 'game', 'attacking_side', 'begin', 'end', 'vod', 'vod_link')
+        fields = (
+            'id', 'round_number', 'game', 'attacking_side', 'attacking_color', 'begin', 'end', 'annotation_status', 'spectator_mode',
+            'sequences', 'stream_vod')
+
+    def get_spectator_mode(self, obj):
+        return obj.game.match.event.get_spectator_mode_display()
+
+
+class RoundEditSerializer(serializers.ModelSerializer):
+    game = GameDisplaySerializer()
+    stream_vod = StreamVodSerializer()
+    class Meta:
+        model = models.Round
+        fields = (
+            'id', 'round_number', 'game', 'attacking_side', 'begin', 'end', 'stream_vod',  'annotation_status',
+            'sequences')
+
+
+class RoundSerializer(serializers.ModelSerializer):
+    # game = GameSerializer()
+    class Meta:
+        model = models.Round
+        fields = (
+            'id', 'round_number', 'game', 'attacking_side', 'begin', 'end', 'stream_vod', 'annotation_status',
+            'sequences')
+
+
+class RoundStatusSerializer(serializers.ModelSerializer):
+    game = GameDisplaySerializer()
+    stream_vod = StreamVodSerializer()
+    annotation_status = serializers.SerializerMethodField()
+    attacking_side = serializers.SerializerMethodField()
+    heroes_used = serializers.SerializerMethodField()
+    duration = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.Round
+        fields = ('id',
+                  'round_number', 'game', 'attacking_side', 'begin', 'end', 'stream_vod', 'heroes_used',
+                  'annotation_status', 'duration')
+
+    def get_heroes_used(self, obj):
+        return obj.get_heroes_used()
+
+    def get_annotation_status(self, obj):
+        return obj.get_annotation_status_display()
+
+    def get_attacking_side(self, obj):
+        return obj.get_attacking_side_display()
+
+    def get_duration(self, obj):
+        return obj.end - obj.begin
 
 
 class SwitchSerializer(serializers.ModelSerializer):
@@ -165,6 +278,46 @@ class DeathDisplaySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Death
         fields = '__all__'
+
+
+class DeathKillFeedSerializer(serializers.ModelSerializer):
+    dying_entity = serializers.SerializerMethodField()
+    killing_hero = serializers.SerializerMethodField()
+    killing_color = serializers.SerializerMethodField()
+    assists = serializers.SerializerMethodField()
+    ability = serializers.SerializerMethodField()
+    headshot = serializers.SerializerMethodField()
+    dying_color = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.Death
+        fields = (
+            'time_point', 'killing_hero', 'killing_color', 'assists', 'ability', 'headshot', 'dying_entity',
+            'dying_color')
+
+    def get_dying_entity(self, obj):
+        return obj.player.get_hero_at_timepoint(obj.round, obj.time_point).name
+
+    def get_dying_color(self, obj):
+        if obj.round.game.left_team.players.filter(pk=obj.player.pk).count():
+            return obj.round.game.left_team.get_color_display()
+        else:
+            return obj.round.game.right_team.get_color_display()
+
+    def get_killing_hero(self, obj):
+        return 'N/A'
+
+    def get_killing_color(self, obj):
+        return 'N/A'
+
+    def get_assists(self, obj):
+        return 'N/A'
+
+    def get_ability(self, obj):
+        return 'N/A'
+
+    def get_headshot(self, obj):
+        return 'N/A'
 
 
 class PauseSerializer(serializers.ModelSerializer):
@@ -197,10 +350,64 @@ class OvertimeStartSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class OvertimeEndSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.OvertimeEnd
+        fields = '__all__'
+
+
+class SmallerWindowStartSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.SmallerWindowStart
+        fields = '__all__'
+
+
+class SmallerWindowEndSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.SmallerWindowEnd
+        fields = '__all__'
+
+
 class KillSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Kill
-        fields = '__all__'
+        fields = ('id', 'time_point', 'killing_player', 'killed_player', 'ability',)
+
+
+class KillKillFeedSerializer(serializers.ModelSerializer):
+    dying_entity = serializers.SerializerMethodField()
+    dying_color = serializers.SerializerMethodField()
+    killing_color = serializers.SerializerMethodField()
+    killing_hero = serializers.SerializerMethodField()
+    ability = serializers.StringRelatedField()
+    assists = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.Kill
+        fields = (
+            'time_point', 'killing_hero', 'killing_color', 'assists', 'ability', 'headshot', 'dying_entity',
+            'dying_color')
+
+    def get_dying_entity(self, obj):
+        return obj.killed_player.get_hero_at_timepoint(obj.round, obj.time_point).name
+
+    def get_dying_color(self, obj):
+        if obj.killed_player in obj.round.game.left_team.players.all():
+            return obj.round.game.left_team.get_color_display()
+        else:
+            return obj.round.game.right_team.get_color_display()
+
+    def get_killing_hero(self, obj):
+        return obj.killing_player.get_hero_at_timepoint(obj.round, obj.time_point).name
+
+    def get_killing_color(self, obj):
+        if obj.killing_player in obj.round.game.left_team.players.all():
+            return obj.round.game.left_team.get_color_display()
+        else:
+            return obj.round.game.right_team.get_color_display()
+
+    def get_assists(self, obj):
+        return [x.get_hero_at_timepoint(obj.round, obj.time_point).name for x in obj.assisting_players.all()]
 
 
 class KillDisplaySerializer(serializers.ModelSerializer):
@@ -211,6 +418,21 @@ class KillDisplaySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Kill
         fields = '__all__'
+
+
+class KillEditSerializer(serializers.ModelSerializer):
+    killing_player = serializers.StringRelatedField()
+    killed_player = serializers.StringRelatedField()
+    ability = AbilitySerializer()
+    possible_abilities = AbilitySerializer(many=True)
+    possible_assists = PlayerSerializer(many=True)
+
+    # assisting_players = PlayerSerializer(many=True)
+
+    class Meta:
+        model = models.Kill
+        fields = ('id', 'time_point', 'killing_player', 'killed_player', 'ability', 'headshot', 'possible_abilities',
+                  'possible_assists', 'assisting_players')
 
 
 class ReviveSerializer(serializers.ModelSerializer):
@@ -227,6 +449,46 @@ class ReviveDisplaySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Revive
         fields = '__all__'
+
+
+class ReviveKillFeedSerializer(serializers.ModelSerializer):
+    dying_entity = serializers.SerializerMethodField()
+    dying_color = serializers.SerializerMethodField()
+    killing_color = serializers.SerializerMethodField()
+    killing_hero = serializers.SerializerMethodField()
+    ability = serializers.StringRelatedField()
+    headshot = serializers.SerializerMethodField()
+    assists = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.Revive
+        fields = (
+            'time_point', 'killing_hero', 'killing_color', 'assists', 'ability', 'headshot', 'dying_entity',
+            'dying_color')
+
+    def get_dying_entity(self, obj):
+        return obj.revived_player.get_hero_at_timepoint(obj.round, obj.time_point).name
+
+    def get_dying_color(self, obj):
+        if obj.round.game.left_team.players.filter(pk=obj.revived_player.pk).count():
+            return obj.round.game.left_team.get_color_display()
+        else:
+            return obj.round.game.right_team.get_color_display()
+
+    def get_killing_hero(self, obj):
+        return obj.reviving_player.get_hero_at_timepoint(obj.round, obj.time_point).name
+
+    def get_killing_color(self, obj):
+        if obj.round.game.left_team.players.filter(pk=obj.reviving_player.pk).count():
+            return obj.round.game.left_team.get_color_display()
+        else:
+            return obj.round.game.right_team.get_color_display()
+
+    def get_assists(self, obj):
+        return 'N/A'
+
+    def get_headshot(self, obj):
+        return 'N/A'
 
 
 class UltGainSerializer(serializers.ModelSerializer):
@@ -272,7 +534,21 @@ class PointFlipSerializer(serializers.ModelSerializer):
 class KillNPCSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.KillNPC
-        fields = '__all__'
+        fields = ('id', 'time_point', 'killing_player', 'killed_npc', 'ability',)
+
+
+class KillNPCEditSerializer(serializers.ModelSerializer):
+    killing_player = serializers.StringRelatedField()
+    killed_npc = serializers.StringRelatedField()
+    ability = AbilitySerializer()
+    possible_abilities = AbilitySerializer(many=True)
+    possible_assists = PlayerSerializer(many=True)
+
+    class Meta:
+        model = models.Kill
+        fields = (
+            'id', 'time_point', 'killing_player', 'killed_npc', 'ability', 'possible_abilities', 'possible_assists',
+            'assisting_players')
 
 
 class KillNPCDisplaySerializer(serializers.ModelSerializer):
@@ -283,6 +559,46 @@ class KillNPCDisplaySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.KillNPC
         fields = '__all__'
+
+
+class KillNPCKillFeedSerializer(serializers.ModelSerializer):
+    dying_entity = serializers.SerializerMethodField()
+    dying_color = serializers.SerializerMethodField()
+    killing_color = serializers.SerializerMethodField()
+    killing_hero = serializers.SerializerMethodField()
+    ability = serializers.StringRelatedField()
+    assists = serializers.SerializerMethodField()
+    headshot = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.Kill
+        fields = (
+            'time_point', 'killing_hero', 'killing_color', 'assists', 'ability', 'headshot', 'dying_entity',
+            'dying_color')
+
+    def get_dying_entity(self, obj):
+        return obj.killed_npc.name
+
+    def get_dying_color(self, obj):
+        if obj.round.game.left_team.players.filter(pk=obj.killing_player.pk).count():
+            return obj.round.game.right_team.get_color_display()
+        else:
+            return obj.round.game.left_team.get_color_display()
+
+    def get_killing_hero(self, obj):
+        return obj.killing_player.get_hero_at_timepoint(obj.round, obj.time_point).name
+
+    def get_killing_color(self, obj):
+        if obj.round.game.left_team.players.filter(pk=obj.killing_player.pk).count():
+            return obj.round.game.left_team.get_color_display()
+        else:
+            return obj.round.game.right_team.get_color_display()
+
+    def get_assists(self, obj):
+        return [x.get_hero_at_timepoint(obj.round, obj.time_point).name for x in obj.assisting_players.all()]
+
+    def get_headshot(self, obj):
+        return 'N/A'
 
 
 class NPCDeathSerializer(serializers.ModelSerializer):
@@ -297,3 +613,67 @@ class NPCDeathDisplaySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.NPCDeath
         fields = '__all__'
+
+
+class NPCDeathKillFeedSerializer(serializers.ModelSerializer):
+    dying_entity = serializers.SerializerMethodField()
+    killing_hero = serializers.SerializerMethodField()
+    killing_color = serializers.SerializerMethodField()
+    assists = serializers.SerializerMethodField()
+    ability = serializers.SerializerMethodField()
+    headshot = serializers.SerializerMethodField()
+    dying_color = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.NPCDeath
+        fields = (
+            'time_point', 'killing_hero', 'killing_color', 'assists', 'ability', 'headshot', 'dying_entity',
+            'dying_color')
+
+    def get_dying_entity(self, obj):
+        return obj.npc.name
+
+    def get_dying_color(self, obj):
+        if obj.side == 'L':
+            return obj.round.game.left_team.get_color_display()
+        else:
+            return obj.round.game.right_team.get_color_display()
+
+    def get_killing_hero(self, obj):
+        return 'N/A'
+
+    def get_killing_color(self, obj):
+        return 'N/A'
+
+    def get_assists(self, obj):
+        return 'N/A'
+
+    def get_ability(self, obj):
+        return 'N/A'
+
+    def get_headshot(self, obj):
+        return 'N/A'
+
+
+# AUTH
+
+class UserGroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        depth = 1
+
+
+class UserWithFullGroupsSerializer(serializers.ModelSerializer):
+    groups = UserGroupSerializer(many=True)
+
+    class Meta:
+        model = User
+        depth = 2
+        fields = ('id', 'first_name', 'last_name', 'username', 'groups', 'password', 'user_permissions', 'is_superuser',
+                  'is_staff', 'is_active')
+
+class UnauthorizedUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        depth = 2
+        fields = ('id', 'first_name', 'last_name', 'username', 'is_superuser')
