@@ -9,6 +9,7 @@ from . import api
 app_name = 'annotator'
 
 api_router = routers.DefaultRouter()
+api_router.register(r'users', api.UserViewSet, base_name='users')
 api_router.register(r'heroes', api.HeroViewSet, base_name='heroes')
 api_router.register(r'hero_summary', api.HeroSummaryViewSet, base_name='hero_summary')
 api_router.register(r'abilities', api.AbilityViewSet, base_name='abilities')
@@ -56,9 +57,6 @@ api_router.register(r'smaller_window_ends', api.SmallerWindowEndViewSet, base_na
 
 urlpatterns = [
     url(r'^$', views.index, name='index'),
-    url(r'^api/api-token-auth/', obtain_auth_token),
-    url(r'^api/api-auth/', views.AuthView.as_view()),
-    url(r'^api/check-auth/', views.CheckAuthView.as_view()),
     url(r'^import_annotations/$', views.import_annotations, name='import_annotations'),
     url('^api/', include(api_router.urls)),
     url(r'^export/(?P<round_id>\d+)/$', views.export_round, name='export'),

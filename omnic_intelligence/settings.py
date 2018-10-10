@@ -24,7 +24,7 @@ SECRET_KEY = 'q6#*lq-b4rjb7(2j&#hz!ao-%_9=2xm)q*ralk#6)ioys*^)j4'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver', '0.0.0.0', '132.206.84.241']
 # PWD = os.path.dirname(os.path.realpath(__file__))  # project root path
 
 # STATICFILES_DIRS = (
@@ -34,29 +34,42 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
+    'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sitemaps',
+
+    'django_extensions',
+    'compressor',
+
+    'rest_framework',
+    'rest_framework.authtoken',
     'oi',
     'annotator',
     'sekizai',
-    'rest_framework',
-    'rest_framework.authtoken',
-    'corsheaders',
+    'rest_auth',
+    'allauth',
+    'allauth.account',
+    'rest_auth.registration',
 ]
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'htmlmin.middleware.HtmlMinifyMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'htmlmin.middleware.MarkRequestMiddleware',
 ]
 
 ROOT_URLCONF = 'omnic_intelligence.urls'
@@ -94,6 +107,8 @@ DATABASES = {
     }
 }
 
+SITE_ID = 1
+
 # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
 
@@ -117,6 +132,10 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
+LANGUAGES = (
+    ('en-us', 'English'),
+)
+
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
@@ -138,87 +157,41 @@ STATICFILES_DIRS = [
     # os.path.join(ANGULAR_APP_DIR),
     ('node_modules', os.path.join(BASE_DIR, 'node_modules')),
 ]
+
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+
+    'compressor.finders.CompressorFinder',
+)
 REST_FRAMEWORK = {
-    'COERCE_DECIMAL_TO_STRING': False,
+    #'COERCE_DECIMAL_TO_STRING': False,
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.BasicAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
     )
 }
 
-SCRAPE_CACHE_DIRECTORY = r'E:\Data\Overwatch\raw_data\annotations'
-TRAINING_DIRECTORY = r'E:\Data\Overwatch\training_data'
-CORS_ORIGIN_ALLOW_ALL = True
-
-# Video settings
-
-VIDEO_HEIGHT = 780
-
-VIDEO_WIDTH = 1280
-
-BOX_PARAMETERS = {
-    'REGULAR': {
-        'MID': {
-            'HEIGHT': 140,
-            'WIDTH': 300,
-            'X': 490,
-            'Y': 45},
-
-        'KILL_FEED': {
-            'Y': 115,
-            'X': 1020,
-            'WIDTH': 210,
-            'HEIGHT': 205
-        },
-        'KILL_FEED_SLOT': {
-            'Y': 115,
-            'X': 1020,
-            'WIDTH': 210,
-            'HEIGHT': 32,
-            'MARGIN': 2
-        },
-        'LEFT': {
-            'Y': 40,
-            'X': 30,
-            'WIDTH': 67,
-            'HEIGHT': 67,
-            'MARGIN': 4,
-        },
-        'RIGHT': {
-            'Y': 40,
-            'X': 830,
-            'WIDTH': 67,
-            'HEIGHT': 67,
-            'MARGIN': 4,
-        }
-    },
-    'APEX': { # Black borders around video feed
-        'MID': {
-            'HEIGHT': 140,
-            'WIDTH': 300,
-            'X': 490,
-            'Y': 45},
-
-        'KILL_FEED': {
-            'Y': 115,
-            'X': 950,
-            'WIDTH': 270,
-            'HEIGHT': 205
-        },
-        'LEFT': {
-            'Y': 45,
-            'X': 51,
-            'WIDTH': 67,
-            'HEIGHT': 55,
-            'MARGIN': 1,
-        },
-        'RIGHT': {
-            'Y': 45,
-            'X': 825,
-            'WIDTH': 67,
-            'HEIGHT': 55,
-            'MARGIN': 1,
-        }
-    }
+REST_AUTH_SERIALIZERS = {
+    'USER_DETAILS_SERIALIZER ': 'annotator.serializers.UserSerializer'
 }
+
+
+CORS_ALLOW_CREDENTIALS = True
+
+#CORS_ORIGIN_ALLOW_ALL = True
+CORS_ORIGIN_WHITELIST = (
+   'localhost:8000',
+   '127.0.0.1:8000'
+)
+
+EXCLUDE_FROM_MINIFYING = ('^files/', '^admin/', '^media/')
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+HTML_MINIFY = True
+COMPRESS_ENABLED = True
+COMPRESS_PRECOMPILERS = (
+    ('text/x-sass', 'sass {infile} {outfile}'),
+    ('text/x-scss', 'sass --scss {infile} {outfile}'),
+)

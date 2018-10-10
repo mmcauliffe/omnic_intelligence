@@ -1,55 +1,37 @@
 angular.module('navbar', [
-    'annotator.auth'
+    'oi.auth',
+    'oi.users'
 ])
-    .controller('NavCtrl', function ($scope, $rootScope, CookieService, $http, AuthService) {
+    .controller('NavCtrl', function ($scope, $rootScope, $http, djangoAuth, Users) {
         $rootScope.authenticated = false;
         $scope.authenticated = false;
         $scope.static = static;
 
-        $scope.checkAuth = function (){
-            $scope.token = CookieService.get('oi_token');
-            console.log($http.defaults.headers)
-            if ($scope.token != undefined){
-                console.log($scope.token);
-                $http.defaults.headers.common["Authorization"] = "Token " + $scope.token;
-            }
-            AuthService.checkAuth().then(function (user) {
-                console.log(user)
-                if (user.data.id === null) {
-                    $rootScope.user = undefined;
-                    $rootScope.authenticated = false;
-                    $scope.authenticated = false;
-                }
-                else {
-                    $rootScope.user = user.data;
-
-                    $rootScope.authenticated = true;
-                    $scope.authenticated = true;
-                    $rootScope.session = AuthService.createSessionFor(user.data);
-                    $rootScope.$broadcast("authenticated", user);
-                }
-
-            }).catch(function(res){
-                $rootScope.user = undefined;
-                $rootScope.authenticated = false;
-                $scope.authenticated = false;
-            });
-
-        };
-        $scope.checkAuth();
-        $scope.$on('logged_in', $scope.checkAuth);
-        $scope.$on('authenticated', function (e, res) {
-            $scope.user = $rootScope.user;
-            $rootScope.authenticated = true;
+        djangoAuth.authenticationStatus(true).then(function () {
             $scope.authenticated = true;
-        });
-        $scope.$on('logged_out', function (e, res){
-           delete $scope.user;
-           delete $scope.token;
-            delete $http.defaults.headers.common["Authorization"];
-            console.log($http.defaults.headers)
+
+            Users.current_user().then(function (res) {
+                console.log(res)
+                $scope.user = res.data;
+            });
+        }).catch(function(res){
+                console.log(res)
             $scope.authenticated = false;
-            $rootScope.authenticated = false;
+        });
+
+
+        // Wait and respond to the logout event.
+        $scope.$on('djangoAuth.logged_out', function () {
+            $scope.authenticated = false;
+            delete $scope.user;
+
+        });
+        // Wait and respond to the log in event.
+        $scope.$on('djangoAuth.logged_in', function (data) {
+            $scope.authenticated = true;
+            Users.current_user().then(function (res) {
+                $scope.user = res.data;
+            });
         });
     }).directive('navbar', function () {
 

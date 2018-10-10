@@ -1,51 +1,89 @@
-<div class="container-fluid">
-    <div class="row">
-    <div class="col-md-8">
-        <div class="row statuses">
+<div layout="row" layout-align="center start" style="height:100%">
+    <div layout="column" style="width:1280px">
+        <div layout="row" class="statuses">
             <div class="offset"></div>
             <div class="team">
                 <div ng-repeat="i in [0,1,2,3,4,5] track by $index" class="left player">
                     <span ng-bind="left_players[$index].name"></span><br>
                     <span ng-bind="left_player_statuses[$index].hero.name"></span><br>
                     <div ng-show="left_player_statuses[$index].has_ult">
-                        <button ng-click="addUltUsePlayer(left_players[$index])">Use ult</button>
+                        <md-button class="md-icon-button" ng-click="addUltUsePlayer(left_players[$index])"
+                                   ng-disabled="!can_edit">
+                            <md-tooltip md-direction="below">Use ult</md-tooltip>
+                            <i class="material-icons">check_circle</i></md-button>
                     </div>
                     <div ng-show="!left_player_statuses[$index].has_ult">
-                        <button ng-click="addUltGainPlayer(left_players[$index])">Gain ult</button>
+                        <md-button class="md-icon-button" ng-click="addUltGainPlayer(left_players[$index])"
+                                   ng-disabled="!can_edit">
+                            <md-tooltip md-direction="below">Gain ult</md-tooltip>
+                            <i class="material-icons">check_circle_outline</i></md-button>
                     </div>
-                    <div class="checkmark" ng-show="left_player_statuses[$index].has_ult"></div>
-                    <span class="fa fa-times" ng-show="!left_player_statuses[$index].alive"></span>
+                    <div layout="row" layout-align="center start">
+                        <i class="material-icons" ng-show="!left_player_statuses[$index].alive">person_outline</i>
+                        <i class="material-icons" ng-show="left_player_statuses[$index].alive">person</i>
+                    </div>
                 </div>
             </div>
-            <div class="mid"></div>
+            <div class="mid" layout="row" layout-align="center center">
+                <h4><label>Current time: <span
+                        ng-bind="currentTime |secondsToDateTime | date:'mm:ss.sss'"></span></label></h4></div>
             <div class="team">
                 <div ng-repeat="i in [0,1,2,3,4,5]" class="right player">
                     <span ng-bind="right_players[$index].name"></span><br>
                     <span ng-bind="right_player_statuses[$index].hero.name"></span><br>
                     <div ng-show="right_player_statuses[$index].has_ult">
-                        <button ng-click="addUltUsePlayer(right_players[$index])">Use ult</button>
+                        <md-button class="md-icon-button" ng-click="addUltUsePlayer(right_players[$index])"
+                                   ng-disabled="!can_edit">
+                            <md-tooltip md-direction="below">Use ult</md-tooltip>
+                            <i class="material-icons">check_circle</i></md-button>
                     </div>
                     <div ng-show="!right_player_statuses[$index].has_ult">
-                        <button ng-click="addUltGainPlayer(right_players[$index])">Gain ult</button>
+                        <md-button class="md-icon-button" ng-click="addUltGainPlayer(right_players[$index])"
+                                   ng-disabled="!can_edit">
+                            <md-tooltip md-direction="below">Gain ult</md-tooltip>
+                            <i class="material-icons">check_circle_outline</i></md-button>
                     </div>
-                    <div class="checkmark" ng-show="right_player_statuses[$index].has_ult"></div>
-                    <span class="fa fa-times" ng-show="!right_player_statuses[$index].alive"></span>
+                    <div layout="row" layout-align="center start">
+
+                        <i class="material-icons" ng-show="!right_player_statuses[$index].alive">person_outline</i>
+                        <i class="material-icons" ng-show="right_player_statuses[$index].alive">person</i>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="row">
+        <div layout="row">
             <div ng-switch on="vod_type">
                 <div ng-switch-when='null'></div>
                 <div ng-switch-when="twitch">
                     <div id="twitch-embed" data-ng-init="initTwitchPlayer()"></div>
-                    <div id="player-controls" class="text-center controls-container">
-                        <span class="fa fa-angle-double-left controls" ng-click="seekBackward(5)"></span>
-                        <span class="fa fa-angle-left controls" ng-click="seekBackward(1)"></span>
-                        <span class="fa fa-caret-left controls" ng-click="seekBackward(0.1)"></span>
-                        <button ng-click="toggleLock()">{{ lockButtonText }}</button>
-                        <span class="fa fa-caret-right controls" ng-click="seekForward(0.1)"></span>
-                        <span class="fa fa-angle-right controls" ng-click="seekForward(1)"></span>
-                        <span class="fa fa-angle-double-right controls" ng-click="seekForward(5)"></span>
+                    <div id="player-controls" class="controls-container" layout="row" layout-align="center start">
+
+                        <md-button class="md-icon-button" ng-click="seekBackward(5)">
+                            <md-tooltip md-direction="below">Go back 5 seconds</md-tooltip>
+                            <i class="material-icons">arrow_back_ios</i></md-button>
+
+                        <md-button class="md-icon-button" ng-click="seekBackward(1)">
+                            <md-tooltip md-direction="below">Go back 1 seconds</md-tooltip>
+                            <i class="material-icons">chevron_left</i></md-button>
+                        <md-button class="md-icon-button" ng-click="seekBackward(0.1)">
+                            <md-tooltip md-direction="below">Go back 0.1 seconds</md-tooltip>
+                            <i class="material-icons">arrow_left</i></md-button>
+
+                        <md-button class="md-icon-button" ng-click="toggleLock()">
+                            <md-tooltip md-direction="below" ng-if="roundLock">Unock seeking to round</md-tooltip>
+                            <md-tooltip md-direction="below" ng-if="!roundLock">Lock seeking to round</md-tooltip>
+                            <i class="material-icons" ng-if="roundLock">lock_open</i>
+                            <i class="material-icons" ng-if="!roundLock">lock</i></md-button>
+
+                        <md-button class="md-icon-button" ng-click="seekForward(0.1)">
+                            <md-tooltip md-direction="below">Go forward 0.1 seconds</md-tooltip>
+                            <i class="material-icons">arrow_right</i></md-button>
+                        <md-button class="md-icon-button" ng-click="seekForward(1)">
+                            <md-tooltip md-direction="below">Go forward 1 seconds</md-tooltip>
+                            <i class="material-icons">chevron_right</i></md-button>
+                        <md-button class="md-icon-button" ng-click="seekForward(5)">
+                            <md-tooltip md-direction="below">Go forward 5 seconds</md-tooltip>
+                            <i class="material-icons">arrow_forward_ios</i></md-button>
                     </div>
 
                 </div>
@@ -90,621 +128,1378 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="sidebar-nav pull-right">
-            <h3>Round {{ round.round_number }} of Game {{ round.game.game_number }} ({{ round.game.map.name }})</h3>
-            <label>VOD:
-            <select ng-model="round.stream_vod.id" class="form-control"
-                                                       ng-options="choice.id as choice.title for choice in vods"
-                                                       ng-change="saveRound()">
-                <option value="">Select VOD</option> </select>
-            </label><br>
+    <div layout="column" flex style="height:100%">
+        <div layout="column" style="height:100%; overflow: hidden">
+            <md-tabs md-border-bottom md-dynamic-height>
+                <md-tab label="Round">
+                    <md-card>
+                        <md-card-title>
+                            <md-card-title-text>
+                                <span class="md-headline">Round {{ round.round_number }} of Game {{ round.game.game_number }} ({{ round.game.map.name }})</span>
+                            </md-card-title-text>
+                        </md-card-title>
+                        <md-card-content>
+                            <div ng-if="can_edit">
+                                <md-input-container>
 
-            <label>Begin: <span ng-bind="round.begin |secondsToDateTime | date:'HH:mm:ss' "></span>
-                <button ng-click="updateBegin()">Update from current timestamp</button>
-            </label><br>
+                                    <label>VOD
+                                    </label>
+                                    <md-select ng-model="round.stream_vod.id"
+                                               ng-change="saveRound()">
+                                        <md-option ng-value="choice.id"
+                                                   ng-repeat=" choice in vods">{{ choice.title }}</md-option>
+                                    </md-select>
+                                </md-input-container>
+                                <md-input-container>
+                                    <label>Begin
+                                    </label><span ng-bind="round.begin |secondsToDateTime | date:'HH:mm:ss' "></span>
+                                    <md-button class="md-raised" ng-click="updateBegin()">Update from current timestamp
+                                    </md-button>
+                                </md-input-container>
+                                <md-input-container>
+                                    <label>End
+                                    </label>
+                                    <span ng-bind="round.end |secondsToDateTime | date:'HH:mm:ss' "></span>
+                                    <md-button class="md-raised" ng-click="updateEnd()">Update from current timestamp
+                                    </md-button>
+                                </md-input-container>
+                                <md-input-container>
 
-            <label>End: <span ng-bind="round.end |secondsToDateTime | date:'HH:mm:ss' "></span>
-                <button ng-click="updateEnd()">Update from current timestamp</button>
-            </label><br>
-            <label>Annotation status: <select ng-model="round.annotation_status" class="form-control"
-                                                       ng-options="choice.id as choice.name for choice in annotation_choices"
-                                                       ng-change="saveRound()">
-                                    <option value="">Select source</option>
+                                    <label>Annotation status</label>
+                                    <md-select ng-model="round.annotation_status"
+                                               ng-change="saveRound()">
+                                        <md-option ng-value="choice.id"
+                                                   ng-repeat="choice in annotation_choices">{{ choice.name }}</md-option>
 
-                                </select></label>
-            <label>Attacking side: <select ng-model="round.attacking_side" class="form-control"
-                                                       ng-options="choice.id as choice.name for choice in sides"
-                                                       ng-change="saveRound()">
-                                    <option value="">Select side</option>
+                                    </md-select>
+                                </md-input-container>
+                                <md-input-container>
+                                    <label>Attacking side</label>
+                                    <md-select ng-model="round.attacking_side"
+                                               ng-change="saveRound()">
+                                        <md-option ng-value="choice.id"
+                                                   ng-repeat="choice in sides">{{ choice.name }}</md-option>
 
-                                </select></label>
-
-            <button class='btn btn-success' ng-click="saveRound()">Save</button>
-            <h4><label>Current time: <span ng-bind="currentTime |secondsToDateTime | date:'mm:ss.sss'"></span></label></h4>
-            <multiselect-dropdown class="tabs" ng-cloak  style="max-height:100%">
-                <md-content>
-                    <md-tabs md-border-bottom>
-                        <md-tab label="Switches">
-                            <md-content class="md-padding">
-                                <h4>Add a switch</h4>
-                                <label>Player: <select ng-model="newEvents.switches.player" class="form-control"
-                                                       ng-options="player.id as player.name for player in all_players"
-                                                       ng-change="updateSwitchHeroes()">
-                                    <option value="">Select player</option>
-
-                                </select></label>
-                                <label>New hero: <select ng-model="newEvents.switches.new_hero" class="form-control"
-                                                         ng-options="hero.id as hero.name for hero in available_heroes">
-                                    <option value="">Select hero</option>
-
-                                </select></label>
-                                <button class='btn btn-success btn-lg' ng-click="addEvent('switches')">Add</button>
-                                <div class="annotation-listing">
-                                    <table class="table table-striped annotation-table switch-table">
-                                        <tr>
-                                            <th></th>
-                                            <th>Time</th>
-                                            <th>Player</th>
-                                            <th>New hero</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                        <tr ng-repeat='e in events.switches'
-                                            ng-class="{'success': inCurrentSecond(e.time_point)}">
-                                            <td ng-click="updateEvent(e.id, e, 'switches');">
-                                                <span class="fa fa-clock-o"></span>
-                                            </td>
-                                            <td ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
-                                            <td>{{ e.player.name }}</td>
-                                            <td>{{ e.new_hero.name }}</td>
-                                            <td>
-                                                <span class='badge' ng-click="deleteEvent(e.id, 'switches')">X</span>
+                                    </md-select>
+                                </md-input-container>
+                                <md-button class='md-raised md-primary' ng-click="saveRound()">Save</md-button>
+                            </div>
+                            <div ng-if="!can_edit">
+                                <md-table-container>
+                                    <table md-table>
+                                        <tbody md-body>
+                                        <tr md-row>
+                                            <td md-cell>Begin</td>
+                                            <td md-cell>
+                                                <span ng-bind="round.begin |secondsToDateTime | date:'HH:mm:ss' "></span>
                                             </td>
                                         </tr>
+                                        <tr md-row>
+                                            <td md-cell>End</td>
+                                            <td md-cell>
+                                                <span ng-bind="round.end |secondsToDateTime | date:'HH:mm:ss' "></span>
+                                            </td>
+                                        </tr>
+                                        <tr md-row>
+                                            <td md-cell>Annotation status</td>
+                                            <td md-cell>
+                                                <span ng-bind="round.annotation_status"></span>
+                                            </td>
+                                        </tr>
+                                        <tr md-row>
+                                            <td md-cell>Attacking side</td>
+                                            <td md-cell>
+                                                <span ng-bind="round.attacking_side"></span>
+                                            </td>
+                                        </tr>
+                                        </tbody>
                                     </table>
+                                </md-table-container>
+                            </div>
+
+                        </md-card-content>
+                    </md-card>
+                </md-tab>
+                <md-tab label="Switches">
+                    <md-content class="md-padding">
+                        <md-card>
+                            <md-card-title>
+                                <md-card-title-text>
+                                    <span class="md-headline">Switches</span>
+                                </md-card-title-text>
+                            </md-card-title>
+                            <md-card-content>
+
+                                <div layout="row" layout-align="space-between start" ng-if="can_edit">
+                                    <md-input-container>
+
+                                        <label>Player</label>
+                                        <md-select ng-model="newEvents.switches.player"
+                                                   ng-change="updateSwitchHeroes()">
+                                            <md-option ng-repeat="player in all_players"
+                                                       ng-value="player.id">{{ player.name }}</md-option>
+
+                                        </md-select>
+                                    </md-input-container>
+                                    <md-input-container>
+                                        <label>New hero</label>
+                                        <md-select ng-model="newEvents.switches.new_hero">
+                                            <md-option ng-repeat="hero in available_heroes"
+                                                       ng-value="hero.id">{{ hero.name }}</md-option>
+
+                                        </md-select>
+
+                                    </md-input-container>
+                                    <md-button class='md-primary md-raised' ng-click="addEvent('switches')">Add
+                                    </md-button>
                                 </div>
-                            </md-content>
-                        </md-tab>
-                        <md-tab label="Kills">
-                            <md-content class="md-padding">
-                                <h6>Add a kill</h6>
-                                <label>Killing player: <select ng-model="newEvents.kills.killing_player"
-                                                               class="form-control"
-                                                               ng-options="player.id as player.name for player in all_players"
-                                                               ng-change="updateKillProperties()">
-                                    <option value="">Select player</option>
+                                <div class="full-listing">
+                                    <md-table-container class="annotation-table">
+                                        <table md-table>
+                                            <thead md-head>
+                                            <tr md-row>
+                                                <th md-column ng-if="can_edit"></th>
+                                                <th md-column>Time</th>
+                                                <th md-column>Player</th>
+                                                <th md-column>New hero</th>
+                                                <th md-column ng-if="can_edit">Actions</th>
+                                            </tr>
 
-                                </select></label>
-                                <label>Killed player: <select ng-model="newEvents.kills.killed_player" class="form-control"
-                                                              ng-options="player.id as player.name for player in killable_players">
-                                    <option value="">Select player</option>
+                                            </thead>
+                                            <tbody md-body>
+                                            <tr md-row ng-repeat='e in events.switches'
+                                                ng-class="{'success': inCurrentSecond(e.time_point)}">
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button" aria-label="Update time"
+                                                               ng-click="updateEvent(e.id, e, 'switches')">
 
-                                </select></label>
-                                <label>Ability: <select ng-model="newEvents.kills.ability" class="form-control"
-                                                        ng-options="ability.id as ability.name for ability in damaging_abilities"
-                                                        ng-change="updateHeadshotability()">
-                                    <option value="">Select ability</option>
+                                                        <md-tooltip md-direction="below">Update time to current
+                                                        </md-tooltip>
+                                                        <i class="material-icons">access_time</i>
+                                                    </md-button>
+                                                </td>
+                                                <td md-cell
+                                                    ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
+                                                <td md-cell>{{ e.player.name }}</td>
+                                                <td md-cell>{{ e.new_hero.name }}</td>
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button md-warn" aria-label="Remove"
+                                                               ng-click="deleteEvent(e.id, 'switches')">
 
-                                </select></label>
-                                <label>Headshot: <input type="checkbox" ng-model="newEvents.kills.headshot"
-                                                        ng-disabled="!headshotable"></label>
-                                <button class='btn btn-success' ng-click="addEvent('kills')">Add</button>
-                                <h6>Add an NPC kill</h6>
-                                <label>Killing player: <select ng-model="newEvents.kill_npcs.killing_player"
-                                                               class="form-control"
-                                                               ng-options="player.id as player.name for player in all_players"
-                                                               ng-change="updateKillNPCproperties()">
-                                    <option value="">Select player</option>
+                                                        <md-tooltip md-direction="below">Remove</md-tooltip>
+                                                        <i class="material-icons">remove_circle</i>
+                                                    </md-button>
+                                                </td>
+                                            </tr>
 
-                                </select></label>
-                                <label>Killed NPC: <select ng-model="newEvents.kill_npcs.killed_npc" class="form-control"
-                                                           ng-options="npc.id as npc.name for npc in NPCs">
-                                    <option value="">Select NPC</option>
+                                            </tbody>
+                                        </table>
+                                    </md-table-container>
+                                </div>
+                            </md-card-content>
+                        </md-card>
 
-                                </select></label>
-                                <label>Ability: <select ng-model="newEvents.kill_npcs.ability" class="form-control"
-                                                        ng-options="ability.id as ability.name for ability in killnpc_damaging_abilities">
-                                    <option value="">Select ability</option>
+                    </md-content>
+                </md-tab>
+                <md-tab label="Kills">
+                    <md-content class="md-padding">
 
-                                </select></label>
-                                <button class='btn btn-success' ng-click="addEvent('kill_npcs')">Add</button>
-                                <h4>Player kills</h4>
+                        <md-card>
+                            <md-card-title>
+                                <md-card-title-text>
+                                    <span class="md-headline">Kills</span>
+                                </md-card-title-text>
+                            </md-card-title>
+                            <md-card-content>
 
-                                    <table class="table table-striped annotation-table kill-table">
-                                        <thead>
-                                        <tr>
-                                            <th></th>
-                                            <th>Time</th>
-                                            <th>Killing player</th>
-                                            <th>Killed player</th>
-                                            <th>Ability</th>
-                                            <th>Was headshot</th>
-                                            <th>Assists</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        <tr ng-repeat='e in events.kills'
-                                            ng-class="{'success': inCurrentSecond(e.time_point)}">
-                                            <td ng-click="updateEvent(e.id, e, 'kills');">
-                                                <span class="fa fa-clock-o"></span>
-                                            </td>
-                                            <td ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
-                                            <td>{{ e.killing_player }}</td>
-                                            <td>{{ e.killed_player }}</td>
-                                            <td><select ng-model="e.ability.id"
-                                                        ng-options="ability.id as ability.name for ability in e.possible_abilities"
-                                                        ng-change="updateEvent(e.id, e, 'kills')"
-                                                          ng-init='e.initial = true'>
-                                                <option value="">Select ability</option>
+                                <div layout="row" layout-align="space-between start" ng-if="can_edit">
+                                    <md-input-container>
 
-                                            </select></td>
-                                            <td><input type="checkbox" ng-model="e.headshot"
-                                                       ng-change="updateEvent(e.id, e, 'kills')"
-                                              ng-init='e.initial = true'></td>
-                                            <td><multiselect class="input-small multiselect" ng-model="e.assisting_players" options="p.id as p.name for p in e.possible_assists" select-limit="5"
-                                 header="0 assists" selected-header="assists" enable-check-all="false" enable-uncheck-all="false" multiple="true" enable-filter="false"  ng-change="updateEvent(e.id, e, 'kills')"
-                                              ng-init='e.initial = true'>
-                    </multiselect></td>
-                                            <td>
-                                                <span class='badge' ng-click="deleteEvent(e.id, 'kills')">X</span>
-                                            </td>
-                                        </tr>
+                                        <label>Killing player</label>
+                                        <md-select ng-model="newEvents.kills.killing_player"
+                                                   ng-change="updateKillProperties()">
+                                            <md-option ng-value="player.id"
+                                                       ng-repeat="player in all_players">{{ player.name }}</md-option>
 
-                                        </tbody>
-                                    </table>
-                                    <h4>NPC kills</h4>
+                                        </md-select>
+                                    </md-input-container>
+                                    <md-input-container>
 
-                                    <table class="table table-striped annotation-table kill-table">
-                                        <thead>
-                                        <tr>
-                                            <th></th>
-                                            <th>Time</th>
-                                            <th>Killing player</th>
-                                            <th>Killed NPC</th>
-                                            <th>Ability</th>
-                                            <th>Assists</th>
-                                            <th>Actions</th>
-                                        </tr>
+                                        <label>Killed player</label>
+                                        <md-select ng-model="newEvents.kills.killed_player">
+                                            <md-option ng-value="player.id"
+                                                       ng-repeat="player in killable_players">{{ player.name }}</md-option>
 
-                                        </thead>
-                                        <tbody>
-                                        <tr ng-repeat='e in events.kill_npcs'
-                                            ng-class="{'success': inCurrentSecond(e.time_point)}">
-                                            <td ng-click="updateEvent(e.id, e, 'kill_npcs');">
-                                                <span class="fa fa-clock-o"></span>
-                                            </td>
-                                            <td ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
-                                            <td>{{ e.killing_player }}</td>
-                                            <td>{{ e.killed_npc }}</td>
-                                            <td><select ng-model="e.ability.id"
-                                                        ng-options="ability.id as ability.name for ability in e.possible_abilities"
-                                                        ng-change="updateEvent(e.id, e, 'kill_npcs')"
-                                              ng-init='e.initial = true'>
-                                                <option value="">Select ability</option>
+                                        </md-select>
 
-                                            </select></td>
-                                            <td><multiselect class="input-small multiselect" ng-model="e.assisting_players" options="p.id as p.name for p in e.possible_assists" select-limit="5"
-                                 header="0 assists" selected-header="assists" enable-check-all="false" enable-uncheck-all="false" multiple="true" enable-filter="false"  ng-init='e.initial = true' ng-change="updateEvent(e.id, e, 'kill_npcs')">
-                    </multiselect></td>
-                                            <td>
-                                                <span class='badge' ng-click="deleteEvent(e.id, 'kill_npcs')">X</span>
-                                            </td>
-                                        </tr>
+                                    </md-input-container>
+                                    <md-input-container>
 
-                                        </tbody>
-                                    </table>
-                            </md-content>
-                        </md-tab>
-                        <md-tab label="Deaths">
-                            <md-content class="md-padding">
-                                <h4>Deaths</h4>
-                                <h6>Add a death</h6>
-                                <label>Player: <select ng-model="newEvents.deaths.player" class="form-control"
-                                                       ng-options="player.id as player.name for player in all_players">
-                                    <option value="">Select player</option>
+                                        <label>Ability</label>
+                                        <md-select ng-model="newEvents.kills.ability"
+                                                   ng-change="updateHeadshotability()">
+                                            <md-option ng-value="ability.id"
+                                                       ng-repeat="ability in damaging_abilities">{{ ability.name }}</md-option>
 
-                                </select></label>
-                                <button class='btn btn-success' ng-click="addEvent('deaths')">Add</button>
-                                    <table class="table table-striped annotation-table kill-table">
-                                        <tr>
-                                            <th></th>
-                                            <th>Time</th>
-                                            <th>Player</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                        <tr ng-repeat='e in events.deaths'
-                                            ng-class="{'success': inCurrentSecond(e.time_point)}">
-                                            <td ng-click="updateEvent(e.id, e, 'deaths');">
-                                                <span class="fa fa-clock-o"></span>
-                                            </td>
-                                            <td ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
-                                            <td>{{ e.player }}</td>
-                                            <td>
-                                                <span class='badge' ng-click="deleteEvent(e.id, 'deaths')">X</span>
-                                            </td>
-                                        </tr>
-                                    </table>
+                                        </md-select>
 
-                                <h4>NPC Deaths</h4>
-                                <h6>Add an NPC death</h6>
-                                <label>NPC: <select ng-model="newEvents.npc_deaths.npc" class="form-control"
-                                                    ng-options="npc.id as npc.name for npc in NPCs">
-                                    <option value="">Select NPC</option>
+                                    </md-input-container>
+                                    <md-input-container>
 
-                                </select></label>
-                                <label>Side: <select ng-model="newEvents.npc_deaths.side" class="form-control"
-                                                     ng-options="side.id as side.name for side in sides">
-                                    <option value="">Select side</option>
+                                        <md-checkbox ng-model="newEvents.kills.headshot"
+                                                     ng-disabled="!headshotable">Headshot
+                                        </md-checkbox>
 
-                                </select></label>
-                                <button class='btn btn-success' ng-click="addEvent('npc_deaths')">Add</button>
-                                    <table class="table table-striped annotation-table kill-table">
-                                        <tr>
-                                            <th></th>
-                                            <th>Time</th>
-                                            <th>NPC</th>
-                                            <th>Side</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                        <tr ng-repeat='e in events.npc_deaths'
-                                            ng-class="{'success': inCurrentSecond(e.time_point)}">
-                                            <td ng-click="updateEvent(e.id, e, 'npc_deaths');">
-                                                <span class="fa fa-clock-o"></span></td>
-                                            <td ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
-                                            <td>{{ e.npc }}</td>
-                                            <td><select ng-model="e.side"
-                                                        ng-options="side.id as side.name for side in sides"
-                                                        ng-change="updateEvent(e.id, e, 'npc_deaths')" ng-init='e.initial = true'>
-                                                <option value="">Select side</option>
 
-                                            </select></td>
-                                            <td>
-                                                <span class='badge' ng-click="deleteEvent(e.id, 'npc_deaths')">X</span>
-                                            </td>
-                                        </tr>
-                                    </table>
-                            </md-content>
-                        </md-tab>
-                        <md-tab label="Revives">
-                            <md-content class="md-padding">
-                                <h4>Revives</h4>
-                                <h6>Add a revive</h6>
-                                <label>Reviving player: <select ng-model="newEvents.revives.reviving_player"
-                                                                class="form-control"
-                                                                ng-options="player.id as player.name for player in reviver_players"
-                                                                ng-change="updateReviveProperties()">
-                                    <option value="">Select player</option>
+                                    </md-input-container>
+                                    <md-button class='md-primary md-raised' ng-click="addEvent('kills')">Add</md-button>
+                                </div>
 
-                                </select></label>
-                                <label>Revived player: <select ng-model="newEvents.revives.revived_player"
-                                                               class="form-control"
-                                                               ng-options="player.id as player.name for player in revivable_players">
-                                    <option value="">Select player</option>
+                                <div class="half-listing">
 
-                                </select></label>
-                                <label>Ability: <select ng-model="newEvents.revives.ability" class="form-control"
-                                                        ng-options="ability.id as ability.name for ability in reviving_abilities">
-                                    <option value="">Select ability</option>
+                                    <md-table-container class="annotation-table">
 
-                                </select></label>
-                                <button class='btn btn-success' ng-click="addEvent('revives')">Add</button>
-                                    <table class="table table-striped annotation-table">
-                                        <tr>
-                                            <th></th>
-                                            <th>Time</th>
-                                            <th>Reviving player</th>
-                                            <th>Revived player</th>
-                                            <th>Ability</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                        <tr ng-repeat='e in events.revives'
-                                            ng-class="{'success': inCurrentSecond(e.time_point)}">
-                                            <td ng-click="updateEvent(e.id, e, 'revives');">
-                                                <span class="fa fa-clock-o"></span>
-                                            </td>
-                                            <td ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
-                                            <td>{{ e.reviving_player }}</td>
-                                            <td>{{ e.revived_player }}</td>
-                                            <td>{{ e.ability }}</td>
-                                            <td>
-                                                <span class='badge' ng-click="deleteEvent(e.id, 'revives')">X</span>
-                                            </td>
-                                        </tr>
-                                    </table>
-                            </md-content>
-                        </md-tab>
-                        <md-tab label="Ults">
-                            <md-content class="md-padding">
-                                <h6>Add an ult gain</h6>
-                                <label>Player: <select ng-model="newEvents.ult_gains.player" class="form-control"
-                                                       ng-options="player.id as player.name for player in all_players"
-                                                       ng-change="updateUltGainProperties()">
-                                    <option value="">Select player</option>
+                                        <table md-table>
+                                            <thead md-head>
+                                            <tr md-row>
+                                                <th md-column ng-if="can_edit"></th>
+                                                <th md-column>Time</th>
+                                                <th md-column>Killing player</th>
+                                                <th md-column>Killed player</th>
+                                                <th md-column>Ability</th>
+                                                <th md-column>Headshot</th>
+                                                <th md-column>Assists</th>
+                                                <th md-column ng-if="can_edit">Actions</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            <tr md-row ng-repeat='e in events.kills'
+                                                ng-class="{'success': inCurrentSecond(e.time_point)}">
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button" aria-label="Update time"
+                                                               ng-click="updateEvent(e.id, e, 'kills');">
 
-                                </select></label>
-                                <button class='btn btn-success ' ng-click="addEvent('ult_gains')">Add
-                                </button>
-                                <h6>Add an ult use</h6>
-                                <label>Player: <select ng-model="newEvents.ult_uses.player" class="form-control"
-                                                       ng-options="player.id as player.name for player in all_players"
-                                                       ng-change="updateUltUseProperties()">
-                                    <option value="">Select player</option>
+                                                        <md-tooltip md-direction="below">Update time to current
+                                                        </md-tooltip>
+                                                        <i class="material-icons">access_time</i>
+                                                    </md-button>
+                                                </td>
+                                                <td md-cell
+                                                    ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
+                                                <td md-cell>{{ e.killing_player }}</td>
+                                                <td md-cell>{{ e.killed_player }}</td>
+                                                <td md-cell>
+                                                    <md-select ng-model="e.ability.id"
+                                                               ng-change="updateEvent(e.id, e, 'kills')"
+                                                               ng-init='e.initial = true' aria-label="Killing ability"
+                                                               ng-if="can_edit">
+                                                        <md-option ng-value="ability.id"
+                                                                   ng-repeat="ability in e.possible_abilities">{{ ability.name }}</md-option>
 
-                                </select></label>
-                                <button class='btn btn-success ' ng-click="addEvent('ult_uses')">Add
-                                </button>
-                                    <h4>Ult gains</h4>
-                                    <table class="table table-striped annotation-table kill-table">
-                                        <tr>
-                                            <th></th>
-                                            <th>Time</th>
-                                            <th>Player</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                        <tr ng-repeat='e in events.ult_gains'
-                                            ng-class="{'success': inCurrentSecond(e.time_point)}">
-                                            <td ng-click="updateEvent(e.id, e, 'ult_gains');">
-                                                <span class="fa fa-clock-o"></span>
-                                            </td>
-                                            <td ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
-                                            <td>{{ e.player.name }}</td>
-                                            <td>
-                                                <span class='badge' ng-click="deleteEvent(e.id, 'ult_gains')">X</span>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                <h4>Ult uses</h4>
-                                    <table class="table table-striped annotation-table kill-table">
-                                        <tr>
-                                            <th></th>
-                                            <th>Time</th>
-                                            <th>Player</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                        <tr ng-repeat='e in events.ult_uses'
-                                            ng-class="{'success': inCurrentSecond(e.time_point)}">
-                                            <td ng-click="updateEvent(e.id, e, 'ult_uses');">
-                                                <span class="fa fa-clock-o"></span>
-                                            </td>
-                                            <td ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
-                                            <td>{{ e.player.name }}</td>
-                                            <td>
-                                                <span class='badge' ng-click="deleteEvent(e.id, 'ult_uses')">X</span>
-                                            </td>
-                                        </tr>
-                                    </table>
-                            </md-content>
-                        </md-tab>
-                        <md-tab label="Pauses">
-                            <md-content class="md-padding">
-                                <h6>Add a pause</h6>
-                                <button class='btn btn-success' ng-click="addEvent('pauses')">
-                                    Add
-                                </button>
-                                <table class="table table-striped annotation-table pause-table">
-                                    <tr>
-                                        <th></th>
-                                        <th>Time</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                    <tr ng-repeat='e in events.pauses'
-                                        ng-class="{'success': inCurrentSecond(e.time_point)}">
-                                            <td ng-click="updateEvent(e.id, e, 'pauses');">
-                                                <span class="fa fa-clock-o"></span>
-                                            </td>
-                                        <td ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
-                                        <td>
-                                            <span class='badge' ng-click="deleteEvent(e.id, 'pauses')">X</span>
-                                        </td>
-                                    </tr>
-                                </table>
-                                <h6>Add an unpause</h6>
-                                <button class='btn btn-success' ng-click="addEvent('unpauses')">Add
-                                </button>
-                                <table class="table table-striped annotation-table pause-table">
-                                    <tr>
-                                        <th></th>
-                                        <th>Time</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                    <tr ng-repeat='e in events.unpauses'
-                                        ng-class="{'success': inCurrentSecond(e.time_point)}">
-                                            <td ng-click="updateEvent(e.id, e, 'unpauses');">
-                                                <span class="fa fa-clock-o"></span>
-                                            </td>
-                                        <td ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
-                                        <td>
-                                            <span class='badge' ng-click="deleteEvent(e.id, 'unpauses')">X</span>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </md-content>
-                        </md-tab>
-                        <md-tab label="Broadcast">
-                            <md-content class="md-padding">
-                                <h6>Add a replay start</h6>
-                                <button class='btn btn-success' ng-click="addEvent('replay_starts')">Add
-                                </button>
-                                <table class="table table-striped annotation-table pause-table">
-                                    <tr>
-                                        <th>Time</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                    <tr ng-repeat='e in events.replay_starts'
-                                        ng-class="{'success': inCurrentSecond(e.time_point)}">
-                                            <td ng-click="updateEvent(e.id, e, 'replay_starts');">
-                                                <span class="fa fa-clock-o"></span>
-                                            </td>
-                                        <td ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
-                                        <td>
-                                            <span class='badge' ng-click="deleteEvent(e.id, 'replay_starts')">X</span>
-                                        </td>
-                                    </tr>
-                                </table>
-                                <h6>Add a replay end</h6>
-                                <button class='btn btn-success' ng-click="addEvent('replay_ends')">Add
-                                </button>
-                                <table class="table table-striped annotation-table pause-table">
-                                    <tr>
-                                        <th></th>
-                                        <th>Time</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                    <tr ng-repeat='e in events.replay_ends'
-                                        ng-class="{'success': inCurrentSecond(e.time_point)}">
-                                            <td ng-click="updateEvent(e.id, e, 'replay_ends');">
-                                                <span class="fa fa-clock-o"></span>
-                                            </td>
-                                        <td ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
-                                        <td>
-                                            <span class='badge' ng-click="deleteEvent(e.id, 'replay_ends')">X</span>
-                                        </td>
-                                    </tr>
-                                </table>
-                                <h6>Add a smaller window start</h6>
-                                <button class='btn btn-success' ng-click="addEvent('smaller_window_starts')">Add
-                                </button>
-                                <table class="table table-striped annotation-table pause-table">
-                                    <tr>
-                                        <th>Time</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                    <tr ng-repeat='e in events.smaller_window_starts'
-                                        ng-class="{'success': inCurrentSecond(e.time_point)}">
-                                            <td ng-click="updateEvent(e.id, e, 'smaller_window_starts');">
-                                                <span class="fa fa-clock-o"></span>
-                                            </td>
-                                        <td ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
-                                        <td>
-                                            <span class='badge' ng-click="deleteEvent(e.id, 'smaller_window_starts')">X</span>
-                                        </td>
-                                    </tr>
-                                </table>
-                                <h6>Add a smaller window end</h6>
-                                <button class='btn btn-success' ng-click="addEvent('smaller_window_ends')">Add
-                                </button>
-                                <table class="table table-striped annotation-table pause-table">
-                                    <tr>
-                                        <th></th>
-                                        <th>Time</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                    <tr ng-repeat='e in events.smaller_window_ends'
-                                        ng-class="{'success': inCurrentSecond(e.time_point)}">
-                                            <td ng-click="updateEvent(e.id, e, 'smaller_window_ends');">
-                                                <span class="fa fa-clock-o"></span>
-                                            </td>
-                                        <td ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
-                                        <td>
-                                            <span class='badge' ng-click="deleteEvent(e.id, 'smaller_window_ends')">X</span>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </md-content>
-                        </md-tab>
-                        <md-tab label="Points">
-                            <md-content class="md-padding">
-                                <h6>Add a point gain</h6>
-                                <label>Point total: <input type="text" ng-model="newEvents.point_gains.point_total"
-                                                           class='form-control'/></label>
-                                <button class='btn btn-success' ng-click="addEvent('point_gains')">Add</button>
-                                <table class="table table-striped annotation-table pause-table">
-                                    <tr>
-                                        <th></th>
-                                        <th>Time</th>
-                                        <th>Point total</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                    <tr ng-repeat='e in events.point_gains'
-                                        ng-class="{'success':inCurrentSecond(e.time_point)}">
-                                            <td ng-click="updateEvent(e.id, e, 'point_gains');">
-                                                <span class="fa fa-clock-o"></span>
-                                            </td>
-                                        <td ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
-                                        <td>{{ e.point_total }}</td>
-                                        <td>
-                                            <span class='badge' ng-click="deleteEvent(e.id, 'point_gains')">X</span>
-                                        </td>
-                                    </tr>
-                                </table>
-                                <h6>Add a point flip</h6>
-                                <label>Controlling side: <select ng-model="newEvents.point_flips.controlling_side"
-                                                                 class="form-control"
-                                                                 ng-options="side.id as side.name for side in sides">
-                                    <option value="">Select side</option>
+                                                    </md-select>
+                                                    <span ng-if="!can_edit" ng-bind="e.ability.name"></span>
+                                                </td>
+                                                <td md-cell>
+                                                    <md-checkbox ng-model="e.headshot"
+                                                                 ng-change="updateEvent(e.id, e, 'kills')"
+                                                                 ng-init='e.initial = true'
+                                                                 aria-label="Headshot" ng-if="can_edit"></md-checkbox>
 
-                                </select></label>
-                                <button class='btn btn-success' ng-click="addEvent('point_flips')">Add</button>
-                                <table class="table table-striped annotation-table pause-table">
-                                    <tr>
-                                        <th></th>
-                                        <th>Time</th>
-                                        <th>Controlling side</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                    <tr ng-repeat='e in events.point_flips'
-                                        ng-class="{'success':inCurrentSecond(e.time_point)}">
-                                            <td ng-click="updateEvent(e.id, e, 'point_flips');">
-                                                <span class="fa fa-clock-o"></span>
-                                            </td>
-                                        <td ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
-                                        <td><select ng-model="e.controlling_side"
-                                                                 ng-options="side.id as side.name for side in sides" ng-change="updateEvent(e.id, e, 'point_flips')"   ng-init='e.initial = true'>
-                                    <option value="">Select side</option>
+                                                    <i class="material-icons" ng-if="!can_edit">check_cirlce</i>
+                                                </td>
+                                                <td md-cell>
+                                                    <md-select ng-model="e.assisting_players" multiple
+                                                               ng-change="updateEvent(e.id, e, 'kills')"
+                                                               ng-init='e.initial = true' aria-label="Assists"
+                                                               ng-if="can_edit">
+                                                        <md-option ng-value="p.id"
+                                                                   ng-repeat="p in e.possible_assists"> {{ p.name }}</md-option>
+                                                    </md-select>
+                                                    <span ng-if="!can_edit">{{ e | joinByAssists }}</span>
+                                                </td>
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button md-warn" aria-label="Remove"
+                                                               ng-click="deleteEvent(e.id, 'kills')">
 
-                                </select></td>
-                                        <td>
-                                            <span class='badge' ng-click="deleteEvent(e.id, 'point_flips')">X</span>
-                                        </td>
-                                    </tr>
-                                </table>
-                                <h6>Add start of overtime</h6>
-                                <button class='btn btn-success' ng-click="addEvent('overtime_starts')">Add
-                                </button>
-                                <table class="table table-striped annotation-table pause-table">
-                                    <tr>
-                                        <th></th>
-                                        <th>Time</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                    <tr ng-repeat='e in events.overtime_starts'
-                                        ng-class="{'success':inCurrentSecond(e.time_point)}">
-                                            <td ng-click="updateEvent(e.id, e, 'overtime_starts');">
-                                                <span class="fa fa-clock-o"></span>
-                                            </td>
-                                        <td ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
-                                        <td>
-                                            <span class='badge' ng-click="deleteEvent(e.id, 'overtime_starts')">X</span>
-                                        </td>
-                                    </tr>
-                                </table>
-                                <h6>Add end of overtime</h6>
-                                <button class='btn btn-success' ng-click="addEvent('overtime_ends')">Add
-                                </button>
-                                <table class="table table-striped annotation-table pause-table">
-                                    <tr>
-                                        <th></th>
-                                        <th>Time</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                    <tr ng-repeat='e in events.overtime_ends'
-                                        ng-class="{'success':inCurrentSecond(e.time_point)}">
-                                            <td ng-click="updateEvent(e.id, e, 'overtime_ends');">
-                                                <span class="fa fa-clock-o"></span>
-                                            </td>
-                                        <td ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
-                                        <td>
-                                            <span class='badge' ng-click="deleteEvent(e.id, 'overtime_ends')">X</span>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </md-content>
-                        </md-tab>
-                    </md-tabs>
-                </md-content>
-            </div>
+                                                        <md-tooltip md-direction="below">Remove</md-tooltip>
+                                                        <i class="material-icons">remove_circle</i>
+                                                    </md-button>
+                                                </td>
+                                            </tr>
+
+                                            </tbody>
+                                        </table>
+                                    </md-table-container>
+                                </div>
+                            </md-card-content>
+                        </md-card>
+                        <md-card>
+                            <md-card-title>
+                                <md-card-title-text>
+                                    <span class="md-headline">NPC kills</span>
+                                </md-card-title-text>
+                            </md-card-title>
+                            <md-card-content>
+                                <div ng-if="can_edit">
+                                    <md-input-container>
+                                        <label>Killing player</label>
+                                        <md-select ng-model="newEvents.kill_npcs.killing_player"
+                                                   ng-change="updateKillNPCproperties()">
+                                            <md-option ng-value="player.id"
+                                                       ng-repeat="player in all_players">{{ player.name }}</md-option>
+
+                                        </md-select>
+
+                                    </md-input-container>
+                                    <md-input-container>
+
+                                        <label>Killed NPC</label>
+                                        <md-select ng-model="newEvents.kill_npcs.killed_npc">
+                                            <md-option ng-value="npc.id"
+                                                       ng-repeat="npc in NPCs">{{ npc.name }}</md-option>
+
+                                        </md-select>
+                                    </md-input-container>
+                                    <md-input-container>
+
+                                        <label>Ability</label>
+                                        <md-select ng-model="newEvents.kill_npcs.ability">
+                                            <md-option ng-value="ability.id"
+                                                       ng-repeat="ability in killnpc_damaging_abilities">{{ ability.name }}</md-option>
+
+                                        </md-select>
+                                    </md-input-container>
+                                    <md-button class='md-raised md-primary' ng-click="addEvent('kill_npcs')">Add
+                                    </md-button>
+                                </div>
+                                <div class="half-listing">
+
+                                    <md-table-container class="annotation-table">
+
+                                        <table md-table>
+                                            <thead md-head>
+                                            <tr md-row>
+                                                <th md-column ng-if="can_edit"></th>
+                                                <th md-column>Time</th>
+                                                <th md-column>Killing player</th>
+                                                <th md-column>Killed NPC</th>
+                                                <th md-column>Ability</th>
+                                                <th md-column>Assists</th>
+                                                <th md-column ng-if="can_edit">Actions</th>
+                                            </tr>
+
+                                            </thead>
+                                            <tbody md-body>
+                                            <tr md-row ng-repeat='e in events.kill_npcs'
+                                                ng-class="{'success': inCurrentSecond(e.time_point)}">
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button" aria-label="Update time"
+                                                               ng-click="updateEvent(e.id, e, 'kill_npcs')">
+
+                                                        <md-tooltip md-direction="below">Update time to current
+                                                        </md-tooltip>
+                                                        <i class="material-icons">access_time</i>
+                                                    </md-button>
+                                                </td>
+                                                <td md-cell
+                                                    ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
+                                                <td md-cell>{{ e.killing_player }}</td>
+                                                <td md-cell>{{ e.killed_npc }}</td>
+                                                <td md-cell>
+                                                    <md-select ng-model="e.ability.id" ng-if="can_edit"
+                                                               ng-change="updateEvent(e.id, e, 'kill_npcs')"
+                                                               ng-init='e.initial = true'>
+                                                        <md-option ng-value="ability.id"
+                                                                   ng-repeat="ability in e.possible_abilities">{{ ability.name }}</md-option>
+
+                                                    </md-select>
+                                                    <span ng-if="!can_edit" ng-bind="e.ability.name"></span>
+                                                </td>
+                                                <td md-cell>
+                                                    <md-select ng-if="can_edit" ng-model="e.assisting_players" multiple
+                                                               ng-init='e.initial = true'
+                                                               ng-change="updateEvent(e.id, e, 'kill_npcs')">
+                                                        <md-option ng-value="p.id"
+                                                                   ng-repeat="p in e.possible_assists">{{ p.name }}</md-option>
+                                                    </md-select>
+                                                    <span ng-if="!can_edit">{{ e | joinByAssists }}</span>
+
+                                                </td>
+                                                <td md-cell ng-if="can_edit">
+
+                                                    <md-button class="md-icon-button md-warn" aria-label="Remove"
+                                                               ng-click="deleteEvent(e.id, 'kill_npcs')">
+
+                                                        <md-tooltip md-direction="below">Remove</md-tooltip>
+                                                        <i class="material-icons">remove_circle</i>
+                                                    </md-button>
+                                                </td>
+                                            </tr>
+
+                                            </tbody>
+                                        </table>
+                                    </md-table-container>
+                                </div>
+                            </md-card-content>
+
+                        </md-card>
+
+                    </md-content>
+                </md-tab>
+                <md-tab label="Deaths">
+                    <md-content class="md-padding">
+
+                        <md-card>
+                            <md-card-title>
+                                <md-card-title-text>
+                                    <span class="md-headline">Deaths</span>
+                                </md-card-title-text>
+                            </md-card-title>
+                            <md-card-content>
+                                <div ng-if="can_edit">
+                                    <md-input-container>
+
+                                        <label>Player</label>
+                                        <md-select ng-model="newEvents.deaths.player">
+                                            <md-option ng-value="player.id"
+                                                       ng-repeat="player in all_players">{{ player.name }}</md-option>
+
+                                        </md-select>
+                                    </md-input-container>
+                                    <md-button class='md-raised md-primary' ng-click="addEvent('deaths')">Add
+                                    </md-button>
+                                </div>
+
+                                <div class="half-listing">
+
+                                    <md-table-container class="annotation-table">
+
+                                        <table md-table>
+                                            <thead md-head>
+                                            <tr md-row>
+                                                <th md-column ng-if="can_edit"></th>
+                                                <th md-column>Time</th>
+                                                <th md-column>Player</th>
+                                                <th md-column ng-if="can_edit">Actions</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody md-body>
+                                            <tr md-row ng-repeat='e in events.deaths'
+                                                ng-class="{'success': inCurrentSecond(e.time_point)}">
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button" aria-label="Update time"
+                                                               ng-click="updateEvent(e.id, e, 'deaths')">
+
+                                                        <md-tooltip md-direction="below">Update time to current
+                                                        </md-tooltip>
+                                                        <i class="material-icons">access_time</i>
+                                                    </md-button>
+                                                </td>
+                                                <td md-cell
+                                                    ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
+                                                <td md-cell>{{ e.player }}</td>
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button md-warn" aria-label="Remove"
+                                                               ng-click="deleteEvent(e.id, 'deaths')">
+
+                                                        <md-tooltip md-direction="below">Remove</md-tooltip>
+                                                        <i class="material-icons">remove_circle</i>
+                                                    </md-button>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </md-table-container>
+                                </div>
+                            </md-card-content>
+                        </md-card>
+
+
+                        <md-card>
+                            <md-card-title>
+                                <md-card-title-text>
+                                    <span class="md-headline">NPC deaths</span>
+                                </md-card-title-text>
+                            </md-card-title>
+                            <md-card-content>
+                                <div ng-if="can_edit">
+
+                                    <md-input-container>
+                                        <label>NPC</label>
+                                        <md-select ng-model="newEvents.npc_deaths.npc">
+                                            <md-option ng-value="npc.id"
+                                                       ng-repeat="npc in NPCs">{{ npc.name }}</md-option>
+
+                                        </md-select>
+
+                                    </md-input-container>
+                                    <md-input-container>
+
+                                        <label>Side</label>
+                                        <md-select ng-model="newEvents.npc_deaths.side">
+                                            <md-option ng-value="side.id"
+                                                       ng-repeat="side in sides">{{ side.name }}</md-option>
+
+                                        </md-select>
+                                    </md-input-container>
+                                    <md-button class='md-raised md-primary' ng-click="addEvent('npc_deaths')">Add
+                                    </md-button>
+                                </div>
+                                <div class="half-listing">
+
+                                    <md-table-container class="annotation-table">
+
+                                        <table md-table>
+                                            <thead md-head>
+                                            <tr md-row>
+                                                <th md-column ng-if="can_edit"></th>
+                                                <th md-column>Time</th>
+                                                <th md-column>NPC</th>
+                                                <th md-column>Side</th>
+                                                <th md-column ng-if="can_edit">Actions</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody md-body>
+                                            <tr md-row ng-repeat='e in events.npc_deaths'
+                                                ng-class="{'success': inCurrentSecond(e.time_point)}">
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button" aria-label="Update time"
+                                                               ng-click="updateEvent(e.id, e, 'npc_deaths')">
+
+                                                        <md-tooltip md-direction="below">Update time to current
+                                                        </md-tooltip>
+                                                        <i class="material-icons">access_time</i>
+                                                    </md-button>
+                                                </td>
+                                                <td md-cell
+                                                    ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
+                                                <td md-cell>{{ e.npc }}</td>
+                                                <td md-cell>
+                                                    <md-select ng-model="e.side" ng-if="can_edit"
+                                                               ng-change="updateEvent(e.id, e, 'npc_deaths')"
+                                                               ng-init='e.initial = true'>
+                                                        <md-option ng-value="side.id"
+                                                                   ng-repeat="side in sides">{{ side.name }}</md-option>
+
+                                                    </md-select>
+                                                    <span ng-if="!can_edit && e.side =='L'">Left</span>
+                                                    <span ng-if="!can_edit && e.side =='R'">Right</span>
+                                                </td>
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button md-warn" aria-label="Remove"
+                                                               ng-click="deleteEvent(e.id, 'npc_deaths')">
+
+                                                        <md-tooltip md-direction="below">Remove</md-tooltip>
+                                                        <i class="material-icons">remove_circle</i>
+                                                    </md-button>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </md-table-container>
+                                </div>
+                            </md-card-content>
+                        </md-card>
+                    </md-content>
+                </md-tab>
+                <md-tab label="Revives">
+                    <md-content class="md-padding">
+
+                        <md-card>
+                            <md-card-title>
+                                <md-card-title-text>
+                                    <span class="md-headline">Revives</span>
+                                </md-card-title-text>
+                            </md-card-title>
+                            <md-card-content>
+                                <div ng-if="can_edit">
+
+                                    <md-input-container>
+
+                                        <label>Reviving player</label>
+                                        <md-select ng-model="newEvents.revives.reviving_player"
+                                                   ng-change="updateReviveProperties()">
+                                            <md-option ng-value="player.id"
+                                                       ng-repeat="player in reviver_players">{{ player.name }}</md-option>
+
+                                        </md-select>
+                                    </md-input-container>
+                                    <md-input-container>
+
+                                        <label>Revived player</label>
+                                        <md-select ng-model="newEvents.revives.revived_player">
+                                            <md-option ng-value="player.id"
+                                                       ng-repeat="player in revivable_players">{{ player.name }}</md-option>
+
+                                        </md-select>
+                                    </md-input-container>
+                                    <md-input-container>
+                                        <label>Ability</label>
+                                        <md-select ng-model="newEvents.revives.ability">
+                                            <md-option ng-value="ability.id"
+                                                       ng-repeat="ability in reviving_abilities">{{ ability.name }}</md-option>
+
+                                        </md-select>
+
+                                    </md-input-container>
+                                    <md-button class='md-raised md-primary' ng-click="addEvent('revives')">Add
+                                    </md-button>
+                                </div>
+                                <div class="full-listing">
+
+                                    <md-table-container class="annotation-table">
+
+                                        <table md-table>
+                                            <thead md-head>
+                                            <tr md-row>
+                                                <th md-column ng-if="can_edit"></th>
+                                                <th md-column>Time</th>
+                                                <th md-column>Reviving player</th>
+                                                <th md-column>Revived player</th>
+                                                <th md-column>Ability</th>
+                                                <th md-column ng-if="can_edit">Actions</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody md-body>
+                                            <tr md-row ng-repeat='e in events.revives'
+                                                ng-class="{'success': inCurrentSecond(e.time_point)}">
+
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button" aria-label="Update time"
+                                                               ng-click="updateEvent(e.id, e, 'revives')">
+
+                                                        <md-tooltip md-direction="below">Update time to current
+                                                        </md-tooltip>
+                                                        <i class="material-icons">access_time</i>
+                                                    </md-button>
+                                                </td>
+                                                <td md-cell
+                                                    ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
+                                                <td md-cell>{{ e.reviving_player }}</td>
+                                                <td md-cell>{{ e.revived_player }}</td>
+                                                <td md-cell>{{ e.ability }}</td>
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button md-warn" aria-label="Remove"
+                                                               ng-click="deleteEvent(e.id, 'revives')">
+
+                                                        <md-tooltip md-direction="below">Remove</md-tooltip>
+                                                        <i class="material-icons">remove_circle</i>
+                                                    </md-button>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </md-table-container>
+                                </div>
+                            </md-card-content>
+                        </md-card>
+                    </md-content>
+                </md-tab>
+                <md-tab label="Ults">
+                    <md-content class="md-padding">
+                        <md-card>
+                            <md-card-title>
+                                <md-card-title-text>
+                                    <span class="md-headline">Ult gains</span>
+                                </md-card-title-text>
+                            </md-card-title>
+                            <md-card-content>
+                                <div ng-if="can_edit">
+
+                                    <md-input-container>
+                                        <label>Player</label>
+                                        <md-select ng-model="newEvents.ult_gains.player"
+                                                   ng-change="updateUltGainProperties()">
+                                            <md-option ng-value="player.id"
+                                                       ng-repeat="player in all_players">{{ player.name }}</md-option>
+
+                                        </md-select>
+
+                                    </md-input-container>
+
+                                    <md-button class='md-raised md-primary' ng-click="addEvent('ult_gains')">Add
+                                    </md-button>
+                                </div>
+                                <div class="half-listing">
+
+                                    <md-table-container class="annotation-table">
+
+                                        <table md-table>
+                                            <thead md-head>
+                                            <tr md-row>
+                                                <th md-column ng-if="can_edit"></th>
+                                                <th md-column>Time</th>
+                                                <th md-column>Player</th>
+                                                <th md-column ng-if="can_edit">Actions</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody md-body>
+                                            <tr md-row ng-repeat='e in events.ult_gains'
+                                                ng-class="{'success': inCurrentSecond(e.time_point)}">
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button" aria-label="Update time"
+                                                               ng-click="updateEvent(e.id, e, 'ult_gains')">
+
+                                                        <md-tooltip md-direction="below">Update time to current
+                                                        </md-tooltip>
+                                                        <i class="material-icons">access_time</i>
+                                                    </md-button>
+                                                </td>
+                                                <td md-cell
+                                                    ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
+                                                <td md-cell>{{ e.player.name }}</td>
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button md-warn" aria-label="Remove"
+                                                               ng-click="deleteEvent(e.id, 'ult_gains')">
+
+                                                        <md-tooltip md-direction="below">Remove</md-tooltip>
+                                                        <i class="material-icons">remove_circle</i>
+                                                    </md-button>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </md-table-container>
+                                </div>
+                            </md-card-content>
+                        </md-card>
+                        <md-card>
+                            <md-card-title>
+                                <md-card-title-text>
+                                    <span class="md-headline">Ult uses</span>
+                                </md-card-title-text>
+                            </md-card-title>
+                            <md-card-content>
+                                <div ng-if="can_edit">
+                                    <md-input-container>
+
+                                        <label>Player</label>
+                                        <md-select ng-model="newEvents.ult_uses.player"
+                                                   ng-change="updateUltUseProperties()">
+                                            <md-option ng-value="player.id"
+                                                       ng-repeat="player in all_players">{{ player.name }}</md-option>
+
+                                        </md-select>
+                                    </md-input-container>
+                                    <md-button class='md-raised md-primary' ng-click="addEvent('ult_uses')">Add
+                                    </md-button>
+                                </div>
+                                <div class="half-listing">
+
+                                    <md-table-container class="annotation-table">
+
+                                        <table md-table>
+                                            <thead md-head>
+                                            <tr md-row>
+                                                <th md-column ng-if="can_edit"></th>
+                                                <th md-column>Time</th>
+                                                <th md-column>Player</th>
+                                                <th md-column ng-if="can_edit">Actions</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody md-body>
+                                            <tr md-row ng-repeat='e in events.ult_uses'
+                                                ng-class="{'success': inCurrentSecond(e.time_point)}">
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button" aria-label="Update time"
+                                                               ng-click="updateEvent(e.id, e, 'ult_uses')">
+
+                                                        <md-tooltip md-direction="below">Update time to current
+                                                        </md-tooltip>
+                                                        <i class="material-icons">access_time</i>
+                                                    </md-button>
+                                                </td>
+                                                <td md-cell
+                                                    ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
+                                                <td md-cell>{{ e.player.name }}</td>
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button md-warn" aria-label="Remove"
+                                                               ng-click="deleteEvent(e.id, 'ult_uses')">
+
+                                                        <md-tooltip md-direction="below">Remove</md-tooltip>
+                                                        <i class="material-icons">remove_circle</i>
+                                                    </md-button>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </md-table-container>
+                                </div>
+                            </md-card-content>
+                        </md-card>
+
+                    </md-content>
+                </md-tab>
+                <md-tab label="Pauses">
+                    <md-content class="md-padding">
+                        <md-card>
+                            <md-card-title>
+                                <md-card-title-text>
+                                    <span class="md-headline">Pauses</span>
+                                </md-card-title-text>
+                            </md-card-title>
+                            <md-card-content>
+                                <div ng-if="can_edit">
+                                    <md-button class='md-raised md-primary' ng-click="addEvent('pauses')">
+                                        Add
+                                    </md-button>
+                                </div>
+                                <div class="half-listing">
+
+                                    <md-table-container class="annotation-table">
+
+                                        <table md-table>
+                                            <thead md-head>
+                                            <tr md-row>
+                                                <th md-column ng-if="can_edit"></th>
+                                                <th md-column>Time</th>
+                                                <th md-column ng-if="can_edit">Actions</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody md-body>
+                                            <tr md-row ng-repeat='e in events.pauses'
+                                                ng-class="{'success': inCurrentSecond(e.time_point)}">
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button" aria-label="Update time"
+                                                               ng-click="updateEvent(e.id, e, 'pauses')">
+
+                                                        <md-tooltip md-direction="below">Update time to current
+                                                        </md-tooltip>
+                                                        <i class="material-icons">access_time</i>
+                                                    </md-button>
+                                                </td>
+                                                <td md-cell
+                                                    ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button md-warn" aria-label="Remove"
+                                                               ng-click="deleteEvent(e.id, 'pauses')">
+
+                                                        <md-tooltip md-direction="below">Remove</md-tooltip>
+                                                        <i class="material-icons">remove_circle</i>
+                                                    </md-button>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </md-table-container>
+                                </div>
+                            </md-card-content>
+                        </md-card>
+                        <md-card>
+                            <md-card-title>
+                                <md-card-title-text>
+                                    <span class="md-headline">Unauses</span>
+                                </md-card-title-text>
+                            </md-card-title>
+                            <md-card-content>
+                                <div ng-if="can_edit">
+
+                                    <md-button class='md-raised md-primary' ng-click="addEvent('unpauses')">Add
+                                    </md-button>
+                                </div>
+                                <div class="half-listing">
+
+                                    <md-table-container class="annotation-table">
+
+                                        <table md-table>
+                                            <thead md-head>
+                                            <tr md-row>
+                                                <th md-column ng-if="can_edit"></th>
+                                                <th md-column>Time</th>
+                                                <th md-column ng-if="can_edit">Actions</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody md-body>
+                                            <tr md-row ng-repeat='e in events.unpauses'
+                                                ng-class="{'success': inCurrentSecond(e.time_point)}">
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button" aria-label="Update time"
+                                                               ng-click="updateEvent(e.id, e, 'unpauses')">
+
+                                                        <md-tooltip md-direction="below">Update time to current
+                                                        </md-tooltip>
+                                                        <i class="material-icons">access_time</i>
+                                                    </md-button>
+                                                </td>
+                                                <td md-cell
+                                                    ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button md-warn" aria-label="Remove"
+                                                               ng-click="deleteEvent(e.id, 'unpauses')">
+
+                                                        <md-tooltip md-direction="below">Remove</md-tooltip>
+                                                        <i class="material-icons">remove_circle</i>
+                                                    </md-button>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </md-table-container>
+                                </div>
+                            </md-card-content>
+                        </md-card>
+                    </md-content>
+                </md-tab>
+                <md-tab label="Broadcast">
+                    <md-content class="md-padding">
+                        <md-card>
+                            <md-card-title>
+                                <md-card-title-text>
+                                    <span class="md-headline">Replay starts</span>
+                                </md-card-title-text>
+                            </md-card-title>
+                            <md-card-content>
+                                <div ng-if="can_edit">
+                                    <md-button class='md-raised md-primary' ng-click="addEvent('replay_starts')">Add
+                                    </md-button>
+                                </div>
+                                <div class="quarter-listing">
+
+                                    <md-table-container class="annotation-table">
+
+                                        <table md-table>
+                                            <thead md-head>
+                                            <tr md-row>
+                                                <th md-column ng-if="can_edit"></th>
+                                                <th md-column>Time</th>
+                                                <th md-column ng-if="can_edit">Actions</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody md-body>
+                                            <tr md-row ng-repeat='e in events.replay_starts'
+                                                ng-class="{'success': inCurrentSecond(e.time_point)}">
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button" aria-label="Update time"
+                                                               ng-click="updateEvent(e.id, e, 'replay_starts')">
+
+                                                        <md-tooltip md-direction="below">Update time to current
+                                                        </md-tooltip>
+                                                        <i class="material-icons">access_time</i>
+                                                    </md-button>
+                                                </td>
+                                                <td md-cell
+                                                    ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button md-warn" aria-label="Remove"
+                                                               ng-click="deleteEvent(e.id, 'replay_starts')">
+
+                                                        <md-tooltip md-direction="below">Remove</md-tooltip>
+                                                        <i class="material-icons">remove_circle</i>
+                                                    </md-button>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </md-table-container>
+                                </div>
+                            </md-card-content>
+                        </md-card>
+                        <md-card>
+                            <md-card-title>
+                                <md-card-title-text>
+                                    <span class="md-headline">Replay ends</span>
+                                </md-card-title-text>
+                            </md-card-title>
+                            <md-card-content>
+                                <div ng-if="can_edit">
+                                    <md-button class='md-raised md-primary' ng-click="addEvent('replay_ends')">Add
+                                    </md-button>
+                                </div>
+                                <div class="quarter-listing">
+
+                                    <md-table-container class="annotation-table">
+
+                                        <table md-table>
+                                            <thead md-head>
+                                            <tr md-row>
+                                                <th md-column ng-if="can_edit"></th>
+                                                <th md-column>Time</th>
+                                                <th md-column ng-if="can_edit">Actions</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody md-body>
+                                            <tr md-row ng-repeat='e in events.replay_ends'
+                                                ng-class="{'success': inCurrentSecond(e.time_point)}">
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button" aria-label="Update time"
+                                                               ng-click="updateEvent(e.id, e, 'replay_ends')">
+
+                                                        <md-tooltip md-direction="below">Update time to current
+                                                        </md-tooltip>
+                                                        <i class="material-icons">access_time</i>
+                                                    </md-button>
+                                                </td>
+                                                <td md-cell
+                                                    ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button md-warn" aria-label="Remove"
+                                                               ng-click="deleteEvent(e.id, 'replay_ends')">
+
+                                                        <md-tooltip md-direction="below">Remove</md-tooltip>
+                                                        <i class="material-icons">remove_circle</i>
+                                                    </md-button>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </md-table-container>
+                                </div>
+                            </md-card-content>
+                        </md-card>
+                        <md-card>
+                            <md-card-title>
+                                <md-card-title-text>
+                                    <span class="md-headline">Smaller window starts</span>
+                                </md-card-title-text>
+                            </md-card-title>
+                            <md-card-content>
+                                <div ng-if="can_edit">
+                                    <md-button class='md-raised md-primary'
+                                               ng-click="addEvent('smaller_window_starts')">Add
+                                    </md-button>
+                                </div>
+                                <div class="quarter-listing">
+
+                                    <md-table-container class="annotation-table">
+
+                                        <table md-table>
+                                            <thead md-head>
+                                            <tr md-row>
+                                                <th md-column ng-if="can_edit"></th>
+                                                <th md-column>Time</th>
+                                                <th md-column ng-if="can_edit">Actions</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody md-body>
+                                            <tr md-row ng-repeat='e in events.smaller_window_starts'
+                                                ng-class="{'success': inCurrentSecond(e.time_point)}">
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button" aria-label="Update time"
+                                                               ng-click="updateEvent(e.id, e, 'smaller_window_starts')">
+
+                                                        <md-tooltip md-direction="below">Update time to current
+                                                        </md-tooltip>
+                                                        <i class="material-icons">access_time</i>
+                                                    </md-button>
+                                                </td>
+                                                <td md-cell
+                                                    ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button md-warn" aria-label="Remove"
+                                                               ng-click="deleteEvent(e.id, 'smaller_window_starts')">
+
+                                                        <md-tooltip md-direction="below">Remove</md-tooltip>
+                                                        <i class="material-icons">remove_circle</i>
+                                                    </md-button>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </md-table-container>
+                                </div>
+                            </md-card-content>
+                        </md-card>
+
+                        <md-card>
+                            <md-card-title>
+                                <md-card-title-text>
+                                    <span class="md-headline">Smaller window ends</span>
+                                </md-card-title-text>
+                            </md-card-title>
+                            <md-card-content>
+                                <div ng-if="can_edit">
+                                    <md-button class='md-raised md-primary' ng-click="addEvent('smaller_window_ends')">
+                                        Add
+                                    </md-button>
+                                </div>
+                                <div class="quarter-listing">
+
+                                    <md-table-container class="annotation-table">
+
+                                        <table md-table>
+                                            <thead md-head>
+                                            <tr md-row>
+                                                <th md-column ng-if="can_edit"></th>
+                                                <th md-column>Time</th>
+                                                <th md-column ng-if="can_edit">Actions</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody md-body>
+                                            <tr md-row ng-repeat='e in events.smaller_window_ends'
+                                                ng-class="{'success': inCurrentSecond(e.time_point)}">
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button" aria-label="Update time"
+                                                               ng-click="updateEvent(e.id, e, 'smaller_window_ends')">
+
+                                                        <md-tooltip md-direction="below">Update time to current
+                                                        </md-tooltip>
+                                                        <i class="material-icons">access_time</i>
+                                                    </md-button>
+                                                </td>
+                                                <td md-cell
+                                                    ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button md-warn" aria-label="Remove"
+                                                               ng-click="deleteEvent(e.id, 'smaller_window_ends')">
+
+                                                        <md-tooltip md-direction="below">Remove</md-tooltip>
+                                                        <i class="material-icons">remove_circle</i>
+                                                    </md-button>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </md-table-container>
+                                </div>
+                            </md-card-content>
+                        </md-card>
+                    </md-content>
+                </md-tab>
+                <md-tab label="Points">
+                    <md-content class="md-padding">
+
+                        <md-card>
+                            <md-card-title>
+                                <md-card-title-text>
+                                    <span class="md-headline">Point gain</span>
+                                </md-card-title-text>
+                            </md-card-title>
+                            <md-card-content>
+                                <div ng-if="can_edit">
+                                    <md-input-container>
+
+                                        <label>Point total</label>
+                                        <input type="text" ng-model="newEvents.point_gains.point_total"/>
+                                    </md-input-container>
+                                    <md-button class='md-raised md-primary' ng-click="addEvent('point_gains')">Add
+                                    </md-button>
+                                </div>
+                                <div class="quarter-listing">
+
+                                    <md-table-container class="annotation-table">
+
+                                        <table md-table>
+                                            <thead md-head>
+                                            <tr md-row>
+                                                <th md-column ng-if="can_edit"></th>
+                                                <th md-column>Time</th>
+                                                <th md-column>Point total</th>
+                                                <th md-column ng-if="can_edit">Actions</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody md-body>
+                                            <tr md-row ng-repeat='e in events.point_gains'
+                                                ng-class="{'success':inCurrentSecond(e.time_point)}">
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button" aria-label="Update time"
+                                                               ng-click="updateEvent(e.id, e, 'point_gains')">
+
+                                                        <md-tooltip md-direction="below">Update time to current
+                                                        </md-tooltip>
+                                                        <i class="material-icons">access_time</i>
+                                                    </md-button>
+                                                </td>
+                                                <td md-cell
+                                                    ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
+                                                <td md-cell>{{ e.point_total }}</td>
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button md-warn" aria-label="Remove"
+                                                               ng-click="deleteEvent(e.id, 'point_gains')">
+
+                                                        <md-tooltip md-direction="below">Remove</md-tooltip>
+                                                        <i class="material-icons">remove_circle</i>
+                                                    </md-button>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </md-table-container>
+                                </div>
+                            </md-card-content>
+                        </md-card>
+                        <md-card>
+                            <md-card-title>
+                                <md-card-title-text>
+                                    <span class="md-headline">Point flips</span>
+                                </md-card-title-text>
+                            </md-card-title>
+                            <md-card-content>
+                                <div ng-if="can_edit">
+                                    <md-input-container>
+
+                                        <label>Controlling side</label>
+                                        <md-select ng-model="newEvents.point_flips.controlling_side">
+                                            <md-option ng-value="side.id"
+                                                       ng-repeat="side in sides">{{ side.name }}</md-option>
+
+                                        </md-select>
+                                    </md-input-container>
+                                    <md-button class='md-raised md-primary' ng-click="addEvent('point_flips')">Add
+                                    </md-button>
+                                </div>
+                                <div class="quarter-listing">
+
+                                    <md-table-container class="annotation-table">
+
+                                        <table md-table>
+                                            <thead md-head>
+                                            <tr md-row>
+                                                <th md-column ng-if="can_edit"></th>
+                                                <th md-column>Time</th>
+                                                <th md-column>Controlling side</th>
+                                                <th md-column ng-if="can_edit">Actions</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody md-body>
+                                            <tr md-row ng-repeat='e in events.point_flips'
+                                                ng-class="{'success':inCurrentSecond(e.time_point)}">
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button" aria-label="Update time"
+                                                               ng-click="updateEvent(e.id, e, 'point_flips')">
+
+                                                        <md-tooltip md-direction="below">Update time to current
+                                                        </md-tooltip>
+                                                        <i class="material-icons">access_time</i>
+                                                    </md-button>
+                                                </td>
+                                                <td md-cell
+                                                    ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
+                                                <td md-cell>
+                                                    <md-select ng-model="e.controlling_side" ng-if="can_edit"
+                                                               ng-change="updateEvent(e.id, e, 'point_flips')"
+                                                               ng-init='e.initial = true'>
+                                                        <md-option ng-value="side.id"
+                                                                   ng-repeat=" side in sides">{{ side.name }}</md-option>
+
+                                                    </md-select>
+                                                    <span ng-if="!can_edit && e.controlling_side =='L'">Left</span>
+                                                    <span ng-if="!can_edit && e.controlling_side =='R'">Right</span>
+                                                </td>
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button md-warn" aria-label="Remove"
+                                                               ng-click="deleteEvent(e.id, 'point_flips')">
+
+                                                        <md-tooltip md-direction="below">Remove</md-tooltip>
+                                                        <i class="material-icons">remove_circle</i>
+                                                    </md-button>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </md-table-container>
+                                </div>
+                            </md-card-content>
+                        </md-card>
+                        <md-card>
+                            <md-card-title>
+                                <md-card-title-text>
+                                    <span class="md-headline">Overtime starts</span>
+                                </md-card-title-text>
+                            </md-card-title>
+                            <md-card-content>
+                                <div ng-if="can_edit">
+                                    <md-button class='md-raised md-primary' ng-click="addEvent('overtime_starts')">Add
+                                    </md-button>
+                                </div>
+                                <div class="quarter-listing">
+
+                                    <md-table-container class="annotation-table">
+
+                                        <table md-table>
+                                            <thead md-head>
+                                            <tr md-row>
+                                                <th md-column ng-if="can_edit"></th>
+                                                <th md-column>Time</th>
+                                                <th md-column ng-if="can_edit">Actions</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody md-body>
+                                            <tr md-row ng-repeat='e in events.overtime_starts'
+                                                ng-class="{'success':inCurrentSecond(e.time_point)}">
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button" aria-label="Update time"
+                                                               ng-click="updateEvent(e.id, e, 'overtime_starts')">
+
+                                                        <md-tooltip md-direction="below">Update time to current
+                                                        </md-tooltip>
+                                                        <i class="material-icons">access_time</i>
+                                                    </md-button>
+                                                </td>
+                                                <td md-cell
+                                                    ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button md-warn" aria-label="Remove"
+                                                               ng-click="deleteEvent(e.id, 'overtime_starts')">
+
+                                                        <md-tooltip md-direction="below">Remove</md-tooltip>
+                                                        <i class="material-icons">remove_circle</i>
+                                                    </md-button>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </md-table-container>
+                                </div>
+                            </md-card-content>
+                        </md-card>
+                        <md-card>
+                            <md-card-title>
+                                <md-card-title-text>
+                                    <span class="md-headline">Overtime ends</span>
+                                </md-card-title-text>
+                            </md-card-title>
+                            <md-card-content>
+                                <div ng-if="can_edit">
+                                    <md-button class='md-raised md-primary' ng-click="addEvent('overtime_ends')">Add
+                                    </md-button>
+                                </div>
+                                <div class="quarter-listing">
+
+                                    <md-table-container class="annotation-table">
+
+                                        <table md-table>
+                                            <thead md-head>
+
+                                            <tr md-row>
+                                                <th md-column ng-if="can_edit"></th>
+                                                <th md-column>Time</th>
+                                                <th md-column ng-if="can_edit">Actions</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody md-body>
+                                            <tr md-row ng-repeat='e in events.overtime_ends'
+                                                ng-class="{'success':inCurrentSecond(e.time_point)}">
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button" aria-label="Update time"
+                                                               ng-click="updateEvent(e.id, e, 'overtime_ends')">
+
+                                                        <md-tooltip md-direction="below">Update time to current
+                                                        </md-tooltip>
+                                                        <i class="material-icons">access_time</i>
+                                                    </md-button>
+                                                </td>
+                                                <td md-cell
+                                                    ng-click="seekTo(e.time_point + round.begin)">{{ e.time_point|secondsToDateTime | date:'mm:ss.sss' }}</td>
+                                                <td md-cell ng-if="can_edit">
+                                                    <md-button class="md-icon-button md-warn" aria-label="Remove"
+                                                               ng-click="deleteEvent(e.id, 'overtime_ends')">
+
+                                                        <md-tooltip md-direction="below">Remove</md-tooltip>
+                                                        <i class="material-icons">remove_circle</i>
+                                                    </md-button>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </md-table-container>
+                                </div>
+                            </md-card-content>
+                        </md-card>
+                    </md-content>
+                </md-tab>
+            </md-tabs>
         </div>
     </div>
+</div>
 </div>
 </div>

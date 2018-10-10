@@ -4,6 +4,13 @@ from django.contrib.auth.models import User, Group
 from django.db.models import Sum, F
 
 
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        depth = 2
+        fields = ('id', 'first_name', 'last_name', 'username', 'is_superuser')
+
 class HeroSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Hero

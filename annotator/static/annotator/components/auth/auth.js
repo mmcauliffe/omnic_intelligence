@@ -1,3 +1,3 @@
 
-angular.module('annotator.auth', [
+angular.module('oi.auth', [
 ]);

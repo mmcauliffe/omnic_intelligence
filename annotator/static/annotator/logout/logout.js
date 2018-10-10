@@ -1,12 +1,8 @@
-angular.module("logout", ['annotator.auth']).controller("LogoutCtrl", [
-    '$scope', '$rootScope', '$state', 'AuthService', 'CookieService', '$timeout', function ($scope, $rootScope, $state, AuthService, CookieService) {
+angular.module("logout", ['oi.auth']).controller("LogoutCtrl", [
+    '$scope', '$rootScope', '$state',  'djangoAuth', function ($scope, $rootScope, $state, djangoAuth) {
         $scope.state = $state;
 
-        CookieService.remove('oi_token');
-        CookieService.remove('oi_sessionid');
-        delete $rootScope.session;
-        $rootScope.$broadcast('logged_out');
-        return $state.go("home");
-
+    djangoAuth.logout();
+    return $state.go("home");
     }
 ]);

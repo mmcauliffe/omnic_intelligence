@@ -11,7 +11,29 @@ angular.module('roundDetail', [
             return new Date(1970, 0, 1).setSeconds(seconds, Math.round(seconds % 1 * 1000));
         };
     }])
-    .controller('RoundDetailCtrl', function ($scope, Rounds, Games, NPCs, Heroes, Teams, $state, $stateParams, $rootScope, Streams) {
+    .filter('joinByAssists', function () {
+        return function (e,delimiter) {
+            var assisting_players = [];
+            for (i=0; i<e.assisting_players.length; i++){
+                assisting_players.push(e.possible_assists.filter(x => x.id== e.assisting_players[i])[0].name)
+            }
+            return (assisting_players || []).join(delimiter || ',');
+        };
+})
+    .controller('RoundDetailCtrl', function ($scope, Rounds, Games, NPCs, Heroes, Teams, $state, $stateParams, $rootScope, Streams, djangoAuth, Users) {
+
+        djangoAuth.authenticationStatus(true).then(function () {
+
+            Users.current_user().then(function (res) {
+                $scope.user = res.data;
+                $scope.can_edit = $scope.user.is_superuser;
+                console.log($scope.user)
+            });
+        }).catch(function (res) {
+            console.log(res)
+            $scope.user = {};
+            $scope.can_edit = false;
+        });
         $scope.events = {};
         $scope.initializing = {};
         $scope.newEvents = {};
@@ -281,7 +303,7 @@ angular.module('roundDetail', [
                 autoplay: false,
                 time: $scope.round.begin
             });
-            $scope.twitch_player.addEventListener(Twitch.Embed.VIDEO_READY, $scope.onPlayerReady)
+            $scope.twitch_player.addEventListener(Twitch.Player.READY, $scope.onPlayerReady)
         };
         $scope.onPlayerReady = function () {
             $scope.player_ready = true;

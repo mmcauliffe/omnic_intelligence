@@ -1,7 +1,6 @@
 from django.db import models
 import os
 import re
-import cv2
 import csv
 from decimal import Decimal
 from django.conf import settings

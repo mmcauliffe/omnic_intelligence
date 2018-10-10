@@ -15,51 +15,23 @@ header.navbar {
 }
 
 
-.table-fixed thead {
-  width: 97.7%;
-}
-.table-fixed tbody {
-  height: 230px;
-  overflow-y: auto;
-  width: 100%;
-}
-.table-fixed thead, .table-fixed tbody, .table-fixed tr, .table-fixed td, .table-fixed th {
-  display: block;
-}
-.table-fixed tbody td, .table-fixed thead > tr> th {
-  float: left;
-  border-bottom-width: 0;
-    height: 35px;
+.full-listing{
+    height:600px;
+    overflow: hidden;
 }
 
-.table-striped>tbody>tr:nth-child(odd),
-.table-striped>tbody>tr:nth-child(odd) {
-   background-color: #88a9c7;
- }
-
-.table-fixed thead > tr> th {
-    background-color: #FF8201;
-
+.half-listing{
+    height:300px;
+    overflow: hidden;
 }
 
-.annotation-table tr th:nth-child(1){
-   width: 30px;
- }
-.annotation-table tr td:nth-child(1){
-   width: 30px;
- }
-
-.annotation-listing{
-    height: 70%;
-}
-
-.kill-listing{
-    height: 29%;
+.quarter-listing{
+    height:150px;
+    overflow: hidden;
 }
 
 
 .statuses {
-    display: table-row;
     width: 1280px;
 }
 
@@ -160,37 +132,14 @@ header.navbar {
     overflow-x: visible;
 }
 
-md-tabs {
-    height: 100%;
-    overflow-y: hidden;
-    overflow-x: visible;
-}
-md-content{
-    height:90%;
-    overflow-y: hidden;
-    overflow-x: visible;
-}
-md-tab-content div{
+
+
+.annotation-table {
     height:100%;
-}
-
-.annotation-table tr {
-    width: 100%;
-    display: inline-table;
-    table-layout: fixed;
-}
-
-.annotation-table{
-    max-height:100%;              // <-- Select the height of the table
-        table-layout:fixed;
-}
-.annotation-table tbody{
     overflow-y: scroll;
-    height: 85%;            //  <-- Select the height of the body
-    width: 100%;
-    position: absolute;
-    background-color: aliceblue;
 }
+
+
 .switch-table tbody{
     height: 83%;            //  <-- Select the height of the body
 }
@@ -213,13 +162,6 @@ md-tab-content div{
     background-color: aliceblue;
 }
 
-.annotation-table tr th:nth-child(1){
-   width: 30px;
- }
-.annotation-table tr td:nth-child(1){
-   width: 30px;
- }
-
 .kill-table {
     height: 250px;
 }
@@ -235,12 +177,6 @@ md-tab-content div{
 .kill-table tbody {
     max-height:25%;
  }
-main .row{
-    height: 100%;
-    padding: 10px;
-    background-color: aliceblue;
-    overflow: hidden;
-}
 .hero-icon{
     width: 24px;
     height: 20px;
@@ -254,4 +190,8 @@ main .row{
     display: inline-block;
     vertical-align: middle;
     position: relative;
+}
+
+.success {
+    background-color: lightgreen;
 }

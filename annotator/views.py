@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from .serializers import UserGroupSerializer, UserWithFullGroupsSerializer, UnauthorizedUserSerializer
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.models import User
+from django.views.decorators.csrf import ensure_csrf_cookie
 import os
 import requests
 import json

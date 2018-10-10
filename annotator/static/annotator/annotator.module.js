@@ -6,11 +6,11 @@ if (window) {
 }
 
 var app = angular.module('annotator', [
-    'long2know',
     'ngResource',
     'ui.router',
     'ui.bootstrap',
     'ngCookies',
+    'md.data.table',
     'ngMaterial',
     'eventList',
     'eventDetail',
@@ -23,7 +23,8 @@ var app = angular.module('annotator', [
     'logout'
 ]).run(
     function ($http, $cookies) {
-        $http.defaults.headers.post['X-CSRFToken'] = $cookies.get('csrftoken');
+    $http.defaults.withCredentials = true;
+    //    $http.defaults.headers.post['X-CSRFToken'] = $cookies.get('csrftoken');
         // Add the following two lines
         $http.defaults.xsrfCookieName = 'csrftoken';
         $http.defaults.xsrfHeaderName = 'X-CSRFToken';
@@ -35,6 +36,10 @@ app.constant('__env', env);
 app.config(function ($stateProvider, $urlRouterProvider) {
     $stateProvider
         .state('home', {
+            url: '/',
+            template: '<div></div>'
+        })
+        .state('user-profile', {
             url: '/',
             template: '<div></div>'
         })

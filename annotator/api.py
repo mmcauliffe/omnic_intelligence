@@ -3,8 +3,9 @@ from rest_framework.response import Response
 from rest_framework.decorators import detail_route, list_route
 from rest_framework import filters
 
-from rest_framework import pagination
+from rest_framework import pagination, status
 
+import django
 from django.db.models import Q
 from django.core.exceptions import FieldDoesNotExist
 from django.db.models.fields.reverse_related import ForeignObjectRel, OneToOneRel
@@ -12,7 +13,37 @@ from decimal import Decimal
 from . import serializers
 from . import models
 from .utils import lookup_team, match_up_players
+from django.contrib.auth.models import User, AnonymousUser
 
+
+class UserViewSet(viewsets.ModelViewSet):
+    model = User
+    queryset = User.objects.all()
+    serializer_class = serializers.UserSerializer
+
+    def create(self, request, *args, **kwargs):
+        if isinstance(request.user, AnonymousUser):
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        if not request.user.is_superuser:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+    def list(self, request, *args, **kwargs):
+        if isinstance(request.user, AnonymousUser):
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        if not request.user.is_superuser:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        users = User.objects.all()
+        return Response(self.serializer_class(users, many=True).data)
+
+    @list_route(methods=['get'])
+    def current_user(self, request):
+        print(dir(request))
+        print(request.auth)
+        print(request.data)
+        print(request.user)
+        if isinstance(request.user, AnonymousUser):
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        return Response(self.serializer_class(request.user).data)
 
 class RelatedOrderingFilter(filters.OrderingFilter):
     """
@@ -599,6 +630,9 @@ class RoundStatusViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter, RelatedOrderingFilter,)
     pagination_class = pagination.LimitOffsetPagination
     search_fields = ('game__match__event__name', 'game__match__teams__name')
+
+    def list(self, request, *args, **kwargs):
+        return super(RoundStatusViewSet, self).list(request, *args, **kwargs)
 
 
 class TrainRoundViewSet(viewsets.ModelViewSet):
