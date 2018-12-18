@@ -1,0 +1,201 @@
+<template>
+    <v-layout row class="status">
+        <div class="offset"></div>
+        <div class="team">
+            <div v-for="status in left_player_statuses" class="left player">
+                <v-layout row>
+                <div v-if="status.has_ult">
+                    <v-tooltip bottom>
+                        <v-icon slot="activator" @click="addUltUsePlayer(status.id)"
+                                :disabled="!can_edit">check_circle
+                        </v-icon>
+                        <span>Use ult</span></v-tooltip>
+
+                </div>
+                <div v-if="!status.has_ult">
+                    <v-tooltip bottom>
+                        <v-icon slot="activator" @click="addUltGainPlayer(status.id)"
+                                :disabled="!can_edit">check_circle_outline
+                        </v-icon>
+                        <span>Gain ult</span></v-tooltip>
+                </div>
+                    <v-tooltip bottom>
+                        <img class="hero-icon" slot="activator" :src="require('../../assets/Icon-'+ make_safe(status.hero.name) +'.png')"/>
+
+                        <span>{{ status.hero.name}}</span>
+                    </v-tooltip>
+
+                </v-layout>
+                <span>{{ status.name}}</span><br>
+                <div>
+                    <v-icon v-if="!status.alive">person_outline</v-icon>
+                    <v-icon v-else-if="status.alive">person</v-icon>
+                </div>
+            </div>
+        </div>
+        <div class="mid">
+            <h4><label>Current time: <span>{{  currentTime |secondsToMoment | moment('mm:ss.S')}}</span></label></h4>
+        </div>
+        <div class="team">
+            <div v-for="status in right_player_statuses" class="right-player player">
+
+                <v-layout row>
+                <div v-if="status.has_ult">
+                    <v-tooltip bottom>
+                        <v-icon slot="activator" @click="addUltUsePlayer(status.id)"
+                                :disabled="!can_edit">check_circle
+                        </v-icon>
+                        <span>Use ult</span></v-tooltip>
+
+                </div>
+                <div v-if="!status.has_ult">
+                    <v-tooltip bottom>
+                        <v-icon slot="activator" @click="addUltGainPlayer(status.id)"
+                                :disabled="!can_edit">check_circle_outline
+                        </v-icon>
+                        <span>Gain ult</span></v-tooltip>
+                </div>
+                    <v-tooltip bottom v-if="status.hero.name">
+                        <img class="hero-icon" slot="activator" :src="require('../../assets/Icon-'+ make_safe(status.hero.name) +'.png')"/>
+
+                        <span>{{ status.hero.name}}</span>
+                    </v-tooltip>
+
+                </v-layout>
+                <span>{{ status.name}}</span><br>
+                <div>
+                    <v-icon v-if="!status.alive">person_outline</v-icon>
+                    <v-icon v-else-if="status.alive">person</v-icon>
+                </div>
+            </div>
+        </div>
+
+    </v-layout>
+</template>
+
+<script>
+    import VBtn from "vuetify/es5/components/VBtn/VBtn";
+    import VIcon from "vuetify/es5/components/VIcon/VIcon";
+    import VTooltip from "vuetify/es5/components/VTooltip/VTooltip";
+    import VImg from "vuetify/es5/components/VImg/VImg";
+    import {mapState, mapActions, mapGetters} from 'vuex'
+
+    export default {
+        name: "status-bar",
+        components: {
+            VBtn,
+            VIcon,
+            VTooltip,
+            VImg
+        },
+        computed: {
+            ...mapState({
+                player_states: state => state.rounds.player_states,
+                round_states: state => state.rounds.round_states,
+                timestamp: state => state.vods.timestamp,
+                round: state => state.rounds.one.item,
+            }),
+            can_edit() {
+                return true;
+            },
+            ...mapGetters('rounds', [
+                'leftPlayers',
+                'rightPlayers',
+                'playerOnLeftTeam',
+                'heroAtTime',
+                'hasUltAtTime',
+                'aliveAtTime',
+                'allPlayers'
+            ]),
+            currentTime() {
+                return this.timestamp - this.round.begin
+            },
+            left_player_statuses() {
+                let statuses = [];
+                this.leftPlayers.forEach(player => {
+                    statuses.push({
+                        id: player.id,
+                        name: player.name,
+                        hero: this.heroAtTime(player.id, this.currentTime),
+                        has_ult: this.hasUltAtTime(player.id, this.currentTime),
+                        alive: this.aliveAtTime(player.id, this.currentTime),
+                    })
+                });
+                return statuses
+            },
+            right_player_statuses() {
+                let statuses = [];
+                this.rightPlayers.forEach(player => {
+                    statuses.push({
+                        id: player.id,
+                        name: player.name,
+                        hero: this.heroAtTime(player.id, this.currentTime),
+                        has_ult: this.hasUltAtTime(player.id, this.currentTime),
+                        alive: this.aliveAtTime(player.id, this.currentTime),
+                    })
+                });
+                return statuses
+            }
+        },
+        methods: {
+            ...mapActions('rounds', {
+                addRoundEvent: 'addRoundEvent'
+            }),
+            addUltUsePlayer(player_id) {
+
+            },
+            addUltGainPlayer(player_id) {
+
+            },
+            make_safe(name){
+                return name.replace(':', '')
+            },
+        }
+    }
+</script>
+
+<style scoped>
+
+
+    .status {
+        width: 1280px;
+        height: 80px;
+    }
+
+    .team {
+        display: table-cell;
+    }
+
+    .player {
+        display: table-cell;
+        height: 80px;
+        width: 67px;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .offset {
+        width: 60px;
+    }
+
+    .left {
+    }
+
+    .right-player {
+        float: left;
+    }
+
+    .v-btn {
+        min-width: 0;
+        min-height: 0;
+    }
+
+    .mid {
+        width: 392px;
+        text-align: center;
+    }
+    .hero-icon{
+        height: 35px;
+    }
+
+</style>

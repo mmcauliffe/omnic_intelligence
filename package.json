@@ -1,38 +1,80 @@
 {
-  "name": "omnic_intelligence",
-  "version": "1.0.0",
-  "description": "omnic_intelligence",
-  "main": "index.js",
+  "name": "omnic-intelligence",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "serve": "vue-cli-service serve",
+    "start": "webpack-dev-server --open",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/mmcauliffe/omnic_intelligence.git"
-  },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/mmcauliffe/omnic_intelligence/issues"
-  },
-  "homepage": "https://github.com/mmcauliffe/omnic_intelligence#readme",
   "dependencies": {
-    "angular": "=1.7.3",
-    "angular-animate": "=1.7.3",
-    "angular-aria": "=1.7.3",
-    "angular-audio": "=1.7.3",
-    "angular-cookies": "=1.7.3",
-    "angular-file-saver": "=1.1.3",
-    "angular-material": "=1.1.10",
-    "angular-material-data-table": "^0.10.10",
-    "angular-material-icons": "^0.7.1",
-    "angular-messages": "=1.7.3",
-    "angular-mousetrap-service": "^0.1.0",
-    "angular-resource": "=1.7.3",
-    "angular-sanitize": "=1.7.3",
-    "angular-ui-bootstrap": "^2.5.6",
-    "angular-ui-router": "^1.0.3",
+    "axios": "^0.18.0",
     "bootstrap": "^4.1.3",
-    "checklist-model": "^1.0.0"
-  }
+    "bootstrap-vue": "^2.0.0-rc.11",
+    "jwt-decode": "^2.2.0",
+    "node-sass": "^4.9.3",
+    "sass-loader": "^7.1.0",
+    "save": "^2.3.2",
+    "vee-validate": "^2.1.0-beta.9",
+    "vue": "^2.5.17",
+    "vue-material": "^1.0.0-beta-10.2",
+    "vue-moment": "^4.0.0",
+    "vue-plugin-load-script": "^1.1.0",
+    "vue-router": "^3.0.1",
+    "vuetify": "^1.2.9",
+    "vuex": "^3.0.1"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "^3.0.0-rc.12",
+    "@vue/cli-plugin-eslint": "^3.0.0-rc.12",
+    "@vue/cli-service": "^3.0.0-rc.12",
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.5",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-stage-0": "^6.24.1",
+    "babel-preset-vue": "^2.0.2",
+    "css-loader": "^0.28.11",
+    "file-loader": "^2.0.0",
+    "html-webpack-plugin": "^3.2.0",
+    "path": "^0.12.7",
+    "style-loader": "^0.23.1",
+    "stylus": "^0.54.5",
+    "stylus-loader": "^3.0.2",
+    "url-loader": "^1.1.2",
+    "vue-loader": "^14.2.3",
+    "vue-template-compiler": "^2.5.17",
+    "webpack": "^4.15.0",
+    "webpack-cli": "^3.0.8",
+    "webpack-dev-server": "^3.1.3"
+  },
+  "babel": {
+    "presets": [
+      "@vue/app"
+    ]
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true
+    },
+    "extends": [
+      "plugin:vue/essential",
+      "eslint:recommended"
+    ],
+    "rules": {},
+    "parserOptions": {
+      "parser": "babel-eslint"
+    }
+  },
+  "postcss": {
+    "plugins": {
+      "autoprefixer": {}
+    }
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not ie <= 8"
+  ]
 }
