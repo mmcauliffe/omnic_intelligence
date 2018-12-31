@@ -8,7 +8,6 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls import url
 from rest_framework import routers
-from rest_framework_jwt.views import obtain_jwt_token, refresh_jwt_token
 
 from .api.views import index_view
 from .api import views as api

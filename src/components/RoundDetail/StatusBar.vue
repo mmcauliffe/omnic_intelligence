@@ -34,7 +34,9 @@
             </div>
         </div>
         <div class="mid">
-            <h4><label>Current time: <span>{{  currentTime |secondsToMoment | moment('mm:ss.S')}}</span></label></h4>
+            <span>{{  currentTime |secondsToMoment | moment('mm:ss.S')}}</span>
+            <span v-if="isOvertime">Overtime</span>
+            <span v-if="isPaused">Paused</span>
         </div>
         <div class="team">
             <div v-for="status in right_player_statuses" class="right-player player">
@@ -98,12 +100,20 @@
             can_edit() {
                 return true;
             },
+            isOvertime(){
+               return this.overtimeAtTime(this.currentTime)
+            },
+            isPaused(){
+                return this.pausedAtTime(this.currentTime)
+            },
             ...mapGetters('rounds', [
                 'leftPlayers',
                 'rightPlayers',
                 'playerOnLeftTeam',
                 'heroAtTime',
                 'hasUltAtTime',
+                'pausedAtTime',
+                'overtimeAtTime',
                 'aliveAtTime',
                 'allPlayers'
             ]),
@@ -142,10 +152,22 @@
                 addRoundEvent: 'addRoundEvent'
             }),
             addUltUsePlayer(player_id) {
+                let newEvent = {};
+                newEvent.time_point = this.currentTime;
+                newEvent.round = this.$store.state.rounds.one.item.id;
+                newEvent.player = player_id;
+                console.log(newEvent);
+                this.addRoundEvent({type: 'ult_uses', event: newEvent});
 
             },
             addUltGainPlayer(player_id) {
 
+                let newEvent = {};
+                newEvent.time_point = this.currentTime;
+                newEvent.round = this.$store.state.rounds.one.item.id;
+                newEvent.player = player_id;
+                console.log(newEvent);
+                this.addRoundEvent({type: 'ult_gains', event: newEvent});
             },
             make_safe(name){
                 return name.replace(':', '')

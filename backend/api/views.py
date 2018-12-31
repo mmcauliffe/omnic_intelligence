@@ -900,11 +900,11 @@ class RoundViewSet(viewsets.ModelViewSet):
             instance.revive_set.update(time_point=F('time_point') - begin_shift)
             instance.ultuse_set.update(time_point=F('time_point') - begin_shift)
             instance.ultgain_set.update(time_point=F('time_point') - begin_shift)
+            instance.pointgain_set.update(time_point=F('time_point') - begin_shift)
+            instance.pointflip_set.update(time_point=F('time_point') - begin_shift)
             instance.pause_set.update(start_time=F('start_time') - begin_shift, end_time=F('end_time') - begin_shift)
             instance.replay_set.update(start_time=F('start_time') - begin_shift, end_time=F('end_time') - begin_shift)
             instance.smallerwindow_set.update(start_time=F('start_time') - begin_shift, end_time=F('end_time') - begin_shift)
-            instance.pointgain_set.update(time_point=F('time_point') - begin_shift)
-            instance.pointflip_set.update(time_point=F('time_point') - begin_shift)
             instance.overtime_set.update(start_time=F('start_time') - begin_shift, end_time=F('end_time') - begin_shift)
         instance.begin = request.data['begin']
         instance.end = request.data['end']

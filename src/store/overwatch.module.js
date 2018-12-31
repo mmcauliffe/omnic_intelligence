@@ -86,6 +86,12 @@ const actions = {
 
 
 const getters = {
+    sides: (state) => {
+        return state.sides.items.filter(x => x.id !== 'N');
+    },
+    npcs: (state) => {
+        return state.npcs.items;
+    },
     hero: (state) => (hero_id) => {
         console.log(state.heroes)
         let i, hero;
@@ -99,6 +105,21 @@ const getters = {
     },
     heroDamagingAbilities: (state, getters) => (hero_id) => {
         return getters.hero(hero_id).damaging_abilities
+    },
+    heroRevivingAbilities: (state, getters) => (hero_id) => {
+        return getters.hero(hero_id).reviving_abilities
+    },
+    availableNPCs: (state, getters) => (hero_id_list) => {
+        let hero, i, npcs=[], j;
+        console.log('NPCS', state.npcs.items)
+        for (i=0; i<state.npcs.items.length; i++){
+            console.log('NPC', state.npcs.items[i].spawning_hero, hero_id_list.indexOf(state.npcs.items[i].spawning_hero), hero_id_list)
+            if (hero_id_list.indexOf(state.npcs.items[i].spawning_hero) >= 0){
+                npcs.push(state.npcs.items[i])
+            }
+
+        }
+        return npcs
     },
 };
 
@@ -151,6 +172,7 @@ const mutations = {
         state.npcs = {loading: true};
     },
     getNPCsSuccess(state, npcs) {
+        console.log('GET NPCS', npcs)
         state.npcs = {items: npcs};
     },
     getNPCsFailure(state, error) {

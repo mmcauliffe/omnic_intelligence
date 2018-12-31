@@ -1,5 +1,9 @@
 import {gameService, roundService} from '../api';
 
+const kf_event_types = ['kills', 'kill_npcs', 'deaths', 'npc_deaths', 'revives'];
+const player_state_types = ['kills', 'deaths', 'revives', 'ult_gains', 'ult_uses'];
+const event_types = ['switches', 'kills', 'kill_npcs', 'deaths', 'npc_deaths', 'ult_gains', 'ult_uses',
+    'revives', 'point_gains', 'point_flips', 'pauses', 'replays', 'overtimes', 'smaller_windows'];
 const state = {
     all: {},
     one: {},
@@ -56,14 +60,25 @@ const actions = {
             );
 
     },
-    addRoundEvent({commit, dispatch}, data) {
+    addRoundEvent({commit, dispatch, getters}, data) {
         roundService.addRoundEvent(data.type, data.event)
             .then(
                 event => {
                     console.log('ADDED EVENT', event, data)
-                    dispatch('getRoundEvents', {round:data.event.round, type: data.type})
+                    dispatch('getRoundEvents', {round: data.event.round, type: data.type})
+                    if (kf_event_types.indexOf(data.type) >= 0) {
+                        console.log('GETTING NEW KILL FEED')
+                        dispatch('getKillFeedEvents', getters.round_id)
+                    }
+                    if (player_state_types.indexOf(data.type) >= 0) {
+                        console.log('GETTING NEW PLAYER STATES')
+                        dispatch('getPlayerStates', getters.round_id)
+                    }
                 },
-                error => commit('addRoundEventFailure', error)
+                error => {
+                    console.log("ERROR", error)
+                    commit('addRoundEventFailure', error)
+                }
             );
 
     },
@@ -73,19 +88,23 @@ const actions = {
             .then(
                 event => {
                     console.log('UPDATED EVENT', event, data, getters.round_id)
-                    dispatch('getRoundEvents', {round:getters.round_id, type:data.type})
-                    console.log('CHECK', ['kills'].indexOf(data.type) != -1)
-                    if (['kills'].indexOf(data.type) != -1){
+                    dispatch('getRoundEvents', {round: getters.round_id, type: data.type})
+                    console.log('CHECK', kf_event_types.indexOf(data.type) >= 0)
+                    if (kf_event_types.indexOf(data.type) >= 0) {
                         console.log('GETTING NEW KILL FEED')
-                    dispatch('getKillFeedEvents', getters.round_id)
+                        dispatch('getKillFeedEvents', getters.round_id)
 
+                    }
+                    if (player_state_types.indexOf(data.type) >= 0) {
+                        console.log('GETTING NEW PLAYER STATES')
+                        dispatch('getPlayerStates', getters.round_id)
                     }
                 }
             ).catch(
-                error => {
-                    console.log("ERROR", error)
-                    commit('deleteRoundEventFailure', error)
-    });
+            error => {
+                console.log("ERROR", error)
+                commit('updateRoundEventFailure', error)
+            });
 
     },
     deleteRoundEvent({commit, dispatch, getters}, data) {
@@ -94,13 +113,22 @@ const actions = {
             .then(
                 event => {
                     console.log('DELETED EVENT', event, data, getters.round_id)
-                    dispatch('getRoundEvents', {round:getters.round_id, type:data.type})
+                    dispatch('getRoundEvents', {round: getters.round_id, type: data.type})
+                    if (kf_event_types.indexOf(data.type) >= 0) {
+                        console.log('GETTING NEW KILL FEED')
+                        dispatch('getKillFeedEvents', getters.round_id)
+
+                    }
+                    if (player_state_types.indexOf(data.type) >= 0) {
+                        console.log('GETTING NEW PLAYER STATES')
+                        dispatch('getPlayerStates', getters.round_id)
+                    }
                 }
             ).catch(
-                error => {
-                    console.log("ERROR", error)
-                    commit('deleteRoundEventFailure', error)
-    });
+            error => {
+                console.log("ERROR", error)
+                commit('deleteRoundEventFailure', error)
+            });
 
     },
     getKillFeedEvents({commit}, id) {
@@ -135,13 +163,41 @@ const actions = {
     },
 
 
+    update({commit, dispatch}, data) {
+        let refresh = data.refresh;
+        data = data.data;
+        commit('updateRequest', data);
+
+        roundService.update(data)
+            .then(
+                round => {
+                    commit('updateSuccess', round);
+                    if (refresh) {
+                        let i;
+                        for (i = 0; i < event_types.length; i++) {
+                            dispatch('getRoundEvents', {round: data.id, type: event_types[i]})
+
+                        }
+                        dispatch('getPlayerStates', data.id);
+                        dispatch('getKillFeedEvents', data.id);
+                        dispatch('getRoundStates', data.id);
+
+                    }
+
+
+                },
+                error => commit('updateFailure', {id, error: error.toString()})
+            );
+    },
+
+
     delete({commit}, id) {
         commit('deleteRequest', id);
 
         roundService.delete(id)
             .then(
-                round => commit('deleteSuccess', id),
-                error => commit('deleteSuccess', {id, error: error.toString()})
+                round => commit('deleteSuccess', round),
+                error => commit('deleteFailure', {id, error: error.toString()})
             );
     }
 };
@@ -153,9 +209,82 @@ const getters = {
     kills: (state) => {
         return state.kills;
     },
-    round_id: (state) =>{
+    kill_npcs: (state) => {
+        return state.kill_npcs;
+    },
+    deaths: (state) => {
+        return state.deaths;
+    },
+    npc_deaths: (state) => {
+        return state.npc_deaths;
+    },
+    revives: (state) => {
+        return state.revives;
+    },
+    ult_gains: (state) => {
+        return state.ult_gains;
+    },
+    ult_uses: (state) => {
+        return state.ult_uses;
+    },
+    point_gains: (state) => {
+        return state.point_gains;
+    },
+    point_flips: (state) => {
+        return state.point_flips;
+    },
+    pauses: (state) => {
+        return state.pauses;
+    },
+    replays: (state) => {
+        return state.replays;
+    },
+    overtimes: (state) => {
+        return state.overtimes;
+    },
+    smaller_windows: (state) => {
+        return state.smaller_windows;
+    },
+
+    round_id: (state) => {
         console.log(state.one.item)
         return state.one.item.id
+    },
+    pausedAtTime: (state) => (time_point) => {
+
+        if (state.round_states.loading) {
+            return false
+        }
+        for (i = 0; i < state.round_states.item.pauses.length; i++) {
+
+                if (state.round_states.item.pauses[i].begin <= time_point && time_point < state.round_states.item.pauses[i].end) {
+                    if (state.round_states.item.pauses[i].status === 'paused') {
+                        return true
+                    }
+                    else {
+                        return false
+                    }
+                }
+        }
+
+    },
+    overtimeAtTime: (state) => (time_point) => {
+
+        if (state.round_states.loading) {
+            return false
+        }
+        for (i = 0; i < state.round_states.item.overtimes.length; i++) {
+
+                if (state.round_states.item.overtimes[i].begin <= time_point && time_point < state.round_states.item.overtimes[i].end) {
+                    if (state.round_states.item.overtimes[i].status === 'paused') {
+                        return true
+                    }
+                    else {
+                        return false
+                    }
+                }
+        }
+
     },
     heroAtTime: (state) => (player_id, time_point) => {
         var hero = '';
@@ -163,7 +292,7 @@ const getters = {
         if (state.one.loading) {
             return ''
         }
-        if(!state.switches){
+        if (!state.switches) {
             return ''
         }
 
@@ -178,18 +307,19 @@ const getters = {
         return hero
     },
     killFeedAtTime: (state, getters) => (time_point) => {
-        if (state.kill_feed_events.loading){
+        console.log('KILL FEED EVENTS', state.kill_feed_events.error)
+        if (state.kill_feed_events.loading || state.kill_feed_events.item == undefined) {
             return []
         }
-        let i, event, events=[];
+        let i, event, events = [];
 
-        for (i=0;i<state.kill_feed_events.item.length; i++){
+        for (i = 0; i < state.kill_feed_events.item.length; i++) {
             event = state.kill_feed_events.item[i];
-            if (event.time_point < time_point - 7){
+            if (event.time_point < time_point - 7) {
                 continue
             }
             console.log(event.time_point, time_point)
-            if (event.time_point > time_point){
+            if (event.time_point > time_point) {
                 break
             }
             events.push(event);
@@ -198,7 +328,7 @@ const getters = {
         }
         events.reverse();
 
-        return events.slice(0,6)
+        return events.slice(0, 6)
     },
     hasUltAtTime: (state, getters) => (player_id, time_point) => {
 
@@ -219,8 +349,7 @@ const getters = {
                 }
             }
             for (i = 0; i < ult_states.length; i++) {
-
-                if (ult_states[i].begin <= time_point && time_point <= ult_states[i].end) {
+                if (ult_states[i].begin <= time_point && time_point < ult_states[i].end) {
                     if (ult_states[i].status === 'has_ult') {
                         return true
                     }
@@ -404,8 +533,17 @@ const mutations = {
                 return {...roundCopy, deleteError: error};
             }
 
-            return user;
+            return round;
         })
+    },
+    updateRequest(state, round) {
+
+    },
+    updateSuccess(state, round) {
+
+    },
+    updateFailure(state, {round, error}) {
+        console.log('ERROR', error);
     }
 };
 

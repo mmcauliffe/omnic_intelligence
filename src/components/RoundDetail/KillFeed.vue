@@ -5,7 +5,7 @@
             <v-layout row justify-center>
 
             <div class="first-hero text-xs-left" :class="item.first_color">
-                <v-tooltip bottom>
+                <v-tooltip bottom v-if="item.first_hero != 'N/A'">
                     <img class="hero-icon" slot="activator"
                          :src="require('../../assets/Icon-'+ make_safe(item.first_hero) +'.png')"/>
 
@@ -19,12 +19,12 @@
 
             </div>
             <div class="ability text-xs-center">
-                <v-tooltip bottom v-if="item.ability == 'Primary'">
+                <v-tooltip bottom v-if="item.first_hero == 'N/A'|| item.ability == 'Primary'">
                     <v-icon slot="activator" color="red" v-if="item.headshot">arrow_right_alt</v-icon>
                     <v-icon slot="activator" color="white" v-else>arrow_right_alt</v-icon>
                     <span>{{ item.ability}}</span>
                 </v-tooltip>
-                <v-tooltip bottom v-if="item.ability != 'Primary'">
+                <v-tooltip bottom v-if="item.first_hero != 'N/A' &&item.ability != 'Primary'">
                     <img class="hero-icon" slot="activator"
                          :src="require('../../assets/'+ make_safe(item.first_hero) + '-' + make_safe(item.ability) +'.png')"/>
 

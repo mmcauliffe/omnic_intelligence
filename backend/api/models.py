@@ -565,8 +565,8 @@ class Round(models.Model):
         states = []
         for o in overtimes:
             if not states:
-                states.append({'begin': 0, 'end': o[0].start_time, 'status': 'not_overtime'})
-            states.append({'begin': o[0].start_time, 'end': o[1].end_time, 'status': 'overtime'})
+                states.append({'begin': 0, 'end': o.start_time, 'status': 'not_overtime'})
+            states.append({'begin': o.start_time, 'end': o.end_time, 'status': 'overtime'})
         if states[-1]['end'] != round_end:
             states.append({'begin': states[-1]['end'], 'end': round_end, 'status': 'not_overtime'})
         return states
@@ -579,8 +579,8 @@ class Round(models.Model):
         states = []
         for o in pauses:
             if not states:
-                states.append({'begin': 0, 'end': o[0].start_time, 'status': 'not_paused'})
-            states.append({'begin': o[0].start_time, 'end': o[1].end_time, 'status': 'paused'})
+                states.append({'begin': 0, 'end': o.start_time, 'status': 'not_paused'})
+            states.append({'begin': o.start_time, 'end': o.end_time, 'status': 'paused'})
         if states[-1]['end'] != round_end:
             states.append({'begin': states[-1]['end'], 'end': round_end, 'status': 'not_paused'})
         return states
@@ -593,8 +593,8 @@ class Round(models.Model):
         states = []
         for o in replays:
             if not states:
-                states.append({'begin': 0, 'end': o[0].start_time, 'status': 'not_replay'})
-            states.append({'begin': o[0].start_time, 'end': o[1].end_time, 'status': 'replay'})
+                states.append({'begin': 0, 'end': o.start_time, 'status': 'not_replay'})
+            states.append({'begin': o.start_time, 'end': o.end_time, 'status': 'replay'})
         if states[-1]['end'] != round_end:
             states.append({'begin': states[-1]['end'], 'end': round_end, 'status': 'not_replay'})
         return states
