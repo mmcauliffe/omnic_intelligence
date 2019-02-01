@@ -1,10 +1,17 @@
 <template>
     <div id="vod-container">
+
         <div v-if="vod_type=='null'"></div>
-        <TwitchPlayer v-if="vod_type=='twitch'" :video="id" :timestamp="timestamp"></TwitchPlayer>
-        <div id="youtube-embed" v-else-if="vod_type == 'youtube'"></div>
+        <TwitchPlayer v-if="vod_type=='twitch'" :video="id" :timestamp="timestamp" :controls="controls"></TwitchPlayer>
+        <YouTubePlayer v-if="vod_type=='youtube'" :video="id" :timestamp="timestamp" :controls="controls"></YouTubePlayer>
         <div id="player-controls" class="text-center controls-container">
 
+            <v-tooltip bottom>
+                <v-btn slot="activator" v-on:click="seekBackward(60)">
+                    <v-icon>fast_rewind</v-icon>
+                </v-btn>
+                <span>Go back 60 seconds</span>
+            </v-tooltip>
             <v-tooltip bottom>
                 <v-btn slot="activator" v-on:click="seekBackward(5)">
                     <v-icon>arrow_back_ios</v-icon>
@@ -28,8 +35,8 @@
 
             <v-tooltip bottom>
                 <v-btn slot="activator" v-on:click="roundLock = !roundLock">
-                    <v-icon v-if="roundLock">lock_open</v-icon>
-                    <v-icon v-if="!roundLock">lock</v-icon>
+                    <v-icon v-if="!roundLock">lock_open</v-icon>
+                    <v-icon v-if="roundLock">lock</v-icon>
                 </v-btn>
                 <span v-if="roundLock">Unlock seeking to round</span>
                 <span v-if="!roundLock">Lock seeking to round</span>
@@ -54,6 +61,12 @@
                 </v-btn>
                 <span>Go forward 5 seconds</span>
             </v-tooltip>
+            <v-tooltip bottom>
+                <v-btn slot="activator" v-on:click="seekForward(60)">
+                    <v-icon>fast_forward</v-icon>
+                </v-btn>
+                <span>Go forward 60 seconds</span>
+            </v-tooltip>
         </div>
 
     </div>
@@ -64,6 +77,7 @@
     import VIcon from "vuetify/es5/components/VIcon/VIcon";
     import VTooltip from "vuetify/es5/components/VTooltip/VTooltip";
     import TwitchPlayer from './TwitchPlayer';
+    import YouTubePlayer from './YouTubePlayer';
     import {mapState, mapActions, mapGetters} from 'vuex';
 
     export default {
@@ -71,17 +85,24 @@
             vod_type: {type: String},
             id: {type: String},
             round_begin: {type: Number},
-            round_end: {type: Number}
+            round_end: {type: Number},
+            controls: Boolean
         },
         name: "Vod",
         components: {
             VBtn,
             VIcon,
             VTooltip,
-            TwitchPlayer
+            TwitchPlayer,
+            YouTubePlayer
         },
-        data: function(){
-            return {roundLock: true}
+        data: function () {
+            if (!this.round_begin) {
+                return {roundLock: false}
+            }
+            else {
+                return {roundLock: true}
+            }
         },
         computed: {
             ...mapState({
@@ -96,6 +117,7 @@
             }),
             seekBackward(time) {
                 let new_timestamp = this.timestamp - time;
+                new_timestamp = Math.round(new_timestamp * 10) / 10;
                 if (this.roundLock && this.round_begin && new_timestamp < this.round_begin) {
                     new_timestamp = this.round_begin;
                 }
@@ -103,6 +125,7 @@
             },
             seekForward(time) {
                 let new_timestamp = this.timestamp + time;
+                new_timestamp = Math.round(new_timestamp * 10) / 10;
                 if (this.roundLock && this.round_end && new_timestamp > this.round_end) {
                     new_timestamp = this.round_end;
                 }

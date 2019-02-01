@@ -6,7 +6,7 @@
              :round_begin="round.item.begin" :round_end="round.item.end"></Vod>
             <KillFeed></KillFeed>
         </div>
-        <v-flex style="height:100%" xs3>
+        <v-flex style="height:100%" xs4>
                 <v-tabs md-border-bottom md-dynamic-height v-if="round.item">
                     <v-tab>
                         Round
@@ -15,10 +15,10 @@
                         Switches
                     </v-tab>
                     <v-tab>
-                        Kills
+                        Player
                     </v-tab>
                     <v-tab>
-                        Deaths
+                        NPCs
                     </v-tab>
                     <v-tab>
                         Revives
@@ -45,7 +45,7 @@
                                         <div>
                                             <label>Begin
                                             </label><span>
-                                            {{round.item.begin | secondsToMoment | moment('HH:mm:ss')}}
+                                            {{round.item.begin | secondsToMoment | moment('HH:mm:ss.S')}}
                                         </span>
                                             <v-btn class="raised" v-on:click="updateBegin">Update from current timestamp
                                             </v-btn>
@@ -54,7 +54,7 @@
                                             <label>End
                                             </label>
                                             <span>
-                                                {{ round.item.end |secondsToMoment | moment('HH:mm:ss')}}
+                                                {{ round.item.end |secondsToMoment | moment('HH:mm:ss.S')}}
                                             </span>
                                             <v-btn class="raised" v-on:click="updateEnd">Update from current timestamp
                                             </v-btn>
@@ -91,8 +91,8 @@
                                 <v-card-text>
 
                                     <Kills></Kills>
-
-                                    <KillNPCs></KillNPCs>
+                                    <Deaths></Deaths>
+                                    <StatusEffects></StatusEffects>
                                 </v-card-text>
                             </v-card>
 
@@ -101,9 +101,10 @@
                             <v-card>
                                 <v-card-text>
 
-                                    <Deaths></Deaths>
 
+                                    <KillNPCs></KillNPCs>
                                     <NPCDeaths></NPCDeaths>
+                                    <UltDenials></UltDenials>
                                 </v-card-text>
                             </v-card>
 
@@ -124,6 +125,7 @@
 
                                     <UltGains></UltGains>
                                     <UltUses></UltUses>
+                                    <UltEnds></UltEnds>
 
                                 </v-card-text>
                             </v-card>
@@ -171,6 +173,9 @@
     import Revives from '../../components/RoundDetail/PointEvents/Revives';
     import UltGains from '../../components/RoundDetail/PointEvents/UltGains';
     import UltUses from '../../components/RoundDetail/PointEvents/UltUses';
+    import UltEnds from '../../components/RoundDetail/PointEvents/UltEnds';
+    import UltDenials from '../../components/RoundDetail/PointEvents/UltDenials';
+    import StatusEffects from '../../components/RoundDetail/IntervalEvents/StatusEffects';
     import PointGains from '../../components/RoundDetail/PointEvents/PointGains';
     import PointFlips from '../../components/RoundDetail/PointEvents/PointFlips';
     import Overtimes from '../../components/RoundDetail/IntervalEvents/Overtimes';
@@ -180,7 +185,6 @@
     import StatusBar from '../../components/RoundDetail/StatusBar';
     import KillFeed from '../../components/RoundDetail/KillFeed';
     import {mapState, mapActions, mapGetters} from 'vuex'
-    import VDataTable from "vuetify/es5/components/VDataTable/VDataTable";
     import VInput from "vuetify/es5/components/VInput/VInput";
     import VTabs from "vuetify/es5/components/VTabs/VTabs";
     import VTab from "vuetify/es5/components/VTabs/VTab";
@@ -207,7 +211,6 @@
             VIcon,
             VTooltip,
             VInput,
-            VDataTable,
             VLayout,
             VFlex,
             Vod,
@@ -219,6 +222,9 @@
             Revives,
             UltGains,
             UltUses,
+            UltEnds,
+            UltDenials,
+            StatusEffects,
             PointGains,
             PointFlips,
             Overtimes,
@@ -246,12 +252,14 @@
             this.getHeroes();
             this.getNPCs();
             this.getAnnotationSources();
+            this.getStatusEffectChoices();
 
             this.getPlayerStates(this.$route.params.id);
             this.getKillFeedEvents(this.$route.params.id);
             this.getRoundStates(this.$route.params.id);
 
-            this.player_event_types = ['switches', 'kills', 'kill_npcs', 'deaths', 'npc_deaths', 'revives', 'ult_gains', 'ult_uses'];
+            this.player_event_types = ['switches', 'kills', 'kill_npcs', 'deaths', 'npc_deaths', 'revives',
+                'ult_gains', 'ult_uses', 'ult_ends', 'ult_denials', 'status_effects'];
             this.round_event_types = ['overtimes', 'point_gains', 'point_flips'];
 
             this.broadcast_event_types = ['replays', 'pauses', 'smaller_windows'];
@@ -273,13 +281,14 @@
                 getKillFeedEvents: 'getKillFeedEvents',
                 getPlayerStates: 'getPlayerStates',
                 getRoundStates: 'getRoundStates',
-                update: 'update',
-                delete: 'delete',
+                updateRound: 'updateRound',
+                deleteRound: 'deleteRound',
             }),
             ...mapActions('overwatch', {
                 getSides: 'getSides',
                 getHeroes: 'getHeroes',
                 getNPCs: 'getNPCs',
+                getStatusEffectChoices: 'getStatusEffectChoices',
             }),
             ...mapActions('vods', {
                 getAnnotationSources: 'getAnnotationSources',
@@ -288,16 +297,16 @@
             updateBegin() {
                 this.round.item.begin = this.timestamp;
 
-                this.update({data:this.round.item, refresh:true});
+                this.updateRound({data:this.round.item, refresh:true});
             },
             updateEnd() {
                 this.round.item.end = this.timestamp;
 
-                this.update({data:this.round.item, refresh:false});
+                this.updateRound({data:this.round.item, refresh:false});
 
             },
             saveRound() {
-                this.update({data:this.round.item, refresh:false});
+                this.updateRound({data:this.round.item, refresh:false});
             }
         },
 

@@ -1,13 +1,15 @@
 import config from 'config';
 import { authHeader } from '../helper';
+import axios from "axios/index";
 
 export const gameService = {
     getAll,
     getById,
     getRounds,
     getTeams,
-    update,
-    delete: _delete
+    createGame,
+    updateGame,
+    deleteGame
 };
 
 function getAll() {
@@ -17,6 +19,30 @@ function getAll() {
     };
 
     return fetch(`${config.apiUrl}/games/`, requestOptions).then(handleResponse);
+}
+
+function createGame(game) {
+    const requestOptions = {
+        headers: { ...authHeader(), 'Content-Type': 'application/json' }
+    };
+    return axios.post(`${config.apiUrl}/games/`, game, requestOptions);
+}
+
+
+function updateGame(game) {
+    const requestOptions = {
+        headers: { ...authHeader(), 'Content-Type': 'application/json' }
+    };
+
+    return axios.put(`${config.apiUrl}/games/${game.id}/`, game, requestOptions);
+}
+
+function deleteGame(id){
+    const requestOptions = {
+        headers: { ...authHeader()},
+    };
+
+    return axios.delete(`${config.apiUrl}/games/${id}/`, requestOptions);
 }
 
 
@@ -47,25 +73,6 @@ function getRounds(id) {
     return fetch(`${config.apiUrl}/games/${id}/rounds/`, requestOptions).then(handleResponse);
 }
 
-function update(event) {
-    const requestOptions = {
-        method: 'PUT',
-        headers: { ...authHeader(), 'Content-Type': 'application/json' },
-        body: JSON.stringify(event)
-    };
-
-    return fetch(`${config.apiUrl}/games/${event.id}/`, requestOptions).then(handleResponse);
-}
-
-// prefixed function name with underscore because delete is a reserved word in javascript
-function _delete(id) {
-    const requestOptions = {
-        method: 'DELETE',
-        headers: authHeader()
-    };
-
-    return fetch(`${config.apiUrl}/games/${id}/`, requestOptions).then(handleResponse);
-}
 
 function handleResponse(response) {
     return response.text().then(text => {

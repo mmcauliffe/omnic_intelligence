@@ -36,6 +36,7 @@
                 </td>
                 <td>{{ props.item.killing_player }}</td>
                 <td>
+
                     <v-select v-model="props.item.assisting_players" multiple chips deletable-chips
                               item-text="name" item-value="id" :items="props.item.possible_assists"
                      v-on:change="updateEvent(props.item)">

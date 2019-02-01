@@ -1,9 +1,11 @@
-import { eventService } from '../api';
+import {eventService} from '../api';
 
 const state = {
     all: {},
     one: {},
     matches: {},
+    available_vods: {},
+    stream_vods: {},
 };
 
 const actions = {
@@ -25,6 +27,18 @@ const actions = {
                 error => commit('getOneFailure', error)
             );
 
+    },
+    getAvailableVods({commit}, id){
+        eventService.getAvailableVods(id).then(
+            vods => commit('getAvailableVodsSuccess', vods),
+                error => commit('getAvailableVodsFailure', error)
+        )
+    },
+    getStreamVods({commit}, id){
+        eventService.getStreamVods(id).then(
+            vods => commit('getStreamVodsSuccess', vods),
+                error => commit('getStreamVodsFailure', error)
+        )
     },
     getOneMatches({ commit }, id){
         commit('getOneMatchesRequest');
@@ -75,6 +89,29 @@ const mutations = {
     },
     getOneMatchesFailure(state, error) {
         state.matches = { error };
+    },
+
+    getStreamVodsRequest(state) {
+        state.stream_vods = {loading: true};
+    },
+    getStreamVodsSuccess(state, vods) {
+        console.log(vods);
+        state.stream_vods = {items: vods.data, loading: false};
+    },
+    getStreamVodsFailure(state, error) {
+        console.log(error);
+        state.stream_vods = {error, loading: false};
+    },
+
+    getAvailableVodsRequest(state) {
+        state.available_vods = {loading: true};
+    },
+    getAvailableVodsSuccess(state, vods) {
+        state.available_vods = {items: vods.data, loading: false};
+        console.log(vods.data)
+    },
+    getAvailableVodsFailure(state, error) {
+        state.available_vods = {error, loading:false};
     },
 
     deleteRequest(state, id) {

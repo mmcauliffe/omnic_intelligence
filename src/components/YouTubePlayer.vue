@@ -1,5 +1,5 @@
 <template>
-    <div ref="player"></div>
+    <div id="player"></div>
 </template>
 
 <script>
@@ -8,10 +8,10 @@
     import {mapState, mapActions, mapGetters} from 'vuex';
 
     Vue.use(LoadScript);
-    let player;
+    let player, initial=true;
 
     export default {
-        name: "twitch-player",
+        name: "youtube-player",
         props: {
             video: String,
             controls: Boolean
@@ -22,53 +22,62 @@
             }),
         },
         beforeCreate() {
-            this.width=1280;
-            this.height=720;
-            this.playsInLine = false;
-            Vue.loadScript('https://player.twitch.tv/js/embed/v1.js')
+            this.width = 1280;
+            this.height = 720;
+
+            Vue.loadScript('https://www.youtube.com/iframe_api')
                 .then(() => {
-                    let options = {
-                        width: this.width,
+                    console.log('helloooooo', this.video)
+                    player = new window.YT.Player('player', {
                         height: this.height,
-                        autoplay: false,
-                        time: this.timestamp,
-                    };
-                    options.controls = this.controls;
-                    if (this.playsInline) {
-                        options.playsinline = true;
-                    }
-                    if (this.video) {
-                        options.video = this.video;
-                    } else {
-                        this.$emit('error', 'no source specified');
-                    }
-                    player = new window.Twitch.Player(this.$refs.player, options);
-                    player.addEventListener('ended', () => (this.$emit('ended')));
-                    player.addEventListener('pause', () => (this.$emit('pause')));
-                    player.addEventListener('play', () => (this.$emit('play')));
-                    player.addEventListener('offline', () => (this.$emit('offline')));
-                    player.addEventListener('online', () => (this.$emit('online')));
-                    player.addEventListener('ready', () => {
-                        player.seek(this.timestamp);
-                        console.log('READY', this.timestamp, this.getCurrentTime())
-                        this.$emit('ready');
-                        player.setQuality('720p60');
-                        console.log('QUALITIES', player.getQualities(), player.getQuality());
+                        width: this.width,
+                        videoId: this.video,
+                        playerVars: {
+                            autoplay: 0,
+                            controls: 0,
+                            rel: 0,
+                            modestbranding: 1
+                        },
+                        events: {
+                            'onReady': () => {
+                                this.seek(this.timestamp)
+                                console.log('READY', this.timestamp, this.getCurrentTime())
+                                //player.setPlaybackQuality('hd720');
+                                //player.pauseVideo();
+                                this.$emit('ready');
+                            },
+                            'onStateChange': e => {
+                                if (initial && e.data === 1){
+                                    player.pauseVideo();
+                                    initial = false;
+                                    this.seek(this.timestamp);
+                                }
+                            }
+                        }
                     });
+                    console.log(player)
                 }).catch((e) => (this.$emit('error', e)));
         },
+        beforeDestroy: function () {
+
+    player.stopVideo();
+    player.destroy();
+},
         methods: {
             play() { // Begins playing the specified video.
                 player.play();
             },
             pause() { // Pauses the player.
-                player.pause();
+                player.pauseVideo();
             },
             seek(timestamp) { // Seeks to the specified timestamp (in seconds) in the video and resumes playing if paused. Does not work for live streams.
-                player.seek(timestamp);
+                player.seekTo(timestamp);
+                if (player.getPlayerState() == 1){
+                    this.pause()
+                }
             },
             getCurrentTime() { // Returns the current video’s timestamp, in seconds. Works only for VODs, not live streams.
-                return player.getCurrentTime();
+                return !player.getCurrentTime ? 0.0 : player.getCurrentTime();
             },
             getDuration() { // Returns the duration of the video, in seconds. Works only for VODs,not live streams.
                 return player.getDuration();
@@ -103,12 +112,11 @@
                 player.setVideo(newVideo);
             },
             timestamp(timestamp) {
-                        player.setQuality('720p60');
                 console.log('hello', timestamp, this.getCurrentTime())
                 this.seek(timestamp);
             },
         },
-    };
+    }
 </script>
 
 <style scoped>

@@ -4,7 +4,7 @@
         <div class="team">
             <div v-for="status in left_player_statuses" class="left player">
                 <v-layout row>
-                <div v-if="status.has_ult">
+                <div v-if="status.ult_state==='has_ult'">
                     <v-tooltip bottom>
                         <v-icon slot="activator" @click="addUltUsePlayer(status.id)"
                                 :disabled="!can_edit">check_circle
@@ -12,15 +12,22 @@
                         <span>Use ult</span></v-tooltip>
 
                 </div>
-                <div v-if="!status.has_ult">
+                <div v-else-if="status.ult_state==='no_ult'">
                     <v-tooltip bottom>
                         <v-icon slot="activator" @click="addUltGainPlayer(status.id)"
                                 :disabled="!can_edit">check_circle_outline
                         </v-icon>
                         <span>Gain ult</span></v-tooltip>
                 </div>
+                <div v-else-if="status.ult_state==='using_ult'">
                     <v-tooltip bottom>
-                        <img class="hero-icon" slot="activator" :src="require('../../assets/Icon-'+ make_safe(status.hero.name) +'.png')"/>
+                        <v-icon slot="activator"
+                                :disabled="!can_edit">new_releases
+                        </v-icon>
+                        <span>Using ult</span></v-tooltip>
+                </div>
+                    <v-tooltip bottom v-if="status.hero.name">
+                        <img class="hero-icon" slot="activator" :src="require('../../assets/'+ make_safe(status.hero.name) +'.png')"/>
 
                         <span>{{ status.hero.name}}</span>
                     </v-tooltip>
@@ -42,7 +49,7 @@
             <div v-for="status in right_player_statuses" class="right-player player">
 
                 <v-layout row>
-                <div v-if="status.has_ult">
+                <div v-if="status.ult_state==='has_ult'">
                     <v-tooltip bottom>
                         <v-icon slot="activator" @click="addUltUsePlayer(status.id)"
                                 :disabled="!can_edit">check_circle
@@ -50,15 +57,22 @@
                         <span>Use ult</span></v-tooltip>
 
                 </div>
-                <div v-if="!status.has_ult">
+                <div v-else-if="status.ult_state==='no_ult'">
                     <v-tooltip bottom>
                         <v-icon slot="activator" @click="addUltGainPlayer(status.id)"
                                 :disabled="!can_edit">check_circle_outline
                         </v-icon>
                         <span>Gain ult</span></v-tooltip>
                 </div>
+                <div v-else-if="status.ult_state==='using_ult'">
+                    <v-tooltip bottom>
+                        <v-icon slot="activator"
+                                :disabled="!can_edit">new_releases
+                        </v-icon>
+                        <span>Using ult</span></v-tooltip>
+                </div>
                     <v-tooltip bottom v-if="status.hero.name">
-                        <img class="hero-icon" slot="activator" :src="require('../../assets/Icon-'+ make_safe(status.hero.name) +'.png')"/>
+                        <img class="hero-icon" slot="activator" :src="require('../../assets/'+ make_safe(status.hero.name) +'.png')"/>
 
                         <span>{{ status.hero.name}}</span>
                     </v-tooltip>
@@ -112,6 +126,7 @@
                 'playerOnLeftTeam',
                 'heroAtTime',
                 'hasUltAtTime',
+                'ultStateAtTime',
                 'pausedAtTime',
                 'overtimeAtTime',
                 'aliveAtTime',
@@ -127,7 +142,7 @@
                         id: player.id,
                         name: player.name,
                         hero: this.heroAtTime(player.id, this.currentTime),
-                        has_ult: this.hasUltAtTime(player.id, this.currentTime),
+                        ult_state: this.ultStateAtTime(player.id, this.currentTime),
                         alive: this.aliveAtTime(player.id, this.currentTime),
                     })
                 });
@@ -140,7 +155,7 @@
                         id: player.id,
                         name: player.name,
                         hero: this.heroAtTime(player.id, this.currentTime),
-                        has_ult: this.hasUltAtTime(player.id, this.currentTime),
+                        ult_state: this.ultStateAtTime(player.id, this.currentTime),
                         alive: this.aliveAtTime(player.id, this.currentTime),
                     })
                 });
@@ -170,7 +185,10 @@
                 this.addRoundEvent({type: 'ult_gains', event: newEvent});
             },
             make_safe(name){
+                if (name !== undefined){
                 return name.replace(':', '')
+                }
+                return ''
             },
         }
     }

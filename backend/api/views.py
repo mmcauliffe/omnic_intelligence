@@ -124,10 +124,28 @@ class AnnotationChoiceViewSet(viewsets.ViewSet):
         return Response(choices)
 
 
+class VodStatusChoiceViewSet(viewsets.ViewSet):
+    def list(self, request):
+        choices = [{'id': x[0], 'name': x[1]} for x in models.StreamVod.STATUS_CHOICES]
+        return Response(choices)
+
+
+class VodTypeChoiceViewSet(viewsets.ViewSet):
+    def list(self, request):
+        choices = [{'id': x[0], 'name': x[1]} for x in models.StreamVod.TYPE_CHOICES]
+        return Response(choices)
+
+
 class HeroViewSet(viewsets.ModelViewSet):
     model = models.Hero
     queryset = models.Hero.objects.all()
     serializer_class = serializers.HeroAbilitySerializer
+
+
+class StatusEffectChoiceViewSet(viewsets.ModelViewSet):
+    model = models.Status
+    queryset = models.Status.objects.all()
+    serializer_class = serializers.StatusSerializer
 
 
 class HeroSummaryViewSet(viewsets.ModelViewSet):
@@ -135,9 +153,10 @@ class HeroSummaryViewSet(viewsets.ModelViewSet):
     queryset = models.Hero.objects.all()
     serializer_class = serializers.HeroSummarySerializer
 
+
 class AbilityViewSet(viewsets.ModelViewSet):
     model = models.Ability
-    queryset = models.Ability.objects.filter(~Q(hero__name='brigitte')).all()
+    queryset = models.Ability.objects.all()
     serializer_class = serializers.AbilitySerializer
 
     @list_route(methods=['get'])
@@ -189,6 +208,85 @@ class EventViewSet(viewsets.ModelViewSet):
         serializer = serializers.MatchSerializer(matches, many=True)
         return Response(serializer.data)
 
+    @detail_route(methods=['get'])
+    def vods(self, request, pk=None):
+        event = self.get_object()
+        vods =[]
+        for c in event.stream_channels.prefetch_related('streamvod_set').all():
+            vods.extend(c.streamvod_set.all())
+        return Response(serializers.StreamVodSerializer(vods, many=True).data)
+
+    @detail_route(methods=['get'])
+    def available_vods(self, request, pk=None):
+        import requests
+        event = self.get_object()
+        vods =[]
+        for c in event.stream_channels.prefetch_related('streamvod_set').all():
+            cursor = ''
+            if c.site == 'T':
+                response = requests.get('https://api.twitch.tv/helix/users?login={}'.format(c.name),
+                                        headers={'Client-ID': 'fgjp7t0f365uazgs84n7t9xhf19xt2'})
+                data = response.json()['data'][0]
+                id = data['id']
+                key = 'fgjp7t0f365uazgs84n7t9xhf19xt2'
+                while True:
+                    vod_urls = [x.url for x in c.streamvod_set.all()]
+                    if not cursor:
+                        response = requests.get('https://api.twitch.tv/helix/videos?user_id={}'.format(id),
+                                                headers={'Client-ID': key})
+                    else:
+                        response = requests.get(
+                            'https://api.twitch.tv/helix/videos?user_id={}&first=100&after={}'.format(id, cursor),
+                            headers={'Client-ID': key})
+
+                    data = response.json()
+                    for v in data['data']:
+                        url = v['url']
+                        if url in vod_urls:
+                            continue
+                        v['channel'] = c.id
+                        v['channel_title'] = c.name
+                        v['channel_type'] = 'Twitch'
+                        vods.append(v)
+                        vod_urls.append(url)
+                    try:
+                        cursor = data['pagination']['cursor']
+                    except KeyError:
+                        break
+            elif c.site == 'Y':
+                key = 'AIzaSyB87s7SK8p7mniHYnDB7xbkWtQg1G-EAM8'
+                while True:
+                    vod_urls = [x.url for x in c.streamvod_set.all()]
+                    if not cursor:
+                        url = 'https://www.googleapis.com/youtube/v3/search?key={}&channelId={}&part=snippet,id&order=date&maxResults=50'.format(key, c.youtube_channel_id)
+                        response = requests.get(url)
+                    else:
+                        url = 'https://www.googleapis.com/youtube/v3/search?key={}&channelId={}&part=snippet,id&order=date&maxResults=50&pageToken={}'.format(key, c.youtube_channel_id, cursor)
+
+                        response = requests.get(url)
+                    data = response.json()
+                    for item in data['items']:
+                        try:
+                            url = 'https://www.youtube.com/watch?v=' + item['id']['videoId']
+                        except KeyError:
+                            continue
+                        if url in vod_urls:
+                            continue
+                        v = {'url': url,
+                             'title': item['snippet']['title'],
+                             'published_at': item['snippet']['publishedAt'],
+                             'channel': c.id,
+                             'channel_title': c.name,
+                             'channel_type': 'YouTube'
+                             }
+                        vods.append(v)
+                        vod_urls.append(url)
+                    try:
+                        cursor= data['nextPageToken']
+                    except KeyError:
+                        break
+        return Response(vods)
+
 
 class MatchViewSet(viewsets.ModelViewSet):
     model = models.Match
@@ -232,6 +330,28 @@ class GameViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.GameSerializer
 
     def create(self, request, *args, **kwargs):
+        print(request.data)
+        left_team_participation = models.TeamParticipation.objects.create(team_id=request.data['left_team'], color='B')
+        do_subtract = min([int(i) for i in request.data['left_players'].keys()]) == 1
+        for i, p in request.data['left_players'].items():
+            if do_subtract:
+                i -= 1
+            pp = models.PlayerParticipation.objects.create(team_participation=left_team_participation, player_id=p,
+                                                           player_index=int(i))
+
+        right_team_participation = models.TeamParticipation.objects.create(team_id=request.data['right_team'], color='R')
+        for i, p in request.data['right_players'].items():
+            if do_subtract:
+                i -= 1
+            pp = models.PlayerParticipation.objects.create(team_participation=right_team_participation, player_id=p,
+                                                           player_index=int(i))
+        game = models.Game.objects.create(match_id=request.data['match'],
+                                          game_number=int(request.data['game_number']), map_id=request.data['map'],
+                                          left_team=left_team_participation, right_team=right_team_participation)
+        return Response(self.serializer_class(game).data)
+
+    @list_route(methods=['post'])
+    def create_upload(self, request, *args, **kwargs):
         for k, v in request.data.items():
             if k == 'rounds':
                 continue
@@ -510,13 +630,13 @@ class GameViewSet(viewsets.ModelViewSet):
                     else:
                         headshot = event['headshot']
                     ability = event['ability'].replace(' headshot', '')
-                    ability = hero.ability_set.filter(name__iexact=ability).first()
+                    ability = hero.abilities.filter(name__iexact=ability).first()
                     assists = []
                     for a in event['assists']:
                         hero = models.Hero.objects.get(name__iexact=a.replace('_assist', ''))
                         assists.append(hero.name)
 
-
+                    print(assists)
                     try:
                         npc = models.NPC.objects.get(name__iexact=event['second_hero'])
                         if ability is not None:
@@ -550,6 +670,7 @@ class GameViewSet(viewsets.ModelViewSet):
                                             killed_player=killed_player, ability=ability, headshot=headshot)
                                 for a in assists:
                                     assisting_player = instance.get_player_of_hero(a, time_point, killing_side)
+                                    print('assisting_player', assisting_player)
                                     if assisting_player is None:
                                         continue
                                     m.assisting_players.add(assisting_player)
@@ -614,6 +735,43 @@ class StreamChannelViewSet(viewsets.ModelViewSet):
         vods = channel.streamvod_set.all()
         return Response(serializers.StreamVodSerializer(vods, many=True).data)
 
+    @detail_route(methods=['get'])
+    def available_vods(self, request, pk=None):
+        import requests
+        c = self.get_object()
+        if c.site == 'T':
+            response = requests.get('https://api.twitch.tv/helix/users?login={}'.format(c.name),
+                                    headers={'Client-ID': 'fgjp7t0f365uazgs84n7t9xhf19xt2'})
+            data = response.json()['data'][0]
+            id = data['id']
+            print(id)
+            cursor = ''
+            vods = []
+            while True:
+                vod_urls = [x.url for x in c.streamvod_set.all()]
+                if not cursor:
+                    response = requests.get('https://api.twitch.tv/helix/videos?user_id={}'.format(id),
+                                            headers={'Client-ID': 'fgjp7t0f365uazgs84n7t9xhf19xt2'})
+                else:
+                    response = requests.get(
+                        'https://api.twitch.tv/helix/videos?user_id={}&first=100&after={}'.format(id, cursor),
+                        headers={'Client-ID': 'fgjp7t0f365uazgs84n7t9xhf19xt2'})
+
+                data = response.json()
+                print(data.keys())
+                for v in data['data']:
+                    url = v['url']
+                    if url in vod_urls:
+                        continue
+                    vods.append(v)
+                    vod_urls.append(url)
+                try:
+                    print(data['pagination'])
+                    cursor = data['pagination']['cursor']
+                except KeyError:
+                    break
+        return Response(vods)
+
 
 class RoundStatusViewSet(viewsets.ModelViewSet):
     model = models.Round
@@ -624,6 +782,7 @@ class RoundStatusViewSet(viewsets.ModelViewSet):
     search_fields = ('game__match__event__name', 'game__match__teams__name')
 
     def list(self, request, *args, **kwargs):
+        print(request.query_params)
         return super(RoundStatusViewSet, self).list(request, *args, **kwargs)
 
 
@@ -661,21 +820,38 @@ class TrainVodViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.VodDisplaySerializer
 
 
+class VodStatusViewSet(viewsets.ModelViewSet):
+    model = models.StreamVod
+    queryset = models.StreamVod.objects.filter(round__annotation_status='M').order_by('pk').distinct().all()
+    serializer_class = serializers.VodStatusSerializer
+    filter_backends = (filters.SearchFilter, RelatedOrderingFilter,)
+    pagination_class = pagination.LimitOffsetPagination
+
+    def list(self, request, *args, **kwargs):
+        print(request.query_params)
+        return super(VodStatusViewSet, self).list(request, *args, **kwargs)
+
+
 class AnnotateVodViewSet(viewsets.ModelViewSet):
     model = models.StreamVod
-    queryset = models.StreamVod.objects.filter(round=None).filter(pk__in=[651, 650, 655, 852, 862, 773, 672, 696, 699, 721, 743, 767]).order_by('pk').all()
+    queryset = models.StreamVod.objects.all()
     serializer_class = serializers.VodDisplaySerializer
 
-    def get_queryset(self):
-        import random
-        qs = models.StreamVod.objects.filter(pk__lte=774, pk__gte=693).order_by('pk').all()
-        for r in qs:
-            if 'korea' in r.title.lower() and r.film_format != 'K':
-                r.film_format = 'K'
-                r.save()
-        qs = [models.StreamVod.objects.get(pk=1092), models.StreamVod.objects.get(pk=1220)] + [x for x in qs]
-        #random.shuffle(qs)
-        return qs
+    @list_route(methods=['get'])
+    def in_out_game(self, request):
+        vods = models.StreamVod.objects.filter(status='N').all()
+        return Response(self.serializer_class(vods, many=True).data)
+
+    @list_route(methods=['post'])
+    def upload_in_out_game(self, request):
+        print(request.data)
+        error
+
+    @list_route(methods=['get'])
+    def round_events(self, request):
+        vods = models.StreamVod.objects.filter(status='T').all()
+        print(vods)
+        return Response(serializers.VodAnnotateSerializer(vods, many=True).data)
 
 
 class TrainPlayerViewSet(viewsets.ModelViewSet):
@@ -699,8 +875,9 @@ class TrainPlayerViewSet(viewsets.ModelViewSet):
 
 class AnnotateRoundViewSet(viewsets.ModelViewSet):
     model = models.Round
-    queryset = models.Round.objects.filter(annotation_status__in=['O']).filter(
-        game__match__event__name='overwatch league - season 1').order_by('game__match__film_format', 'pk').all()
+    #queryset = models.Round.objects.filter(annotation_status__in=['O']).filter(
+    #    game__match__event__name='overwatch league - season 1').order_by('game__match__film_format', 'pk').all()
+    queryset = models.Round.objects.filter(annotation_status__in=['O', 'N']).all()
     serializer_class = serializers.RoundDisplaySerializer
 
     def create(self, request, *args, **kwargs):
@@ -716,54 +893,50 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
         print(left)
         right = [x.player for x in instance.game.right_team.playerparticipation_set.all()]
         print(right)
-        if not request.data['ignore_switches']:
+        if not request.data.get('ignore_switches', False):
             instance.switch_set.all().delete()
         instance.ultgain_set.all().delete()
         instance.ultuse_set.all().delete()
-        instance.replaystart_set.all().delete()
-        instance.replayend_set.all().delete()
+        instance.replay_set.all().delete()
         switches = []
         ult_gains = []
         ult_uses = []
-        replay_begins = []
-        replay_ends = []
+        replays = []
         for r in request.data['replays']:
-            replay_begins.append(models.ReplayStart(round=instance, time_point=r['begin']))
-            replay_ends.append(models.ReplayEnd(round=instance, time_point=r['end']))
-        models.ReplayStart.objects.bulk_create(replay_begins)
-        models.ReplayEnd.objects.bulk_create(replay_ends)
+            replays.append(models.Replay(round=instance, start_time=r['begin'], end_time=r['end']))
+        models.Replay.objects.bulk_create(replays)
         sequences = instance.sequences
-        for k, v in request.data['player_states'].items():
+        for k, v in request.data['player'].items():
             side, num = k.split('_')
             num = int(num)
             if side == 'left':
                 p = left[num]
             else:
                 p = right[num]
-            if not request.data['ignore_switches']:
+            if not request.data.get('ignore_switches', False):
                 for s in v['switches']:
                     for seq in sequences:
-                        if seq[0] <= s[1] <= seq[1]:
+                        if seq[0] <= s[0] <= seq[1]:
                             break
                     else:
                         continue
-                    hero = models.Hero.objects.get(name__iexact=s[2])
-                    switches.append(models.Switch(round=instance, player=p, new_hero=hero, time_point=s[1]))
+                    hero = models.Hero.objects.get(name__iexact=s[1])
+                    switches.append(models.Switch(round=instance, player=p, new_hero=hero, time_point=s[0]))
             for ug in v['ult_gains']:
                 for seq in sequences:
-                    if seq[0] <= ug[1] <= seq[1]:
+                    if seq[0] <= ug <= seq[1]:
                         break
                 else:
                     continue
-                ult_gains.append(models.UltGain(player=p, round=instance, time_point=ug[1]))
+                ult_gains.append(models.UltGain(player=p, round=instance, time_point=ug))
             for uu in v['ult_uses']:
                 for seq in sequences:
-                    if seq[0] <= uu[1] <= seq[1]:
+                    if seq[0] <= uu <= seq[1]:
                         break
                 else:
                     continue
-                ult_uses.append(models.UltUse(player=p, round=instance, time_point=uu[1]))
-        if not request.data['ignore_switches']:
+                ult_uses.append(models.UltUse(player=p, round=instance, time_point=uu))
+        if not request.data.get('ignore_switches', False):
             models.Switch.objects.bulk_create(switches)
         models.UltGain.objects.bulk_create(ult_gains)
         models.UltUse.objects.bulk_create(ult_uses)
@@ -840,18 +1013,31 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                     errors.append((instance.id, time_point, 'kill', event['first_hero'], killing_side))
                     continue
                 hero = models.Hero.objects.get(name__iexact=event['first_hero'])
-                headshot = event['ability'].endswith('headshot')
+                headshot = event['headshot']
                 ability = event['ability'].replace(' headshot', '')
-                ability = hero.ability_set.filter(name__iexact=ability).first()
-
+                ability = hero.abilities.filter(name__iexact=ability).first()
+                assists = []
+                for a in event['assists']:
+                    hero = models.Hero.objects.get(name__iexact=a.replace('_assist', ''))
+                    assists.append(hero.name)
+                print(assists)
                 try:
                     npc = models.NPC.objects.get(name__iexact=event['second_hero'])
                     if ability is not None:
-                        killnpcs.append(
-                            models.KillNPC(round=instance, time_point=time_point, killing_player=killing_player,
-                                           killed_npc=npc, ability=ability))
-                        npcdeaths.append(models.NPCDeath(round=instance, time_point=time_point, npc=npc,
-                                                         side=killed_side[0].upper()))
+                        if not assists:
+                            killnpcs.append(
+                                models.KillNPC(round=instance, time_point=time_point, killing_player=killing_player,
+                                               killed_npc=npc, ability=ability))
+                            npcdeaths.append(models.NPCDeath(round=instance, time_point=time_point, npc=npc,
+                                                             side=killed_side[0].upper()))
+                        else:
+                            m = models.KillNPC.objects.create(round=instance, time_point=time_point, killing_player=killing_player,
+                                           killed_npc=npc, ability=ability)
+                            for a in assists:
+                                assisting_player = instance.get_player_of_hero(a, time_point, killing_side)
+                                if assisting_player is None:
+                                    continue
+                                m.assisting_players.add(assisting_player)
                 except models.NPC.DoesNotExist:
                     killed_player = instance.get_player_of_hero(event['second_hero'], time_point, killed_side)
                     print('killed_player', killed_player)
@@ -859,9 +1045,20 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                         errors.append((instance.id, time_point, 'kill', event['second_hero'], killed_side))
                         continue
                     if ability is not None:
-                        kills.append(models.Kill(round=instance, time_point=time_point, killing_player=killing_player,
-                                                 killed_player=killed_player, ability=ability, headshot=headshot))
-                        deaths.append(models.Death(round=instance, time_point=time_point, player=killed_player))
+                        if not assists:
+                            kills.append(models.Kill(round=instance, time_point=time_point, killing_player=killing_player,
+                                                     killed_player=killed_player, ability=ability, headshot=headshot))
+                            deaths.append(models.Death(round=instance, time_point=time_point, player=killed_player))
+                        else:
+                            m = models.Kill.objects.create(round=instance, time_point=time_point, killing_player=killing_player,
+                                        killed_player=killed_player, ability=ability, headshot=headshot)
+                            print(m)
+                            for a in assists:
+                                assisting_player = instance.get_player_of_hero(a, time_point, killing_side)
+                                print('assisting_player', assisting_player)
+                                if assisting_player is None:
+                                    continue
+                                m.assisting_players.add(assisting_player)
         models.Revive.objects.bulk_create(revives)
         models.Death.objects.bulk_create(deaths)
         models.NPCDeath.objects.bulk_create(npcdeaths)
@@ -875,10 +1072,54 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
         return Response()
 
 
+class VodViewSet(viewsets.ModelViewSet):
+    model = models.StreamVod
+    queryset = models.StreamVod.objects.all()
+    serializer_class = serializers.StreamVodSerializer
+
+    def create(self, request, *args, **kwargs):
+        from datetime import datetime
+        print(request.data)
+        try:
+            b = datetime.strptime(request.data['broadcast_date'], '%Y-%m-%dT%H:%M:%SZ')
+        except ValueError:
+            b = datetime.strptime(request.data['broadcast_date'], '%Y-%m-%dT%H:%M:%S.%fZ')
+        t = datetime.today()
+        vod = models.StreamVod.objects.create(channel_id=request.data['channel'], url=request.data['url'],
+                                              title=request.data['title'], status='N',
+                                              broadcast_date=b, last_modified=t)
+        return Response(self.serializer_class(vod).data)
+
+    @detail_route(methods=['get'])
+    def possible_matches(self, request, pk=None):
+        vod = self.get_object()
+        events = vod.channel.events.prefetch_related('match_set').all()
+        matches = []
+        for e in events:
+            matches.extend(e.match_set.all())
+        return Response(serializers.MatchSerializer(matches, many=True).data)
+
+    @detail_route(methods=['get'])
+    def rounds(self, request, pk=None):
+        vod = self.get_object()
+        rounds = vod.round_set.all()
+        return Response(serializers.RoundEditSerializer(rounds, many=True).data)
+
+
 class RoundViewSet(viewsets.ModelViewSet):
     model = models.Round
     queryset = models.Round.objects.all()
     serializer_class = serializers.RoundEditSerializer
+
+    def create(self, request, *args, **kwargs):
+        print(request.data)
+        round = models.Round.objects.create(stream_vod_id=int(request.data['vod']),
+                                            round_number=request.data['round_number'],
+                                            game_id=request.data['game'],
+                                            attacking_side=request.data['attacking_side'],
+                                            begin=request.data['begin'],
+                                            end=request.data['end'])
+        return Response(self.serializer_class(round).data)
 
     def update(self, request, *args, **kwargs):
         from django.db.models import F
@@ -911,7 +1152,7 @@ class RoundViewSet(viewsets.ModelViewSet):
         instance.annotation_status = request.data['annotation_status']
         instance.attacking_side = request.data['attacking_side']
         instance.save()
-        return Response()
+        return Response(self.serializer_class(instance).data)
 
     @detail_route(methods=['post'])
     def download(self, request, pk=None):
@@ -1049,6 +1290,27 @@ class RoundViewSet(viewsets.ModelViewSet):
         round = self.get_object()
         ultgains = round.ultgain_set.all()
         serializer = serializers.UltGainDisplaySerializer(ultgains, many=True)
+        return Response(serializer.data)
+
+    @detail_route(methods=['get'])
+    def ult_ends(self, request, pk=None):
+        round = self.get_object()
+        ult_ends = round.ultend_set.all()
+        serializer = serializers.UltEndDisplaySerializer(ult_ends, many=True)
+        return Response(serializer.data)
+
+    @detail_route(methods=['get'])
+    def ult_denials(self, request, pk=None):
+        round = self.get_object()
+        ult_denials = round.ultdenial_set.all()
+        serializer = serializers.UltDenialEditSerializer(ult_denials, many=True)
+        return Response(serializer.data)
+
+    @detail_route(methods=['get'])
+    def status_effects(self, request, pk=None):
+        round = self.get_object()
+        status_effects = round.statuseffect_set.all()
+        serializer = serializers.StatusEffectDisplaySerializer(status_effects, many=True)
         return Response(serializer.data)
 
     @detail_route(methods=['get'])
@@ -1311,6 +1573,58 @@ class UltGainViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.time_point = request.data['time_point']
+        instance.save()
+        return Response()
+
+
+class UltEndViewSet(viewsets.ModelViewSet):
+    model = models.UltEnd
+    queryset = models.UltEnd.objects.all()
+    serializer_class = serializers.UltEndSerializer
+
+    def create(self, request, *args, **kwargs):
+        request.data['time_point'] = round(request.data['time_point'], 1)
+        return super(UltEndViewSet, self).create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.time_point = request.data['time_point']
+        instance.save()
+        return Response()
+
+
+class UltDenialViewSet(viewsets.ModelViewSet):
+    model = models.UltDenial
+    queryset = models.UltDenial.objects.all()
+    serializer_class = serializers.UltDenialSerializer
+
+    def create(self, request, *args, **kwargs):
+        print(request.data)
+        request.data['time_point'] = round(request.data['time_point'], 1)
+        return super(UltDenialViewSet, self).create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.time_point = request.data['time_point']
+        instance.save()
+        return Response()
+
+
+class StatusEffectViewSet(viewsets.ModelViewSet):
+    model = models.StatusEffect
+    queryset = models.StatusEffect.objects.all()
+    serializer_class = serializers.StatusEffectSerializer
+
+    def create(self, request, *args, **kwargs):
+        request.data['start_time'] = round(request.data['start_time'], 1)
+        request.data['end_time'] = round(request.data['end_time'], 1)
+        print(request.data)
+        return super(StatusEffectViewSet, self).create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.start_time = round(request.data['start_time'], 1)
+        instance.end_time = round(request.data['end_time'], 1)
         instance.save()
         return Response()
 

@@ -1,11 +1,17 @@
 import {gameService, roundService} from '../api';
 
-const kf_event_types = ['kills', 'kill_npcs', 'deaths', 'npc_deaths', 'revives'];
-const player_state_types = ['kills', 'deaths', 'revives', 'ult_gains', 'ult_uses'];
+const kf_event_types = ['kills', 'kill_npcs', 'deaths', 'npc_deaths', 'revives', 'ult_denials'];
+const player_state_types = ['kills', 'deaths', 'revives', 'ult_gains', 'ult_uses', 'ult_ends'];
 const event_types = ['switches', 'kills', 'kill_npcs', 'deaths', 'npc_deaths', 'ult_gains', 'ult_uses',
+    'ult_ends', 'ult_denials', 'status_effects',
     'revives', 'point_gains', 'point_flips', 'pauses', 'replays', 'overtimes', 'smaller_windows'];
 const state = {
     all: {},
+    round_status: {},
+    pagination: {
+        page: 1,
+        rowsPerPage: 10,
+    },
     one: {},
     switches: [],
     kills: [],
@@ -14,6 +20,9 @@ const state = {
     npc_deaths: [],
     ult_gains: [],
     ult_uses: [],
+    ult_ends: [],
+    ult_denials: [],
+    status_effects: [],
     revives: [],
     point_gains: [],
     point_flips: [],
@@ -27,6 +36,9 @@ const state = {
 };
 
 const actions = {
+    updatePagination({commit}, value){
+       commit('setPagination', value)
+    },
     getAll({commit}) {
         commit('getAllRequest');
 
@@ -34,6 +46,33 @@ const actions = {
             .then(
                 rounds => commit('getAllSuccess', rounds),
                 error => commit('getAllFailure', error)
+            );
+    },
+    createRound( { commit }, round){
+        commit('createRequest');
+
+        return roundService.createRound(round)
+            .then(
+                round => commit('createSuccess', round),
+                error => commit('createFailure', error)
+            );
+
+    },
+    updateRound( { commit }, round){
+        commit('updateRequest');
+
+        roundService.updateRound(round.data)
+            .then(
+                round => commit('updateSuccess', round),
+                error => commit('updateFailure', error)
+            );
+
+    },
+    getRounds({commit}, data) {
+        roundService.getRounds(data)
+            .then(
+                rounds => commit('getRoundsSuccess', rounds.data),
+                error => commit('getRoundsFailure', error)
             );
     },
     getOne({commit}, id) {
@@ -203,6 +242,9 @@ const actions = {
 };
 
 const getters = {
+    pagination (state) {
+      return state.pagination
+    },
     switches: (state) => {
         return state.switches;
     },
@@ -226,6 +268,15 @@ const getters = {
     },
     ult_uses: (state) => {
         return state.ult_uses;
+    },
+    ult_ends: (state) => {
+        return state.ult_ends;
+    },
+    ult_denials: (state) => {
+        return state.ult_denials;
+    },
+    status_effects: (state) => {
+        return state.status_effects;
     },
     point_gains: (state) => {
         return state.point_gains;
@@ -255,16 +306,17 @@ const getters = {
         if (state.round_states.loading) {
             return false
         }
+        let i;
         for (i = 0; i < state.round_states.item.pauses.length; i++) {
 
-                if (state.round_states.item.pauses[i].begin <= time_point && time_point < state.round_states.item.pauses[i].end) {
-                    if (state.round_states.item.pauses[i].status === 'paused') {
-                        return true
-                    }
-                    else {
-                        return false
-                    }
+            if (state.round_states.item.pauses[i].begin <= time_point && time_point < state.round_states.item.pauses[i].end) {
+                if (state.round_states.item.pauses[i].status === 'paused') {
+                    return true
                 }
+                else {
+                    return false
+                }
+            }
         }
 
     },
@@ -273,28 +325,28 @@ const getters = {
         if (state.round_states.loading) {
             return false
         }
+        let i;
         for (i = 0; i < state.round_states.item.overtimes.length; i++) {
 
-                if (state.round_states.item.overtimes[i].begin <= time_point && time_point < state.round_states.item.overtimes[i].end) {
-                    if (state.round_states.item.overtimes[i].status === 'paused') {
-                        return true
-                    }
-                    else {
-                        return false
-                    }
+            if (state.round_states.item.overtimes[i].begin <= time_point && time_point < state.round_states.item.overtimes[i].end) {
+                if (state.round_states.item.overtimes[i].status === 'paused') {
+                    return true
                 }
+                else {
+                    return false
+                }
+            }
         }
 
     },
     heroAtTime: (state) => (player_id, time_point) => {
-        var hero = '';
-        var i;
         if (state.one.loading) {
             return ''
         }
         if (!state.switches) {
             return ''
         }
+        let i, hero = '';
 
         for (i = 0; i < state.switches.length; i++) {
             if (state.switches[i].player.id === player_id) {
@@ -330,12 +382,39 @@ const getters = {
 
         return events.slice(0, 6)
     },
-    hasUltAtTime: (state, getters) => (player_id, time_point) => {
-
+    ultStateAtTime: (state, getters) => (player_id, time_point) => {
         if (state.player_states.item) {
             let index, ult_states, i;
             index = getters.leftPlayerIndex(player_id);
             if (index >= 0) {
+                console.log(index, state.player_states.item.left[index])
+                ult_states = state.player_states.item.left[index].ult;
+            }
+            else {
+                index = getters.rightPlayerIndex(player_id);
+                if (index >= 0) {
+                    ult_states = state.player_states.item.right[index].ult;
+
+                }
+                else {
+                    return false
+                }
+            }
+            for (i = 0; i < ult_states.length; i++) {
+                if (ult_states[i].begin <= time_point && time_point < ult_states[i].end) {
+                    return ult_states[i].status
+                }
+            }
+
+        }
+        return false
+    },
+    hasUltAtTime: (state, getters) => (player_id, time_point) => {
+        if (state.player_states.item) {
+            let index, ult_states, i;
+            index = getters.leftPlayerIndex(player_id);
+            if (index >= 0) {
+                console.log(index, state.player_states.item.left[index])
                 ult_states = state.player_states.item.left[index].ult;
             }
             else {
@@ -405,7 +484,7 @@ const getters = {
         return on_left
     },
     leftPlayerIndex: (state, getters) => (player_id) => {
-        var index = 0, found = false;
+        var index = 1, found = false;
         if (!state.one.loading) {
             getters.leftPlayers.forEach(player => {
                 if (player_id == player.id) {
@@ -423,7 +502,7 @@ const getters = {
         return -1
     },
     rightPlayerIndex: (state) => (player_id) => {
-        let index = 0, found = false;
+        let index = 1, found = false;
         if (state.one.teams.right_team) {
             state.one.teams.right_team.forEach(player => {
                 if (player_id === player.id) {
@@ -453,6 +532,9 @@ const getters = {
 };
 
 const mutations = {
+    setPagination (state, payload) {
+      state.pagination = payload
+    },
     getAllRequest(state) {
         state.all = {loading: true};
     },
@@ -462,15 +544,45 @@ const mutations = {
     getAllFailure(state, error) {
         state.all = {error};
     },
+    getRoundsRequest(state) {
+        state.round_status = {loading: true};
+    },
+    getRoundsSuccess(state, rounds) {
+        console.log(rounds);
+        state.round_status = {items: rounds.results, loading: false, count: rounds.count};
+    },
+    getRoundsFailure(state, error) {
+        console.log(error);
+        state.round_status = {error, loading: false};
+    },
 
     getOneRequest(state) {
         state.one = {loading: true};
     },
     getOneSuccess(state, round) {
-        state.one = {item: round.round, teams: round.teams};
+        state.one = {item: round.round, teams: round.teams, loading:false};
     },
     getOneFailure(state, error) {
-        state.one = {error};
+        state.one = {error, loading:false};
+    },
+
+    updateRequest(state) {
+    },
+    updateSuccess(state, game) {
+
+    },
+    updateFailure(state, error) {
+        console.log(error)
+        state.one = { error };
+    },
+
+    createRequest(state) {
+    },
+    createSuccess(state, game) {
+
+    },
+    createFailure(state, error) {
+        console.log(error)
     },
 
     getEventsSuccess(state, data) {

@@ -5,7 +5,6 @@ from django.db.models import Sum, F
 
 
 class UserSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = User
         depth = 2
@@ -21,16 +20,20 @@ class HeroSerializer(serializers.ModelSerializer):
 class HeroAbilitySerializer(serializers.ModelSerializer):
     damaging_abilities = serializers.SerializerMethodField()
     reviving_abilities = serializers.SerializerMethodField()
+    deniable_abilities = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Hero
-        fields = ('id', 'name', 'hero_type', 'damaging_abilities', 'reviving_abilities')
+        fields = ('id', 'name', 'hero_type', 'damaging_abilities', 'reviving_abilities', 'deniable_abilities')
 
     def get_damaging_abilities(self, obj):
-        return AbilitySerializer(obj.ability_set.filter(damaging_ability=True).all(), many=True).data
+        return AbilitySerializer(obj.abilities.filter(damaging_ability=True).all(), many=True).data
 
     def get_reviving_abilities(self, obj):
-        return AbilitySerializer(obj.ability_set.filter(revive_ability=True).all(), many=True).data
+        return AbilitySerializer(obj.abilities.filter(revive_ability=True).all(), many=True).data
+
+    def get_deniable_abilities(self, obj):
+        return AbilitySerializer(obj.abilities.filter(matrixable=True).all(), many=True).data
 
 
 class AbilitySerializer(serializers.ModelSerializer):
@@ -39,15 +42,22 @@ class AbilitySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class StatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Status
+        fields = '__all__'
+
+
 class HeroSummarySerializer(serializers.ModelSerializer):
     abilities = serializers.SerializerMethodField()
     play_time = serializers.SerializerMethodField()
+
     class Meta:
         model = models.Hero
         fields = ('id', 'name', 'abilities', 'play_time')
 
     def get_abilities(self, obj):
-        return AbilitySerializer(obj.ability_set.all(), many=True).data
+        return AbilitySerializer(obj.abilities.all(), many=True).data
 
     def get_play_time(self, obj):
         return obj.switch_set.aggregate(total=Sum(F('end_time_point') - F('time_point')))['total']
@@ -77,6 +87,8 @@ class PlayerSerializer(serializers.ModelSerializer):
 
 
 class TeamSerializer(serializers.ModelSerializer):
+    players = PlayerSerializer(many=True)
+
     class Meta:
         model = models.Team
         fields = '__all__'
@@ -109,12 +121,17 @@ class EventSerializer(serializers.ModelSerializer):
 class MatchSerializer(serializers.ModelSerializer):
     event = EventSerializer()
     teams = serializers.StringRelatedField(many=True)
+    name = serializers.SerializerMethodField()
 
     start_time = serializers.DecimalField(10, 1)
 
     class Meta:
         model = models.Match
-        fields = ('id', 'event', 'teams', 'start_time')
+        fields = ('id', 'event', 'teams', 'start_time', 'name')
+
+    def get_name(self, obj):
+        teams = obj.teams.all()
+        return '{} vs {}'.format(teams[0].name, teams[1].name)
 
 
 class GameDisplaySerializer(serializers.ModelSerializer):
@@ -122,20 +139,29 @@ class GameDisplaySerializer(serializers.ModelSerializer):
     map = MapSerializer()
     left_team = TeamParticipationSerializer()
     right_team = TeamParticipationSerializer()
+    name = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Game
-        fields = ('id', 'game_number', 'match', 'left_team', 'right_team', 'map')
+        fields = ('id', 'name', 'game_number', 'match', 'left_team', 'right_team', 'map')
 
+    def get_name(self, obj):
+        teams = obj.match.teams.all()
+        return 'Game {} of {} vs {} on {}'.format(obj.game_number, teams[0].name, teams[1].name, obj.map.name)
 
 
 class GameSerializer(serializers.ModelSerializer):
     left_team = TeamParticipationSerializer()
     right_team = TeamParticipationSerializer()
+    name = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Game
-        fields = ('id', 'game_number', 'match', 'left_team', 'right_team', 'map')
+        fields = ('id', 'name', 'game_number', 'match', 'left_team', 'right_team', 'map')
+
+    def get_name(self, obj):
+        teams = obj.match.teams.all()
+        return 'Game {} of {} vs {} on {}'.format(obj.game_number, teams[0].name, teams[1].name, obj.map.name)
 
     def create(self, validated_data):
         left_team_data = validated_data.pop('left_team')
@@ -203,14 +229,38 @@ class StreamChannelSerializer(serializers.ModelSerializer):
 class StreamVodSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.StreamVod
-        fields = ('id', 'title', 'url', 'broadcast_date', 'vod_link', 'film_format')
+        fields = ('id', 'title', 'url', 'broadcast_date', 'vod_link', 'film_format', 'sequences',
+                  'channel', 'status', 'type')
 
 
 class VodDisplaySerializer(serializers.ModelSerializer):
     channel = StreamChannelSerializer()
+
     class Meta:
         model = models.StreamVod
-        fields = ('id', 'title', 'url', 'broadcast_date', 'vod_link', 'film_format', 'sequences', 'channel')
+        fields = ('id', 'title', 'url', 'broadcast_date', 'vod_link', 'film_format',
+                  'sequences', 'channel', 'status', 'type')
+
+
+class VodAnnotateSerializer(serializers.ModelSerializer):
+    rounds = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.StreamVod
+        fields = ('id', 'title', 'url', 'broadcast_date', 'vod_link', 'film_format',
+                  'sequences', 'channel', 'status', 'type', 'rounds')
+
+    def get_rounds(self, obj):
+        unnanotated_rounds = obj.round_set.filter(annotation_status='N')
+        return RoundDisplaySerializer(unnanotated_rounds, many=True).data
+
+
+class VodStatusSerializer(serializers.ModelSerializer):
+    channel = StreamChannelSerializer()
+
+    class Meta:
+        model = models.StreamVod
+        fields = ('id', 'title', 'url', 'broadcast_date', 'vod_link', 'film_format', 'channel')
 
 
 class RoundDisplaySerializer(serializers.ModelSerializer):
@@ -221,7 +271,8 @@ class RoundDisplaySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Round
         fields = (
-            'id', 'round_number', 'game', 'attacking_side', 'attacking_color', 'begin', 'end', 'annotation_status', 'spectator_mode',
+            'id', 'round_number', 'game', 'attacking_side', 'attacking_color', 'begin', 'end', 'annotation_status',
+            'spectator_mode',
             'sequences', 'stream_vod')
 
     def get_spectator_mode(self, obj):
@@ -231,11 +282,23 @@ class RoundDisplaySerializer(serializers.ModelSerializer):
 class RoundEditSerializer(serializers.ModelSerializer):
     game = GameDisplaySerializer()
     stream_vod = StreamVodSerializer()
+
     class Meta:
         model = models.Round
         fields = (
-            'id', 'round_number', 'game', 'attacking_side', 'begin', 'end', 'stream_vod',  'annotation_status',
+            'id', 'round_number', 'game', 'attacking_side', 'begin', 'end', 'stream_vod', 'annotation_status',
             'sequences')
+
+
+class VodEditSerializer(serializers.ModelSerializer):
+    rounds = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.StreamVod
+        fields = ('id', 'title', 'url', 'broadcast_date', 'vod_link', 'film_format', 'sequences', 'channel', 'rounds')
+
+    def get_rounds(self, obj):
+        return RoundSerializer(obj.round_set.all(), many=True).data
 
 
 class RoundSerializer(serializers.ModelSerializer):
@@ -353,7 +416,6 @@ class ReplaySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Replay
         fields = '__all__'
-
 
 
 class OvertimeSerializer(serializers.ModelSerializer):
@@ -491,9 +553,63 @@ class ReviveKillFeedSerializer(serializers.ModelSerializer):
         return 'N/A'
 
 
+class StatusEffectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.StatusEffect
+        fields = '__all__'
+
+
+class StatusEffectDisplaySerializer(serializers.ModelSerializer):
+    status = serializers.StringRelatedField()
+    player = serializers.StringRelatedField()
+
+    class Meta:
+        model = models.StatusEffect
+        fields = ('id', 'start_time', 'end_time', 'round', 'status', 'player')
+
+
+class StatusEffectEditSerializer(serializers.ModelSerializer):
+    status = StatusSerializer()
+    player = PlayerSerializer()
+
+    class Meta:
+        model = models.StatusEffect
+        fields = ('id', 'start_time', 'end_time', 'round', 'status', 'player')
+
+
+class UltDenialEditSerializer(serializers.ModelSerializer):
+    denying_player = serializers.StringRelatedField()
+    denied_player = serializers.StringRelatedField()
+    ability = serializers.StringRelatedField()
+
+    class Meta:
+        model = models.UltDenial
+        fields = '__all__'
+
+
+class UltDenialSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.UltDenial
+        fields = '__all__'
+
+
 class UltGainSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.UltGain
+        fields = '__all__'
+
+
+class UltEndSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.UltEnd
+        fields = '__all__'
+
+
+class UltEndDisplaySerializer(serializers.ModelSerializer):
+    player = PlayerSerializer()
+
+    class Meta:
+        model = models.UltEnd
         fields = '__all__'
 
 
@@ -671,6 +787,7 @@ class UserWithFullGroupsSerializer(serializers.ModelSerializer):
         depth = 2
         fields = ('id', 'first_name', 'last_name', 'username', 'groups', 'password', 'user_permissions', 'is_superuser',
                   'is_staff', 'is_active')
+
 
 class UnauthorizedUserSerializer(serializers.ModelSerializer):
     class Meta:

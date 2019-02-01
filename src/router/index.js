@@ -11,6 +11,13 @@ import EventListPage from '../views/annotator/EventListPage'
 import MatchDetailPage from '../views/annotator/MatchDetailPage'
 import GameDetailPage from '../views/annotator/GameDetailPage'
 import RoundDetailPage from '../views/annotator/RoundDetailPage'
+import RoundStatusPage from '../views/annotator/RoundStatusPage'
+import VodStatusPage from '../views/annotator/VodStatusPage'
+import VodDetailPage from '../views/annotator/VodDetailPage'
+import ReporterPage from '../views/reporter/ReporterPage'
+import TeamDetailPage from '../views/reporter/TeamDetailPage'
+import TeamListPage from '../views/reporter/TeamListPage'
+
 
 Vue.use(Router);
 
@@ -22,12 +29,27 @@ export const router = new Router({
         {path: '/register', component: RegisterPage, name: 'register'},
         {path: '/logout', component: LogoutPage, name: 'logout'},
         {
+            path: '/reporter', component: ReporterPage,
+            children: [
+                {
+                    path: 'teams/',
+                    component: TeamListPage,
+                    name: 'team-list'
+                },
+                {
+                    path: 'team/:id',
+                    component: TeamDetailPage,
+                    name: 'team-detail'
+                },
+                ]
+        },
+        {
             path: '/annotator', component: AnnotatorPage,
             children: [
                 {
-                    path: '',
+                    path: 'events/',
                     component: EventListPage,
-                    name: 'annotator'
+                    name: 'event-list'
                 },
                 {
                     path: 'event/:id',
@@ -48,7 +70,22 @@ export const router = new Router({
                     path: 'round/:id',
                     component: RoundDetailPage,
                     name: 'round-detail'
-                }
+                },
+                {
+                    path: 'round_status/',
+                    component: RoundStatusPage,
+                    name: 'round-status'
+                },
+                {
+                    path: 'vod_status/',
+                    component: VodStatusPage,
+                    name: 'vod-status'
+                },
+                {
+                    path: 'vod/:id',
+                    component: VodDetailPage,
+                    name: 'vod-detail'
+                },
             ]
         },
 

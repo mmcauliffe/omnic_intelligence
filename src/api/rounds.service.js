@@ -1,9 +1,13 @@
 import config from 'config';
 import { authHeader } from '../helper';
+import axios from 'axios';
 
 export const roundService = {
     getById,
-    update,
+    getRounds,
+    createRound,
+    updateRound,
+    deleteRound,
     getPlayers,
     getRoundStates,
     getKillFeedEvents,
@@ -12,7 +16,7 @@ export const roundService = {
     addRoundEvent,
     updateRoundEvent,
     deleteRoundEvent,
-    delete: _delete
+
 };
 
 
@@ -25,6 +29,39 @@ function getById(id) {
     return fetch(`${config.apiUrl}/rounds/${id}/`, requestOptions).then(handleResponse);
 }
 
+function createRound(round) {
+    const requestOptions = {
+        headers: { ...authHeader(), 'Content-Type': 'application/json' }
+    };
+    return axios.post(`${config.apiUrl}/rounds/`, round, requestOptions);
+}
+
+
+function updateRound(round) {
+    const requestOptions = {
+        headers: { ...authHeader(), 'Content-Type': 'application/json' }
+    };
+    console.log(round)
+    return axios.put(`${config.apiUrl}/rounds/${round.id}/`, round, requestOptions);
+}
+
+function deleteRound(id){
+    const requestOptions = {
+        headers: { ...authHeader()},
+    };
+
+    return axios.delete(`${config.apiUrl}/rounds/${id}/`, requestOptions);
+}
+
+function getRounds(params){
+    const requestOptions = {
+        headers: authHeader(),
+        params: params
+    };
+
+    return axios.get(`${config.apiUrl}/round_status/`, requestOptions);
+
+}
 
 function getPlayers(id) {
     const requestOptions = {
@@ -93,7 +130,7 @@ function updateRoundEvent(type, event) {
         headers: { ...authHeader(), 'Content-Type': 'application/json' },
         body: JSON.stringify(event)
     };
-
+    console.log(event)
     return fetch(`${config.apiUrl}/${type}/${event.id}/`, requestOptions).then(handleResponse);
 }
 
@@ -107,27 +144,9 @@ function deleteRoundEvent(type, event_id) {
     return fetch(`${config.apiUrl}/${type}/${event_id}/`, requestOptions).then(handleResponse);
 }
 
-function update(round) {
-    const requestOptions = {
-        method: 'PUT',
-        headers: { ...authHeader(), 'Content-Type': 'application/json' },
-        body: JSON.stringify(round)
-    };
-
-    return fetch(`${config.apiUrl}/rounds/${round.id}/`, requestOptions).then(handleResponse);
-}
-
-// prefixed function name with underscore because delete is a reserved word in javascript
-function _delete(id) {
-    const requestOptions = {
-        method: 'DELETE',
-        headers: authHeader()
-    };
-
-    return fetch(`${config.apiUrl}/rounds/${id}/`, requestOptions).then(handleResponse);
-}
 
 function handleResponse(response) {
+    console.log(response)
     return response.text().then(text => {
         const data = text && JSON.parse(text);
         console.log(response.ok)

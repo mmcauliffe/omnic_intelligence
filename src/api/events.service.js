@@ -1,12 +1,15 @@
 import config from 'config';
 import { authHeader } from '../helper';
+import axios from "axios/index";
 
 export const eventService = {
     getAll,
     getById,
     getMatches,
     update,
-    delete: _delete
+    delete: _delete,
+    getStreamVods,
+    getAvailableVods,
 };
 
 function getAll() {
@@ -35,6 +38,24 @@ function getMatches(id) {
     };
 
     return fetch(`${config.apiUrl}/events/${id}/matches/`, requestOptions).then(handleResponse);
+}
+
+
+function getStreamVods(id) {
+    const requestOptions = {
+        headers: authHeader()
+    };
+
+    return axios.get(`${config.apiUrl}/events/${id}/vods/`, requestOptions);
+}
+
+
+function getAvailableVods(id) {
+    const requestOptions = {
+        headers: authHeader()
+    };
+
+    return axios.get(`${config.apiUrl}/events/${id}/available_vods/`, requestOptions);
 }
 
 

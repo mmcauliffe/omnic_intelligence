@@ -100,7 +100,7 @@
         },
         watch: {
             newEvent: {
-                handler(newNewKill) {
+                handler(newNewEvent) {
                     this.eventChangeHandler(newNewEvent);
 
                 },

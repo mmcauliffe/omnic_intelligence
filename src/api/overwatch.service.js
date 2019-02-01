@@ -12,6 +12,7 @@ export const overwatchService = {
     getTeamColors,
     getMapModes,
     getSides,
+    getStatusEffectChoices,
 };
 
 function getHeroes() {
@@ -58,6 +59,15 @@ function getMaps() {
     };
 
     return fetch(`${config.apiUrl}/maps/`, requestOptions).then(handleResponse);
+}
+
+function getStatusEffectChoices() {
+    const requestOptions = {
+        method: 'GET',
+        headers: authHeader()
+    };
+
+    return fetch(`${config.apiUrl}/status_effect_choices/`, requestOptions).then(handleResponse);
 }
 
 function getMapTypes() {

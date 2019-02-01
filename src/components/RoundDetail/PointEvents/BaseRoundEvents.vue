@@ -51,7 +51,9 @@
             ]),
             ...mapGetters('overwatch', [
                 'sides',
+                'status_effect_choices',
                 'heroDamagingAbilities',
+                'heroDeniableAbilities',
                 'heroRevivingAbilities',
                 'availableNPCs'
             ]),

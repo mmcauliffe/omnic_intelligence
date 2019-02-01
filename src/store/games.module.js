@@ -1,4 +1,4 @@
-import { gameService} from '../api';
+import {gameService, teamService} from '../api';
 import { matchService} from '../api';
 
 
@@ -17,6 +17,26 @@ const actions = {
                 games => commit('getAllSuccess', games),
                 error => commit('getAllFailure', error)
             );
+    },
+    createGame( { commit }, game){
+        commit('createRequest');
+
+        return gameService.createGame(game)
+            .then(
+                game => commit('createSuccess', game),
+                error => commit('createFailure', error)
+            );
+
+    },
+    updateGame( { commit }, game){
+        commit('updateRequest');
+
+        return gameService.updateGame(game)
+            .then(
+                game => commit('updateSuccess', game),
+                error => commit('updateFailure', error)
+            );
+
     },
     getOne( { commit }, id){
         commit('getOneRequest');
@@ -43,10 +63,10 @@ const actions = {
                 error => commit('getOneRoundsFailure', error)
             );
     },
-    delete({ commit }, id) {
+    deleteGame({ commit }, id) {
         commit('deleteRequest', id);
 
-        gameService.delete(id)
+        gameService.deleteGame(id)
             .then(
                 game => commit('deleteSuccess', id),
                 error => commit('deleteSuccess', { id, error: error.toString() })
@@ -87,6 +107,24 @@ const mutations = {
         state.rounds = { error };
     },
 
+    updateRequest(state) {
+    },
+    updateSuccess(state, game) {
+
+    },
+    updateFailure(state, error) {
+        console.log(error)
+        state.one = { error };
+    },
+
+    createRequest(state) {
+    },
+    createSuccess(state, game) {
+
+    },
+    createFailure(state, error) {
+        console.log(error)
+    },
     deleteRequest(state, id) {
         // add 'deleting:true' property to user being deleted
         state.all.items = state.all.items.map(game =>

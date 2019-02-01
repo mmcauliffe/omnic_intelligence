@@ -24,7 +24,7 @@ Vue.config.productionTip = false;
 
 Vue.filter('secondsToMoment', function (seconds) {
         var m = moment({hour: 0, minute: 0});
-        m.seconds(Math.round(seconds));
+        m.seconds(Math.floor(seconds));
         m.milliseconds(Math.round(seconds % 1 * 1000));
         return m;
     }

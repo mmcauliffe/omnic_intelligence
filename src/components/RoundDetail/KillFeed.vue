@@ -7,26 +7,26 @@
             <div class="first-hero text-xs-left" :class="item.first_color">
                 <v-tooltip bottom v-if="item.first_hero != 'N/A'">
                     <img class="hero-icon" slot="activator"
-                         :src="require('../../assets/Icon-'+ make_safe(item.first_hero) +'.png')"/>
+                         :src="require('../../assets/'+ make_safe(item.first_hero) +'.png')"/>
 
                     <span>{{ item.first_hero}}</span>
                 </v-tooltip>
-                <v-tooltip v-for="h in item.assisting_heroes" bottom>
-                    <img class="hero-icon" slot="activator" :src="require('../../assets/Icon-'+ make_safe(h) +'.png')"/>
+                <v-tooltip v-for="h in item.assisting_heroes" v-bind:key="h" bottom>
+                    <img class="hero-icon" slot="activator" :src="require('../../assets/'+ make_safe(h) +'.png')"/>
 
                     <span>{{ h }}</span>
                 </v-tooltip>
 
             </div>
             <div class="ability text-xs-center">
-                <v-tooltip bottom v-if="item.first_hero == 'N/A'|| item.ability == 'Primary'">
+                <v-tooltip bottom v-if="item.first_hero === 'N/A'|| item.ability === 'Primary' || item.ability === 'Melee'">
                     <v-icon slot="activator" color="red" v-if="item.headshot">arrow_right_alt</v-icon>
                     <v-icon slot="activator" color="white" v-else>arrow_right_alt</v-icon>
                     <span>{{ item.ability}}</span>
                 </v-tooltip>
-                <v-tooltip bottom v-if="item.first_hero != 'N/A' &&item.ability != 'Primary'">
+                <v-tooltip bottom v-if="item.first_hero !== 'N/A' &&item.ability !== 'Primary' && item.ability !== 'Melee'">
                     <img class="hero-icon" slot="activator"
-                         :src="require('../../assets/'+ make_safe(item.first_hero) + '-' + make_safe(item.ability) +'.png')"/>
+                         :src="require('../../assets/'+ make_safe(item.ability) +'.png')"/>
 
                     <span>{{ item.ability}}</span>
                 </v-tooltip>
@@ -35,7 +35,7 @@
             <div class="second-hero text-xs-right" :class="item.second_color">
                 <v-tooltip bottom>
                     <img class="hero-icon" slot="activator"
-                         :src="require('../../assets/Icon-'+ make_safe(item.second_hero) +'.png')"/>
+                         :src="require('../../assets/'+ make_safe(item.second_hero) +'.png')"/>
 
                     <span>{{ item.second_hero}}</span>
                 </v-tooltip>
@@ -95,7 +95,7 @@
 
         methods: {
             make_safe(name) {
-                return name.replace(':', '')
+                return name.replace(':', '').replace('!', '')
             },
         }
     }

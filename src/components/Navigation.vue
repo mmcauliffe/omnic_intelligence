@@ -12,10 +12,15 @@
 
                     <b-collapse is-nav id="nav_collapse">
 
-                        <b-navbar-nav>
-                            <b-nav-item :to="{name: 'annotator'}">Annotator</b-nav-item>
-                        </b-navbar-nav>
+                            <b-nav-item-dropdown text="Annotator" right>
+                                <b-dropdown-item :to="{name: 'event-list'}">Event listing</b-dropdown-item>
+                                <b-dropdown-item :to="{name: 'round-status'}">Round listing</b-dropdown-item>
+                                <b-dropdown-item :to="{name: 'vod-status'}">Training vod listing</b-dropdown-item>
+                            </b-nav-item-dropdown>
 
+                            <b-nav-item-dropdown text="Reporter" right>
+                                <b-dropdown-item :to="{name: 'team-list'}">Team listing</b-dropdown-item>
+                            </b-nav-item-dropdown>
                         <!-- Right aligned nav items -->
                         <b-navbar-nav class="ml-auto">
 

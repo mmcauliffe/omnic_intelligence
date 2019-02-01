@@ -10,6 +10,7 @@ import { games } from './games.module';
 import { vods } from './vod.module';
 import { overwatch } from './overwatch.module';
 import { rounds } from './rounds.module'
+import { teams } from './teams.module'
 
 Vue.use(Vuex);
 
@@ -22,6 +23,7 @@ export const store = new Vuex.Store({
         matches,
         games,
         rounds,
+        teams,
         vods,
         overwatch
     }

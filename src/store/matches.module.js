@@ -5,9 +5,17 @@ const state = {
     one: {},
     games: {},
     teams: {},
+    left_player_options: [],
+    right_player_options: [],
 };
 
 const actions = {
+    updateLeftPlayerOptions({commit}, value){
+       commit('setLeftPlayerOptions', value)
+    },
+    updateRightPlayerOptions({commit}, value){
+       commit('setRightPlayerOptions', value)
+    },
     getAll({ commit }) {
         commit('getAllRequest');
 
@@ -57,6 +65,12 @@ const actions = {
 };
 
 const mutations = {
+    setLeftPlayerOptions (state, payload) {
+      state.left_player_options = payload
+    },
+    setRightPlayerOptions (state, payload) {
+      state.right_player_options = payload
+    },
     getAllRequest(state) {
         state.all = { loading: true };
     },
@@ -93,7 +107,7 @@ const mutations = {
     },
     getOneTeamsSuccess(state, match) {
         console.log(match)
-        state.teams = { item: match };
+        state.teams = { items: match };
     },
     getOneTeamsFailure(state, error) {
         state.teams = { error };

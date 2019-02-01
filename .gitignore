@@ -115,3 +115,5 @@ venv.bak/
 20181010_revised\.json
 
 *.sqlite3
+
+20190103_backup\.json

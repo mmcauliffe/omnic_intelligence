@@ -1,7 +1,7 @@
 from django.contrib import admin
 # Register your models here.
 from .models import Map, Hero, Ability, NPC, Team, Player, Event, Match, Round, StreamChannel, StreamVod, \
-    TeamParticipation, Affiliation, Game
+    TeamParticipation, Affiliation, Game, Status
 
 
 @admin.register(Map)
@@ -9,18 +9,30 @@ class MapAdmin(admin.ModelAdmin):
     list_display = ('name', 'mode')
 
 
+class AbilityInline(admin.TabularInline):
+    model = Hero.abilities.through
+    verbose_name = "Ability"
+    verbose_name_plural = "Abilities"
+
+
 @admin.register(Hero)
 class HeroAdmin(admin.ModelAdmin):
     list_display = ('name', 'hero_type')
+    inlines = [AbilityInline]
 
 
 @admin.register(Ability)
 class AbilityAdmin(admin.ModelAdmin):
-    list_display = ('name', 'hero', 'damaging_ability', 'headshot_capable', 'revive_ability', 'ultimate_ability')
+    list_display = ('name', 'damaging_ability', 'headshot_capable', 'revive_ability', 'ultimate_ability')
 
 
 @admin.register(NPC)
 class NPCAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Status)
+class StatusAdmin(admin.ModelAdmin):
     pass
 
 
@@ -39,9 +51,16 @@ class PlayerAdmin(admin.ModelAdmin):
     readonly_fields = ('id',)
 
 
+class TeamInline(admin.TabularInline):
+    model = Event.teams.through
+    verbose_name = "Team"
+    verbose_name_plural = "Teams"
+
+
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
     list_display = ('id', 'name')
+    inlines = [TeamInline]
 
 
 @admin.register(StreamChannel)

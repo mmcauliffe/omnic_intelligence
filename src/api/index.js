@@ -6,3 +6,4 @@ export * from './rounds.service'
 
 export * from  './overwatch.service'
 export * from  './vod.service'
+export * from  './teams.service'

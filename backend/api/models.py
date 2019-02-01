@@ -23,6 +23,7 @@ class StreamChannel(models.Model):
                     ('Y', 'YouTube'))
     name = models.CharField(max_length=256, unique=True)
     site = models.CharField(max_length=1, choices=SITE_CHOICES, default='T')
+    youtube_channel_id = models.CharField(max_length=128, blank=True, null=True)
 
     def __str__(self):
         return '{} - {}'.format(self.name, self.get_site_display())
@@ -35,11 +36,26 @@ class StreamVod(models.Model):
                            ('A', 'APEX'),
                            ('K', 'Korean Contenders'),
                            ('2', 'Overwatch league stage 2'))
+    STATUS_CHOICES = (
+        ('N', 'Not analyzed'),
+        ('G', 'Automatically annotated for in-game/out-of-game'),
+        ('A', 'Rounds automatically annotated'),
+        ('T', 'Game boundaries manually checked'),
+        ('M', 'Round events manually corrected')
+                      )
+    TYPE_CHOICES = (
+        ('M', 'Match'),
+        ('G', 'Game'),
+        ('R', 'Round')
+    )
     channel = models.ForeignKey(StreamChannel, on_delete=models.CASCADE)
     url = models.URLField(max_length=256, unique=True)
     title = models.CharField(max_length=256)
     broadcast_date = models.DateTimeField(blank=True, null=True)
     film_format = models.CharField(max_length=1, choices=FILM_FORMAT_CHOICES, default=ORIGINAL)
+    status = models.CharField(max_length=1, choices=STATUS_CHOICES, default='A')
+    type = models.CharField(max_length=1, choices=STATUS_CHOICES, default='G')
+    last_modified = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
         return self.title
@@ -80,13 +96,11 @@ class Map(models.Model):
 
 
 class Hero(models.Model):
-    OFFENSE = 'O'
-    DEFENSE = 'D'
+    DAMAGE = 'D'
     TANK = 'T'
     SUPPORT = 'S'
     TYPE_CHOICES = (
-        (OFFENSE, 'Offense'),
-        (DEFENSE, 'Defense'),
+        (DAMAGE, 'Damage'),
         (TANK, 'Tank'),
         (SUPPORT, 'Support'),
     )
@@ -95,6 +109,17 @@ class Hero(models.Model):
 
     class Meta:
         verbose_name_plural = "heroes"
+        ordering = ['hero_type', 'name']
+
+    def __str__(self):
+        return self.name
+
+
+class Status(models.Model):
+    name = models.CharField(max_length=128, unique=True)
+
+    class Meta:
+        verbose_name_plural = "statuses"
 
     def __str__(self):
         return self.name
@@ -113,16 +138,17 @@ class NPC(models.Model):
 
 
 class Ability(models.Model):
-    hero = models.ForeignKey(Hero, on_delete=models.CASCADE)
+    heroes = models.ManyToManyField(Hero, related_name='abilities')
     name = models.CharField(max_length=128)
     revive_ability = models.BooleanField(default=False)
     damaging_ability = models.BooleanField(default=True)
     headshot_capable = models.BooleanField(default=False)
     ultimate_ability = models.BooleanField(default=False)
+    matrixable = models.BooleanField(default=False)
 
     class Meta:
         verbose_name_plural = "abilities"
-        ordering = ['hero', 'name']
+        ordering = ['name']
 
     def __str__(self):
         return self.name
@@ -138,7 +164,7 @@ class Player(models.Model):
     def get_hero_at_timepoint(self, round_object, time_point):
         time_point = round(time_point, 1)
         s = self.switch_set.filter(time_point__lte=time_point, round=round_object).order_by(
-            '-time_point').prefetch_related('new_hero', 'new_hero__ability_set').first()
+            '-time_point').prefetch_related('new_hero', 'new_hero__abilities').first()
         if s is not None:
             return s.new_hero
         return ''
@@ -150,10 +176,12 @@ class Player(models.Model):
             return [{'begin': 0, 'end': round_end, 'status': 'no_ult'}]
 
         ultuses = self.ultuse_set.filter(round=round_object).all()
+        ultends = self.ultend_set.filter(round=round_object).all()
         switches = self.switch_set.filter(round=round_object).all()
         starts = sorted([round(x.time_point, 1) for x in ultgains])
-        ends = sorted([round(x.time_point, 1) for x in ultuses] + [round(x.time_point, 1) for x in switches])
-        cur_beg = 0
+        switch_time_points = [round(x.time_point, 1) for x in switches]
+        ult_end_time_points = [round(x.time_point, 1) for x in ultends]
+        ends = sorted([round(x.time_point, 1) for x in ultuses] + switch_time_points)
         segments = []
         for i, s in enumerate(starts):
             if segments:
@@ -163,6 +191,11 @@ class Player(models.Model):
             for e in ends:
                 if e >= s:
                     segments.append({'begin': s, 'end': e, 'status': 'has_ult'})
+                    if e not in switch_time_points and ultends:
+                        for ue in ult_end_time_points:
+                            if ue >= e and (i == len(starts) -1 or (ue <= s)):
+                                segments.append({'begin': e, 'end': ue, 'status': 'using_ult'})
+                                break
                     break
             else:
                 segments.append({'begin': s, 'end': round_end, 'status': 'has_ult'})
@@ -197,6 +230,23 @@ class Player(models.Model):
         if segments[-1]['end'] < round_end:
             segments.append({'begin': segments[-1]['end'], 'end': round_end, 'status': 'alive'})
 
+        return segments
+
+    def get_status_effect_states(self, round_object, status):
+        status_effects = self.statuseffect_set.filter(round=round_object, status=status).all()
+        round_end = round_object.end - round_object.begin
+        status_name = status.name.lower()
+        if len(status_effects) == 0:
+            return [{'begin': 0, 'end': round_end, 'status': 'not_'+ status_name}]
+        segments = []
+        for s in status_effects:
+            if segments:
+                segments.append({'begin': segments[-1]['end'], 'end': s.start_time, 'status': 'not_'+status_name})
+            else:
+                segments.append({'begin': Decimal('0.0'), 'end':  s.start_time, 'status': 'not_'+status_name})
+            segments.append({'begin': s.start_time, 'end': s.end_time, 'status': status_name})
+        if segments[-1]['end'] < round_end:
+            segments.append({'begin': segments[-1]['end'], 'end': round_end, 'status': 'not_'+status_name})
         return segments
 
     def get_hero_states(self, round_object):
@@ -293,6 +343,7 @@ class Event(models.Model):
                               ('W', 'World Cup'),
                               ('L', 'Overwatch League'),
                               ('A', 'Ability'),
+                              ('S', 'Status'),
                               ('N', 'Contenders'),
                               ('H', 'China Contenders'),
                               ('K', 'Korea Contenders'),
@@ -302,7 +353,8 @@ class Event(models.Model):
     end_date = models.DateField(null=True, blank=True)
     liquipedia_id = models.CharField(max_length=128, null=True, blank=True)
     spectator_mode = models.CharField(max_length=1, choices=SPECTATOR_MODE_CHOICES, default='C')
-    channel = models.ForeignKey(StreamChannel, on_delete=models.SET_NULL, null=True, blank=True)
+    stream_channels = models.ManyToManyField(StreamChannel, related_name='events')
+    teams = models.ManyToManyField(Team, through='EventParticipation')
 
     class Meta:
         ordering = ['start_date']
@@ -311,10 +363,23 @@ class Event(models.Model):
         return self.name
 
 
+class EventParticipation(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    result = models.CharField(max_length=128, null=True, blank=True)
+
+
 class Match(models.Model):
+    COMP = 'C'
+    RULES_CHOICES = (
+        (COMP, 'Competitive'),
+        ('M', 'Mystery heroes')
+                     )
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
     teams = models.ManyToManyField(Team)
     description = models.CharField(max_length=256)
+    rules = models.CharField(max_length=1, choices=RULES_CHOICES, default=COMP)
+    exhibition = models.BooleanField(default=False)
 
     def __str__(self):
         return 'Match between {} in {}'.format(' and '.join(x.name for x in self.teams.all()), str(self.event))
@@ -396,7 +461,7 @@ class Round(models.Model):
 
     class Meta:
         unique_together = (("game", "round_number"),)
-        ordering = ['round_number']
+        ordering = ['game__match__id', 'game__game_number', 'round_number']
 
     def __str__(self):
         return 'Round {} of Game {} for {} vs {} in {}'.format(self.round_number, self.game.game_number,
@@ -462,21 +527,28 @@ class Round(models.Model):
         data = {'left': {}, 'right': {}}
         left_team = self.game.left_team.playerparticipation_set.prefetch_related('player', 'player__switch_set',
                                                                                  'player__death_set',
+                                                                                 'player__statuseffect_set',
                                                                                  'player__ultuse_set',
                                                                                  'player__ultgain_set',
+                                                                                 'player__ultend_set',
                                                                                  'player__revived_player').all()
         right_team = self.game.right_team.playerparticipation_set.all()
+        statuses = Status.objects.all()
         for p in left_team:
             pp = p.player
             hero_states = pp.get_hero_states(self)
 
             data['left'][p.player_index] = {'ult': pp.get_ult_states(self), 'alive': pp.get_alive_states(self),
                                             'hero': hero_states, 'player': pp.name}
+            for s in statuses:
+                data['left'][p.player_index][s.name.lower()] = pp.get_status_effect_states(self, s)
         for p in right_team:
             pp = p.player
             hero_states = pp.get_hero_states(self)
             data['right'][p.player_index] = {'ult': pp.get_ult_states(self), 'alive': pp.get_alive_states(self),
                                              'hero': hero_states, 'player': pp.name}
+            for s in statuses:
+                data['right'][p.player_index][s.name.lower()] = pp.get_status_effect_states(self, s)
         return data
 
     def get_heroes_used(self):
@@ -513,39 +585,37 @@ class Round(models.Model):
 
     @property
     def replay_duration(self):
-        starts = self.replaystart_set.all()
-        ends = self.replayend_set.all()
-        if len(starts) != len(ends):
-            raise Exception('Unequal replay starts and ends for {}'.format(self))
-        return sum(x[1].time_point - x[0].time_point for x in zip(starts, ends))
+        replays = self.replay_set.all()
+
+        round_end = self.end - self.begin
+        return sum(x.end_time - x.start_time if x.end_time is not None else round_end - x.start_time for x in replays)
 
     @property
     def pause_duration(self):
-        starts = self.pause_set.all()
-        ends = self.unpause_set.all()
-        if len(starts) != len(ends):
-            raise Exception('Unequal pause and unpauses for {}'.format(self))
-        return sum(x[1].time_point - x[0].time_point for x in zip(starts, ends))
+        pauses = self.pause_set.all()
+
+        round_end = self.end - self.begin
+        return sum(x.end_time - x.start_time if x.end_time is not None else round_end - x.start_time for x in pauses)
 
     @property
     def sequences(self):
-        replay_starts = self.replaystart_set.all()
+        replays = self.replay_set.all()
         pauses = self.pause_set.all()
-        if len(replay_starts) == 0 and len(pauses) == 0:
+        if len(replays) == 0 and len(pauses) == 0:
             return [[0, self.end - self.begin]]
-        replay_ends = self.replayend_set.all()
-        unpauses = self.unpause_set.all()
-        starts = sorted([x.time_point for x in replay_starts] + [x.time_point for x in pauses])
-        ends = sorted([x.time_point for x in replay_ends] + [x.time_point for x in unpauses])
+        interruptions = sorted([x for x in replays] + [x for x in pauses], key=lambda x: x.start_time)
+
+        round_end = self.end - self.begin
         cur_beg = 0
         segments = []
-        for i, s in enumerate(starts):
-            segments.append([cur_beg, s])
-            try:
-                cur_beg = ends[i]
-            except IndexError:
-                cur_beg = s
-        segments.append([cur_beg, self.end - self.begin])
+        for i, s in enumerate(interruptions):
+            segments.append([cur_beg, s.start_time])
+            if s.end_time is not None:
+                cur_beg = s.end_time
+            else:
+                cur_beg = round_end
+        if round_end - cur_beg > 1:
+            segments.append([cur_beg, round_end])
 
         return segments
 
@@ -567,7 +637,9 @@ class Round(models.Model):
             if not states:
                 states.append({'begin': 0, 'end': o.start_time, 'status': 'not_overtime'})
             states.append({'begin': o.start_time, 'end': o.end_time, 'status': 'overtime'})
-        if states[-1]['end'] != round_end:
+        if states[-1]['end'] is None:
+            states[-1]['end'] = round_end
+        elif states[-1]['end'] != round_end:
             states.append({'begin': states[-1]['end'], 'end': round_end, 'status': 'not_overtime'})
         return states
 
@@ -581,7 +653,9 @@ class Round(models.Model):
             if not states:
                 states.append({'begin': 0, 'end': o.start_time, 'status': 'not_paused'})
             states.append({'begin': o.start_time, 'end': o.end_time, 'status': 'paused'})
-        if states[-1]['end'] != round_end:
+        if states[-1]['end'] is None:
+            states[-1]['end'] = round_end
+        elif states[-1]['end'] != round_end:
             states.append({'begin': states[-1]['end'], 'end': round_end, 'status': 'not_paused'})
         return states
 
@@ -595,7 +669,9 @@ class Round(models.Model):
             if not states:
                 states.append({'begin': 0, 'end': o.start_time, 'status': 'not_replay'})
             states.append({'begin': o.start_time, 'end': o.end_time, 'status': 'replay'})
-        if states[-1]['end'] != round_end:
+        if states[-1]['end'] is None:
+            states[-1]['end'] = round_end
+        elif states[-1]['end'] != round_end:
             states.append({'begin': states[-1]['end'], 'end': round_end, 'status': 'not_replay'})
         return states
 
@@ -620,30 +696,27 @@ class Round(models.Model):
         else:
             point_gains = self.pointgain_set.all()
             if not point_gains:
-                if map_type in ['Assault', 'Hybrid']:
-                    return [{'begin': 0, 'end': round_end, 'status': 'Assault_A'}]
+                if map_type in ['Assault']:
+                    return [{'begin': 0, 'end': round_end, 'status': 'Assault_1'}]
                 else:
-                    return [{'begin': 0, 'end': round_end, 'status': 'Escort_1'}]
+                    return [{'begin': 0, 'end': round_end, 'status': '{}_1'.format(map_type)}]
             for i, p in enumerate(point_gains):
                 if map_type == 'Assault':
                     if not states:
-                        states.append({'begin': 0, 'end': p.time_point, 'status': 'Assault_A'})
+                        states.append({'begin': 0, 'end': p.time_point, 'status': 'Assault_1'})
                     if p.point_total % 2 != 0:
-                        states.append({'begin': p.time_point, 'end': round_end, 'status': 'Assault_B'})
+                        states.append({'begin': p.time_point, 'end': round_end, 'status': 'Assault_2'})
                 else:
                     if not states:
-                        if map_type == 'Hybrid':
-                            states.append({'begin': 0, 'end': p.time_point, 'status': 'Assault_A'})
-                        else:
-                            states.append({'begin': 0, 'end': p.time_point, 'status': 'Escort_1'})
+                        states.append({'begin': 0, 'end': p.time_point, 'status': '{}_1'.format(map_type)})
                     if i != len(point_gains) - 1:
                         end_point = point_gains[i + 1].time_point
                     else:
                         end_point = round_end
                     if p.point_total % 3 == 1:
-                        states.append({'begin': p.time_point, 'end': end_point, 'status': 'Escort_2'})
+                        states.append({'begin': p.time_point, 'end': end_point, 'status': '{}_2'.format(map_type)})
                     elif p.point_total % 3 == 2:
-                        states.append({'begin': p.time_point, 'end': end_point, 'status': 'Escort_3'})
+                        states.append({'begin': p.time_point, 'end': end_point, 'status': '{}_3'.format(map_type)})
         return states
 
     def point_status(self, time_point):
@@ -710,9 +783,24 @@ class Round(models.Model):
                  'first_color': killing_color, 'assisting_heroes': assisting_heroes,
                  'ability': k.ability.name, 'headshot': k.headshot,
                  'second_hero': dying_hero, 'second_player': k.killed_player.name, 'second_color': dying_color})
+        for u in self.ultdenial_set.all():
+            denying_hero = u.denying_player.get_hero_at_timepoint(self, u.time_point)
+            if self.game.left_team.playerparticipation_set.filter(player=u.denying_player).count():
+                killing_color = self.game.left_team.get_color_display()
+                dying_color = self.game.right_team.get_color_display()
+            else:
+                killing_color = self.game.right_team.get_color_display()
+                dying_color = self.game.left_team.get_color_display()
+            ability = denying_hero.abilities.get(name='Defense Matrix').name
+            kf_item = {'time_point': u.time_point, 'first_hero': denying_hero.name, 'first_player': u.denying_player.name,
+                       'ability':ability, 'second_hero': u.ability.name,
+                       'first_color': killing_color,'second_player': u.denied_player.name, 'second_color': dying_color}
+            potential_killfeed.append(kf_item)
+
         killnpcs = self.killnpc_set.all()
         for k in killnpcs:
             killing_hero = k.killing_player.get_hero_at_timepoint(self, k.time_point).name
+            dying_player = 'N/A'
             if self.game.left_team.playerparticipation_set.filter(player=k.killing_player).count():
                 killing_color = self.game.left_team.get_color_display()
                 dying_color = self.game.right_team.get_color_display()
@@ -761,6 +849,7 @@ class Round(models.Model):
                     break
             else:
                 dying_npc = d.npc.name
+                dying_player = 'N/A'
                 if d.side == 'L':
                     dying_color = self.game.left_team.get_color_display()
                     for p in self.game.left_team.players.all():
@@ -884,9 +973,8 @@ class Round(models.Model):
             hero = u.player.get_hero_at_timepoint(self, u.time_point)
             annotations.append([u.time_point + self.begin, 'ULT_USE', color, ind + 1, hero.name.lower()])
         for p in self.pause_set.all():
-            annotations.append([p.time_point + self.begin, 'PAUSE'])
-        for p in self.unpause_set.all():
-            annotations.append([p.time_point + self.begin, 'UNPAUSE'])
+            annotations.append([p.start_time + self.begin, 'PAUSE'])
+            annotations.append([p.end_time + self.begin, 'UNPAUSE'])
         for p in self.pointgain_set.all():
             if self.attacking_side == 'L':
                 color = 'BLUE'
@@ -1007,6 +1095,18 @@ class Overtime(models.Model):
         ordering = ['round', 'start_time']
 
 
+class StatusEffect(models.Model):
+    start_time = models.DecimalField(max_digits=6, decimal_places=1)
+    end_time = models.DecimalField(max_digits=6, decimal_places=1)
+    round = models.ForeignKey(Round, on_delete=models.CASCADE)
+    status = models.ForeignKey(Status, on_delete=models.CASCADE)
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = (("round", "start_time", 'player', 'status'),)
+        ordering = ['round', 'start_time', 'player']
+
+
 class PointGain(models.Model):
     round = models.ForeignKey(Round, on_delete=models.CASCADE)
     time_point = models.DecimalField(max_digits=6, decimal_places=1)
@@ -1098,6 +1198,19 @@ class UltUse(models.Model):
         ordering = ['round', 'time_point', 'player']
 
 
+class UltEnd(models.Model):
+    time_point = models.DecimalField(max_digits=6, decimal_places=1)
+    round = models.ForeignKey(Round, on_delete=models.CASCADE)
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return '{} ended their ult at {}'.format(self.player, self.time_point)
+
+    class Meta:
+        unique_together = (("round", "time_point", "player"),)
+        ordering = ['round', 'time_point', 'player']
+
+
 class Kill(models.Model):
     time_point = models.DecimalField(max_digits=6, decimal_places=1)
     round = models.ForeignKey(Round, on_delete=models.CASCADE)
@@ -1126,7 +1239,9 @@ class Kill(models.Model):
     @property
     def possible_abilities(self):
         hero = self.killing_player.get_hero_at_timepoint(self.round, self.time_point)
-        return hero.ability_set.filter(damaging_ability=True).all()
+        if hero == '':
+            return []
+        return hero.abilities.filter(damaging_ability=True).all()
 
     @property
     def possible_assists(self):
@@ -1136,6 +1251,14 @@ class Kill(models.Model):
         else:
             right_players = self.round.game.right_team.players.all()
             return [x for x in right_players if x != self.killing_player]
+
+
+class UltDenial(models.Model):
+    time_point = models.DecimalField(max_digits=6, decimal_places=1)
+    round = models.ForeignKey(Round, on_delete=models.CASCADE)
+    denying_player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='ult_denials')
+    denied_player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='denied_ults')
+    ability = models.ForeignKey(Ability, on_delete=models.CASCADE)
 
 
 class KillNPC(models.Model):
@@ -1155,7 +1278,7 @@ class KillNPC(models.Model):
     @property
     def possible_abilities(self):
         hero = self.killing_player.get_hero_at_timepoint(self.round, self.time_point)
-        return hero.ability_set.filter(damaging_ability=True).all()
+        return hero.abilities.filter(damaging_ability=True).all()
 
     @property
     def possible_assists(self):

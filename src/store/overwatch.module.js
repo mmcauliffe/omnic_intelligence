@@ -7,6 +7,7 @@ const state = {
     maps: {},
     map_types: {},
     npcs: {},
+    status_effect_choices: {},
     team_colors: {},
     sides: {},
 };
@@ -44,6 +45,15 @@ const actions = {
             .then(
                 events => commit('getMapsSuccess', events),
                 error => commit('getMapsFailure', error)
+            );
+    },
+    getStatusEffectChoices({commit}) {
+        commit('getStatusEffectChoicesRequest');
+
+        overwatchService.getStatusEffectChoices()
+            .then(
+                events => commit('getStatusEffectChoicesSuccess', events),
+                error => commit('getStatusEffectChoicesFailure', error)
             );
     },
     getMapTypes({commit}) {
@@ -92,6 +102,9 @@ const getters = {
     npcs: (state) => {
         return state.npcs.items;
     },
+    status_effect_choices: (state) => {
+        return state.status_effect_choices.items;
+    },
     hero: (state) => (hero_id) => {
         console.log(state.heroes)
         let i, hero;
@@ -105,6 +118,9 @@ const getters = {
     },
     heroDamagingAbilities: (state, getters) => (hero_id) => {
         return getters.hero(hero_id).damaging_abilities
+    },
+    heroDeniableAbilities: (state, getters) => (hero_id) => {
+        return getters.hero(hero_id).deniable_abilities
     },
     heroRevivingAbilities: (state, getters) => (hero_id) => {
         return getters.hero(hero_id).reviving_abilities
@@ -156,6 +172,16 @@ const mutations = {
     },
     getMapsFailure(state, error) {
         state.maps = {error};
+    },
+
+    getStatusEffectChoicesRequest(state) {
+        state.status_effect_choices = {loading: true};
+    },
+    getStatusEffectChoicesSuccess(state, status_effect_choices) {
+        state.status_effect_choices = {items: status_effect_choices};
+    },
+    getStatusEffectChoicesFailure(state, error) {
+        state.status_effect_choices = {error};
     },
 
     getMapTypesRequest(state) {
