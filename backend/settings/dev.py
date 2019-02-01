@@ -92,16 +92,6 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'oi',
-        'USER': 'oi_user',
-        'PASSWORD': 'zenyatta',
-        'HOST': 'localhost',
-        'PORT': 5432
-    }
-}
-DATABASES = {
-    'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'omnic_intelligence.sqlite3'),
     }
