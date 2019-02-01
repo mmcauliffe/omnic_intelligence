@@ -107,3 +107,13 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+20180111_data\.json
+
+20181010_backup\.json
+
+20181010_revised\.json
+
+*.sqlite3
+
+20190103_backup\.json
