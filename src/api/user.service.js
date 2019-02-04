@@ -1,5 +1,5 @@
 import config from 'config';
-import { authHeader } from '../helper';
+import { authHeader, csrfHeader } from '../helper';
 
 export const userService = {
     login,
@@ -15,7 +15,8 @@ export const userService = {
 function login(username, password) {
     const requestOptions = {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json',
+            ...csrfHeader()},
         body: JSON.stringify({ username, password })
     };
 
@@ -42,7 +43,7 @@ function logout() {
 function register(user) {
     const requestOptions = {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeader() },
         body: JSON.stringify(user)
     };
 
@@ -52,7 +53,7 @@ function register(user) {
 function getAll() {
     const requestOptions = {
         method: 'GET',
-        headers: authHeader()
+        headers: {...authHeader(), ...csrfHeader()}
     };
 
     return fetch(`${config.apiUrl}/users/`, requestOptions).then(handleResponse);
@@ -62,7 +63,7 @@ function getAll() {
 function getById(id) {
     const requestOptions = {
         method: 'GET',
-        headers: authHeader()
+        headers: {...authHeader(), ...csrfHeader()}
     };
 
     return fetch(`${config.apiUrl}/users/${id}/`, requestOptions).then(handleResponse);
@@ -72,7 +73,7 @@ function getById(id) {
 function getCurrent() {
     const requestOptions = {
         method: 'GET',
-        headers: authHeader()
+        headers: {...authHeader(), ...csrfHeader()}
     };
 
     return fetch(`${config.apiUrl}/users/current_user/`, requestOptions).then(handleResponse).then(user =>
@@ -88,7 +89,7 @@ function getCurrent() {
 function update(user) {
     const requestOptions = {
         method: 'PUT',
-        headers: { ...authHeader(), 'Content-Type': 'application/json' },
+        headers: { ...authHeader(), 'Content-Type': 'application/json', ...csrfHeader() },
         body: JSON.stringify(user)
     };
 
@@ -99,7 +100,7 @@ function update(user) {
 function _delete(id) {
     const requestOptions = {
         method: 'DELETE',
-        headers: authHeader()
+        headers: {...authHeader(), ...csrfHeader()}
     };
 
     return fetch(`${config.apiUrl}/users/${id}/`, requestOptions).then(handleResponse);
