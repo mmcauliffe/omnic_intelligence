@@ -793,7 +793,8 @@ class Round(models.Model):
                 dying_color = self.game.left_team.get_color_display()
             ability = denying_hero.abilities.get(name='Defense Matrix').name
             kf_item = {'time_point': u.time_point, 'first_hero': denying_hero.name, 'first_player': u.denying_player.name,
-                       'ability':ability, 'second_hero': u.ability.name,
+                       'ability':ability, 'second_hero': u.ability.name, 'headshot': False,
+                     'assisting_heroes': [],
                        'first_color': killing_color,'second_player': u.denied_player.name, 'second_color': dying_color}
             potential_killfeed.append(kf_item)
 

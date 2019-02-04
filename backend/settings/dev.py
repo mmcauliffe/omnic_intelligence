@@ -166,5 +166,5 @@ CORS_ORIGIN_ALLOW_ALL=True
 #    'localhost:8081',
 #)
 CSRF_TRUSTED_ORIGINS = (
-    'localhost:8081',
+    'localhost:8080',
 )
