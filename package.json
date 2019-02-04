@@ -5,7 +5,7 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "start": "webpack-dev-server --open",
-    "build": "vue-cli-service build",
+    "build": "webpack",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {

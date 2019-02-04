@@ -21,3 +21,9 @@ DATABASES = {
 DEBUG = False
 # Set to your Domain here (eg. 'django-vue-template-demo.herokuapp.com')
 ALLOWED_HOSTS = ['omnicintelligence.com']
+
+
+CSRF_TRUSTED_ORIGINS = (
+    'https://omnicintelligence.com',
+'omnicintelligence.com'
+)

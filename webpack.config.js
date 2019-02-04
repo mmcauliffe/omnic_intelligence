@@ -4,6 +4,7 @@ var HtmlWebpackPlugin = require('html-webpack-plugin');
 module.exports = {
     mode: 'development',
 
+
     output: {
         publicPath: '/'
     },
@@ -73,14 +74,14 @@ module.exports = {
         proxy: {
             '/api*': {
                 // Forward frontend dev server request for /api to django dev server
-                target: 'http://localhost:8000/',
+                target: 'http://omnicintelligence.com/',
             }
         }
     },
     externals: {
         // global app config object
         config: JSON.stringify({
-            apiUrl: 'http://localhost:8000/api'
+            apiUrl: 'https://omnicintelligence.com/api'
         })
     }
 }
