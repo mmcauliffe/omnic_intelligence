@@ -484,7 +484,7 @@ const getters = {
         return on_left
     },
     leftPlayerIndex: (state, getters) => (player_id) => {
-        var index = 1, found = false;
+        var index = 0, found = false;
         if (!state.one.loading) {
             getters.leftPlayers.forEach(player => {
                 if (player_id == player.id) {
@@ -502,7 +502,7 @@ const getters = {
         return -1
     },
     rightPlayerIndex: (state) => (player_id) => {
-        let index = 1, found = false;
+        let index = 0, found = false;
         if (state.one.teams.right_team) {
             state.one.teams.right_team.forEach(player => {
                 if (player_id === player.id) {
