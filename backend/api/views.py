@@ -265,6 +265,7 @@ class EventViewSet(viewsets.ModelViewSet):
 
                         response = requests.get(url)
                     data = response.json()
+                    print(data)
                     for item in data['items']:
                         try:
                             url = 'https://www.youtube.com/watch?v=' + item['id']['videoId']
