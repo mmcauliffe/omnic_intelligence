@@ -6,6 +6,23 @@
         <YouTubePlayer v-if="vod_type=='youtube'" :video="id" :timestamp="timestamp" :controls="controls"></YouTubePlayer>
         <div id="player-controls" class="text-center controls-container">
 
+            <v-slider
+              v-model="timestamp"
+              min="0"
+              step="0.1"
+              :max="duration"
+        thumb-size="64"
+          thumb-label>
+        <template
+          slot="thumb-label"
+          slot-scope="props">
+          <span>
+            {{ props.value|secondsToMoment | moment('HH:mm:ss.S') }}
+          </span>
+        </template>
+            </v-slider>
+            <v-layout row>
+
             <v-tooltip bottom>
                 <v-btn slot="activator" v-on:click="seekBackward(60)">
                     <v-icon>fast_rewind</v-icon>
@@ -67,6 +84,7 @@
                 </v-btn>
                 <span>Go forward 60 seconds</span>
             </v-tooltip>
+            </v-layout>
         </div>
 
     </div>
@@ -106,8 +124,17 @@
         },
         computed: {
             ...mapState({
-                timestamp: state => state.vods.timestamp,
+                duration: state => state.vods.duration,
+                vod_state: state => state.vods
             }),
+            timestamp: {
+                get: function () {
+                    return this.vod_state.timestamp
+                },
+                set: function (value) {
+                    this.updateTimestamp(value)
+                }
+            }
         },
         created() {
         },
@@ -118,6 +145,7 @@
             seekBackward(time) {
                 let new_timestamp = this.timestamp - time;
                 new_timestamp = Math.round(new_timestamp * 10) / 10;
+                console.log(new_timestamp)
                 if (this.roundLock && this.round_begin && new_timestamp < this.round_begin) {
                     new_timestamp = this.round_begin;
                 }

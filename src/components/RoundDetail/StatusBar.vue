@@ -171,7 +171,6 @@
                 newEvent.time_point = this.currentTime;
                 newEvent.round = this.$store.state.rounds.one.item.id;
                 newEvent.player = player_id;
-                console.log(newEvent);
                 this.addRoundEvent({type: 'ult_uses', event: newEvent});
 
             },
@@ -181,7 +180,6 @@
                 newEvent.time_point = this.currentTime;
                 newEvent.round = this.$store.state.rounds.one.item.id;
                 newEvent.player = player_id;
-                console.log(newEvent);
                 this.addRoundEvent({type: 'ult_gains', event: newEvent});
             },
             make_safe(name){

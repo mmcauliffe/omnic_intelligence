@@ -313,7 +313,6 @@
         watch: {
             round(newRound) {
                 if (newRound.item !== undefined){
-                    console.log(newRound)
                     this.updateTimestamp(newRound.item.begin);
 
                 }

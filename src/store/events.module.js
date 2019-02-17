@@ -6,6 +6,7 @@ const state = {
     matches: {},
     available_vods: {},
     stream_vods: {},
+    teams: {}
 };
 
 const actions = {
@@ -25,6 +26,16 @@ const actions = {
             .then(
                 event => commit('getOneSuccess', event),
                 error => commit('getOneFailure', error)
+            );
+
+    },
+    getOneTeams( { commit }, id){
+        commit('getOneTeamsRequest');
+
+        eventService.getOneTeams(id)
+            .then(
+                teams => commit('getOneTeamsSuccess', teams),
+                error => commit('getOneTeamsFailure', error)
             );
 
     },
@@ -79,6 +90,16 @@ const mutations = {
     },
     getOneFailure(state, error) {
         state.one = { error };
+    },
+
+    getOneTeamsRequest(state) {
+        state.teams = { loading: true };
+    },
+    getOneTeamsSuccess(state, teams) {
+        state.teams = { items: teams };
+    },
+    getOneTeamsFailure(state, error) {
+        state.teams = { error };
     },
 
     getOneMatchesRequest(state) {

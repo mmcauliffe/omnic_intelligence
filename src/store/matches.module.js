@@ -21,7 +21,7 @@ const actions = {
 
         matchService.getAll()
             .then(
-                matches => commit('getAllSuccess', matches),
+                matches => commit('getAllSuccess', matches.data),
                 error => commit('getAllFailure', error)
             );
     },
@@ -30,7 +30,7 @@ const actions = {
 
         matchService.getById(id)
             .then(
-                match => commit('getOneSuccess', match),
+                match => commit('getOneSuccess', match.data),
                 error => commit('getOneFailure', error)
             );
 
@@ -40,7 +40,7 @@ const actions = {
 
         matchService.getGames(id)
             .then(
-                games => commit('getOneGamesSuccess', games),
+                games => commit('getOneGamesSuccess', games.data),
                 error => commit('getOneGamesFailure', error)
             );
     },
@@ -49,14 +49,14 @@ const actions = {
 
         matchService.getTeams(id)
             .then(
-                games => commit('getOneTeamsSuccess', games),
+                games => commit('getOneTeamsSuccess', games.data),
                 error => commit('getOneTeamsFailure', error)
             );
     },
-    delete({ commit }, id) {
+    deleteMatch({ commit }, id) {
         commit('deleteRequest', id);
 
-        matchService.delete(id)
+        matchService.deleteMatch(id)
             .then(
                 match => commit('deleteSuccess', id),
                 error => commit('deleteSuccess', { id, error: error.toString() })
@@ -115,28 +115,34 @@ const mutations = {
 
     deleteRequest(state, id) {
         // add 'deleting:true' property to user being deleted
-        state.all.items = state.all.items.map(match =>
-            match.id === id
-                ? { ...match, deleting: true }
-                : match
-        )
+        if (state.all.items) {
+            state.all.items = state.all.items.map(match =>
+                match.id === id
+                    ? {...match, deleting: true}
+                    : match
+            )
+        }
     },
     deleteSuccess(state, id) {
         // remove deleted user from state
-        state.all.items = state.all.items.filter(match => match.id !== id)
+        if (state.all.items) {
+            state.all.items = state.all.items.filter(match => match.id !== id)
+        }
     },
     deleteFailure(state, { id, error }) {
         // remove 'deleting:true' property and add 'deleteError:[error]' property to user
-        state.all.items = state.items.map(match => {
-            if (match.id === id) {
-                // make copy of user without 'deleting:true' property
-                const { deleting, ...matchCopy } = match;
-                // return copy of user with 'deleteError:[error]' property
-                return { ...matchCopy, deleteError: error };
-            }
+        if (state.all.items) {
+            state.all.items = state.items.map(match => {
+                if (match.id === id) {
+                    // make copy of user without 'deleting:true' property
+                    const {deleting, ...matchCopy} = match;
+                    // return copy of user with 'deleteError:[error]' property
+                    return {...matchCopy, deleteError: error};
+                }
 
-            return user;
-        })
+                return user;
+            })
+        }
     }
 };
 

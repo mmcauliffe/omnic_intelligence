@@ -38,6 +38,16 @@ const actions = {
             );
 
     },
+    updateTeams( { commit }, game){
+        commit('updateTeamsRequest');
+
+        return gameService.updateTeams(game)
+            .then(
+                game => commit('updateTeamsSuccess', game),
+                error => commit('updateTeamsFailure', error)
+            );
+
+    },
     getOne( { commit }, id){
         commit('getOneRequest');
 
@@ -117,6 +127,15 @@ const mutations = {
         state.one = { error };
     },
 
+    updateTeamsRequest(state) {
+    },
+    updateTeamsSuccess(state, game) {
+
+    },
+    updateTeamsFailure(state, error) {
+        console.log(error)
+    },
+
     createRequest(state) {
     },
     createSuccess(state, game) {
@@ -127,28 +146,34 @@ const mutations = {
     },
     deleteRequest(state, id) {
         // add 'deleting:true' property to user being deleted
-        state.all.items = state.all.items.map(game =>
-            game.id === id
-                ? { ...game, deleting: true }
-                : game
-        )
+        if (state.all.items) {
+            state.all.items = state.all.items.map(game =>
+                game.id === id
+                    ? {...game, deleting: true}
+                    : game
+            )
+        }
     },
     deleteSuccess(state, id) {
         // remove deleted user from state
-        state.all.items = state.all.items.filter(game => game.id !== id)
+        if (state.all.items){
+            state.all.items = state.all.items.filter(game => game.id !== id)
+        }
     },
     deleteFailure(state, { id, error }) {
         // remove 'deleting:true' property and add 'deleteError:[error]' property to user
-        state.all.items = state.items.map(game => {
-            if (game.id === id) {
-                // make copy of user without 'deleting:true' property
-                const { deleting, ...gameCopy } = game;
-                // return copy of user with 'deleteError:[error]' property
-                return { ...gameCopy, deleteError: error };
-            }
+        if (state.all.items) {
+            state.all.items = state.items.map(game => {
+                if (game.id === id) {
+                    // make copy of user without 'deleting:true' property
+                    const {deleting, ...gameCopy} = game;
+                    // return copy of user with 'deleteError:[error]' property
+                    return {...gameCopy, deleteError: error};
+                }
 
-            return user;
-        })
+                return user;
+            })
+        }
     }
 };
 

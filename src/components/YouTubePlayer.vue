@@ -19,6 +19,7 @@
         computed: {
             ...mapState({
                 timestamp: state => state.vods.timestamp,
+                duration: state => state.vods.duration,
             }),
         },
         beforeCreate() {
@@ -51,6 +52,7 @@
                                     player.pauseVideo();
                                     initial = false;
                                     this.seek(this.timestamp);
+                                    this.updateDuration(this.getDuration());
                                 }
                             }
                         }
@@ -64,6 +66,9 @@
     player.destroy();
 },
         methods: {
+            ...mapActions('vods', {
+                updateDuration: 'updateDuration',
+            }),
             play() { // Begins playing the specified video.
                 player.play();
             },

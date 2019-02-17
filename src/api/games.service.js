@@ -9,16 +9,16 @@ export const gameService = {
     getTeams,
     createGame,
     updateGame,
-    deleteGame
+    deleteGame,
+    updateTeams
 };
 
 function getAll() {
     const requestOptions = {
-        method: 'GET',
         headers: authHeader()
     };
 
-    return fetch(`${config.apiUrl}/games/`, requestOptions).then(handleResponse);
+    return axios.get(`${config.apiUrl}/games/`, requestOptions);
 }
 
 function createGame(game) {
@@ -48,45 +48,33 @@ function deleteGame(id){
 
 function getById(id) {
     const requestOptions = {
-        method: 'GET',
         headers: authHeader()
     };
 
-    return fetch(`${config.apiUrl}/games/${id}/`, requestOptions).then(handleResponse);
+    return axios.get(`${config.apiUrl}/games/${id}/`, requestOptions);
 }
 
 function getTeams(id) {
     const requestOptions = {
-        method: 'GET',
         headers: authHeader()
     };
 
-    return fetch(`${config.apiUrl}/games/${id}/teams/`, requestOptions).then(handleResponse);
+    return axios.get(`${config.apiUrl}/games/${id}/teams/`, requestOptions);
 }
+
+function updateTeams(game) {
+    const requestOptions = {
+        headers: authHeader()
+    };
+
+    return axios.put(`${config.apiUrl}/games/${game.id}/update_teams/`, game, requestOptions);
+}
+
 
 function getRounds(id) {
     const requestOptions = {
-        method: 'GET',
         headers: authHeader()
     };
 
-    return fetch(`${config.apiUrl}/games/${id}/rounds/`, requestOptions).then(handleResponse);
-}
-
-
-function handleResponse(response) {
-    return response.text().then(text => {
-        const data = text && JSON.parse(text);
-        if (!response.ok) {
-            if (response.status === 401) {
-                // auto logout if 401 response returned from api
-                logout();
-                location.reload(true);
-            }
-            const error = (data && data.non_field_errors) || response.statusText;
-            return Promise.reject(error);
-        }
-
-        return data;
-    });
+    return axios.get(`${config.apiUrl}/games/${id}/rounds/`, requestOptions);
 }

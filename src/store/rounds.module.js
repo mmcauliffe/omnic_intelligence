@@ -63,7 +63,7 @@ const actions = {
 
         roundService.updateRound(round.data)
             .then(
-                round => commit('updateSuccess', round),
+                round => commit('updateSuccess', round.data),
                 error => commit('updateFailure', error)
             );
 
@@ -76,17 +76,20 @@ const actions = {
             );
     },
     getOne({commit}, id) {
-        commit('getOneRequest');
+        commit('getOneRoundRequest');
 
         roundService.getById(id)
             .then(
                 round => {
-                    roundService.getPlayers(round.id).then(
-                        teams => commit('getOneSuccess', {round: round, teams: teams}),
-                        error => commit('getOneFailure', error)
+                    roundService.getPlayers(round.data.id).then(
+                        teams => {
+                            commit('getOneRoundSuccess', {round: round, teams: teams});
+                        console.log('hello??')},
+                        error => {console.log('booooo', error)
+                            commit('getOneRoundFailure', error)}
                     )
                 },
-                error => commit('getOneFailure', error)
+                error => commit('getOneRoundFailure', error)
             );
 
     },
@@ -94,7 +97,7 @@ const actions = {
         console.log('GETTING EVENTS', data)
         roundService.getRoundEvents(data.round, data.type)
             .then(
-                events => commit('getEventsSuccess', {type: data.type, events: events}),
+                events => commit('getEventsSuccess', {type: data.type, events: events.data}),
                 error => commit('getEventsFailure', error)
             );
 
@@ -175,7 +178,7 @@ const actions = {
 
         roundService.getKillFeedEvents(id)
             .then(
-                events => commit('getKillFeedSuccess', events),
+                events => commit('getKillFeedSuccess', events.data),
                 error => commit('getKillFeedFailure', error)
             );
 
@@ -185,7 +188,7 @@ const actions = {
 
         roundService.getPlayerStates(id)
             .then(
-                events => commit('getPlayerStatesSuccess', events),
+                events => commit('getPlayerStatesSuccess', events.data),
                 error => commit('getPlayerStatesFailure', error)
             );
 
@@ -195,22 +198,22 @@ const actions = {
 
         roundService.getRoundStates(id)
             .then(
-                events => commit('getRoundStatesSuccess', events),
+                events => commit('getRoundStatesSuccess', events.data),
                 error => commit('getRoundStatesFailure', error)
             );
 
     },
 
 
-    update({commit, dispatch}, data) {
+    updateRound({commit, dispatch}, data) {
         let refresh = data.refresh;
         data = data.data;
         commit('updateRequest', data);
 
-        roundService.update(data)
+        roundService.updateRound(data)
             .then(
                 round => {
-                    commit('updateSuccess', round);
+                    commit('updateSuccess', round.data);
                     if (refresh) {
                         let i;
                         for (i = 0; i < event_types.length; i++) {
@@ -230,10 +233,10 @@ const actions = {
     },
 
 
-    delete({commit}, id) {
+    deleteRound({commit}, id) {
         commit('deleteRequest', id);
 
-        roundService.delete(id)
+        roundService.deleteRound(id)
             .then(
                 round => commit('deleteSuccess', round),
                 error => commit('deleteFailure', {id, error: error.toString()})
@@ -556,13 +559,20 @@ const mutations = {
         state.round_status = {error, loading: false};
     },
 
-    getOneRequest(state) {
+    getOneRoundRequest(state) {
         state.one = {loading: true};
     },
-    getOneSuccess(state, round) {
-        state.one = {item: round.round, teams: round.teams, loading:false};
+    arghSuccess(state, round) {
+        console.log("HELLOOOOOO")
     },
-    getOneFailure(state, error) {
+    getOneRoundSuccess(state, round) {
+        console.log("HELLOOOOOO")
+        console.log('SUCCESS', round)
+        state.one = {item: round.round.data, teams: round.teams.data, loading:false};
+        console.log(state.one)
+    },
+    getOneRoundFailure(state, error) {
+        console.log(error)
         state.one = {error, loading:false};
     },
 
@@ -590,6 +600,7 @@ const mutations = {
         console.log(data.type, data.events)
     },
     getEventsFailure(state, error) {
+        console.log(error)
         state.events = {error};
     },
 
@@ -600,6 +611,7 @@ const mutations = {
         state.kill_feed_events = {item: kill_feed_events};
     },
     getKillFeedFailure(state, error) {
+        console.log(error)
         state.kill_feed_events = {error};
     },
 
@@ -610,6 +622,7 @@ const mutations = {
         state.player_states = {item: player_states};
     },
     getPlayerStatesFailure(state, error) {
+        console.log(error)
         state.player_states = {error};
     },
 
@@ -620,33 +633,42 @@ const mutations = {
         state.round_states = {item: round_states};
     },
     getRoundStatesFailure(state, error) {
+        console.log(error)
         state.round_states = {error};
     },
 
     deleteRequest(state, id) {
         // add 'deleting:true' property to user being deleted
-        state.all.items = state.all.items.map(round =>
-            round.id === id
-                ? {...round, deleting: true}
-                : round
-        )
+        if (state.all.items) {
+            state.all.items = state.all.items.map(round =>
+                round.id === id
+                    ? {...round, deleting: true}
+                    : round
+            )
+        }
     },
     deleteSuccess(state, id) {
         // remove deleted user from state
-        state.all.items = state.all.items.filter(round => round.id !== id)
+
+        if (state.all.items) {
+            state.all.items = state.all.items.filter(round => round.id !== id)
+        }
     },
     deleteFailure(state, {id, error}) {
         // remove 'deleting:true' property and add 'deleteError:[error]' property to user
-        state.all.items = state.items.map(round => {
-            if (round.id === id) {
-                // make copy of user without 'deleting:true' property
-                const {deleting, ...roundCopy} = round;
-                // return copy of user with 'deleteError:[error]' property
-                return {...roundCopy, deleteError: error};
-            }
 
-            return round;
-        })
+        if (state.all.items) {
+            state.all.items = state.items.map(round => {
+                if (round.id === id) {
+                    // make copy of user without 'deleting:true' property
+                    const {deleting, ...roundCopy} = round;
+                    // return copy of user with 'deleteError:[error]' property
+                    return {...roundCopy, deleteError: error};
+                }
+
+                return round;
+            })
+        }
     },
     updateRequest(state, round) {
 

@@ -7,6 +7,7 @@ export const eventService = {
     getById,
     getMatches,
     update,
+    getOneTeams,
     delete: _delete,
     getStreamVods,
     getAvailableVods,
@@ -19,6 +20,16 @@ function getAll() {
     };
 
     return fetch(`${config.apiUrl}/events/`, requestOptions).then(handleResponse);
+}
+
+
+function getOneTeams(id) {
+    const requestOptions = {
+        method: 'GET',
+        headers: authHeader()
+    };
+
+    return fetch(`${config.apiUrl}/events/${id}/teams/`, requestOptions).then(handleResponse);
 }
 
 

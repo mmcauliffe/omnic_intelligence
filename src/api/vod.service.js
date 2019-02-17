@@ -17,7 +17,9 @@ export const vodService = {
     getVodStatusChoices,
     getVodTypeChoices,
     getVodPossibleMatches,
-    getRounds
+    getRounds,
+    getMatches,
+    getGames,
 };
 
 
@@ -43,6 +45,22 @@ function getRounds(id) {
     };
 
     return axios.get(`${config.apiUrl}/vods/${id}/rounds/`, requestOptions);
+}
+
+function getGames(id) {
+    const requestOptions = {
+        headers: authHeader()
+    };
+
+    return axios.get(`${config.apiUrl}/vods/${id}/games/`, requestOptions);
+}
+
+function getMatches(id) {
+    const requestOptions = {
+        headers: authHeader()
+    };
+
+    return axios.get(`${config.apiUrl}/vods/${id}/matches/`, requestOptions);
 }
 
 

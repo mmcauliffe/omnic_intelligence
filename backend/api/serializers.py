@@ -113,6 +113,7 @@ class TeamParticipationSerializer(serializers.ModelSerializer):
 
 
 class EventSerializer(serializers.ModelSerializer):
+    teams = TeamSerializer(many=True)
     class Meta:
         model = models.Event
         fields = '__all__'
@@ -132,6 +133,26 @@ class MatchSerializer(serializers.ModelSerializer):
     def get_name(self, obj):
         teams = obj.teams.all()
         return '{} vs {}'.format(teams[0].name, teams[1].name)
+
+
+class MatchEditSerializer(serializers.ModelSerializer):
+    event = EventSerializer()
+    name = serializers.SerializerMethodField()
+    teams = serializers.SerializerMethodField()
+
+    start_time = serializers.DecimalField(10, 1)
+
+    class Meta:
+        model = models.Match
+        fields = ('id', 'event', 'teams', 'start_time', 'name')
+
+    def get_name(self, obj):
+        teams = obj.teams.all()
+        return '{} vs {}'.format(teams[0].name, teams[1].name)
+
+    def get_teams(self, obj):
+        teams = obj.teams.all()
+        return {i:x.id for i,x in enumerate(teams)}
 
 
 class GameDisplaySerializer(serializers.ModelSerializer):
@@ -280,7 +301,7 @@ class RoundDisplaySerializer(serializers.ModelSerializer):
 
 
 class RoundEditSerializer(serializers.ModelSerializer):
-    game = GameDisplaySerializer()
+    #game = GameDisplaySerializer()
     stream_vod = StreamVodSerializer()
 
     class Meta:

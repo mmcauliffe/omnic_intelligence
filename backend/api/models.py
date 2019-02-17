@@ -54,7 +54,7 @@ class StreamVod(models.Model):
     broadcast_date = models.DateTimeField(blank=True, null=True)
     film_format = models.CharField(max_length=1, choices=FILM_FORMAT_CHOICES, default=ORIGINAL)
     status = models.CharField(max_length=1, choices=STATUS_CHOICES, default='A')
-    type = models.CharField(max_length=1, choices=STATUS_CHOICES, default='G')
+    type = models.CharField(max_length=1, choices=STATUS_CHOICES, default='M')
     last_modified = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):

@@ -331,22 +331,47 @@ class GameViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.GameSerializer
 
     def create(self, request, *args, **kwargs):
-        print(request.data)
-        left_team_participation = models.TeamParticipation.objects.create(team_id=request.data['left_team'], color='B')
-        do_subtract = min([int(i) for i in request.data['left_players'].keys()]) == 1
-        for i, p in request.data['left_players'].items():
-            if do_subtract:
-                i -= 1
-            pp = models.PlayerParticipation.objects.create(team_participation=left_team_participation, player_id=p,
-                                                           player_index=int(i))
+        match = models.Match.objects.get(id=request.data['match'])
+        game_num = int(request.data['game_number'])
+        try:
+            game = models.Game.objects.get(game_number=game_num, match=match)
+            return Response('Game already exists for this match.',status=status.HTTP_409_CONFLICT)
+        except models.Game.DoesNotExist:
+            pass
 
-        right_team_participation = models.TeamParticipation.objects.create(team_id=request.data['right_team'], color='R')
-        for i, p in request.data['right_players'].items():
-            if do_subtract:
-                i -= 1
-            pp = models.PlayerParticipation.objects.create(team_participation=right_team_participation, player_id=p,
-                                                           player_index=int(i))
-        game = models.Game.objects.create(match_id=request.data['match'],
+        if 'left_team' in request.data:
+            print(request.data)
+            left_team_participation = models.TeamParticipation.objects.create(team_id=request.data['left_team'], color='B')
+            do_subtract = min([int(i) for i in request.data['left_players'].keys()]) == 1
+            for i, p in request.data['left_players'].items():
+                if do_subtract:
+                    i -= 1
+                pp = models.PlayerParticipation.objects.create(team_participation=left_team_participation, player_id=p,
+                                                               player_index=int(i))
+
+            right_team_participation = models.TeamParticipation.objects.create(team_id=request.data['right_team'], color='R')
+            for i, p in request.data['right_players'].items():
+                if do_subtract:
+                    i -= 1
+                pp = models.PlayerParticipation.objects.create(team_participation=right_team_participation, player_id=p,
+                                                               player_index=int(i))
+        else:
+            teams = match.teams.all()
+            left_team_participation = models.TeamParticipation.objects.create(team=teams[0], color='B')
+            for i, p in enumerate(teams[0].players.all()):
+                pp = models.PlayerParticipation.objects.create(player=p,
+                                                               team_participation=left_team_participation,
+                                                               player_index=i)
+                if i == 5:
+                    break
+            right_team_participation = models.TeamParticipation.objects.create(team=teams[1], color='R')
+            for i, p in enumerate(teams[1].players.all()):
+                pp = models.PlayerParticipation.objects.create(player=p,
+                                                               team_participation=right_team_participation,
+                                                               player_index=i)
+                if i == 5:
+                    break
+        game = models.Game.objects.create(match=match,
                                           game_number=int(request.data['game_number']), map_id=request.data['map'],
                                           left_team=left_team_participation, right_team=right_team_participation)
         return Response(self.serializer_class(game).data)
@@ -709,7 +734,29 @@ class GameViewSet(viewsets.ModelViewSet):
         instance.right_team.color = value
         instance.right_team.save()
         instance.save()
-        return Response()
+        return Response(self.serializer_class(instance).data)
+
+    @detail_route(methods=['put'])
+    def update_teams(self, request, pk=None):
+        game = self.get_object()
+        left_t = models.TeamParticipation.objects.prefetch_related('playerparticipation_set').get(id=request.data['left_team']['id'])
+        left_t.color = request.data['left_team']['color']
+        for i,p in enumerate(left_t.playerparticipation_set.all()):
+            if p.player_id != request.data['left_team']['players'][i]['player']:
+                p.player_id = request.data['left_team']['players'][i]['player']
+                p.save()
+        left_t.save()
+        game.left_team = left_t
+        right_t = models.TeamParticipation.objects.prefetch_related('playerparticipation_set').get(id=request.data['right_team']['id'])
+        right_t.color = request.data['right_team']['color']
+        for i,p in enumerate(right_t.playerparticipation_set.all()):
+            if p.player_id != request.data['right_team']['players'][i]['player']:
+                p.player_id = request.data['right_team']['players'][i]['player']
+                p.save()
+        right_t.save()
+        game.right_team = right_t
+        game.save()
+        return Response('Success')
 
     @detail_route(methods=['get'])
     def rounds(self, request, pk=None):
@@ -846,7 +893,59 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
     @list_route(methods=['post'])
     def upload_in_out_game(self, request):
         print(request.data)
-        error
+        vod = models.StreamVod.objects.get(id=request.data['vod_id'])
+        event = vod.channel.events.all()[0] # FIXME just gets the first event
+
+        try:
+            team_one = event.teams.get(name=request.data['team_one'])
+        except models.Team.DoesNotExist:
+            return Response('Team "{}" is not participating in {}'.format(request.data['team_one'], event.name),
+                            status=status.HTTP_400_BAD_REQUEST)
+        try:
+            team_two = event.teams.get(name=request.data['team_two'])
+        except models.Team.DoesNotExist:
+            return Response('Team "{}" is not participating in {}'.format(request.data['team_two'], event.name),
+                            status=status.HTTP_400_BAD_REQUEST)
+        print(vod, event, team_one, team_two)
+        matches = models.Match.objects.filter(teams__id__in=[team_one.id, team_two.id], event=event)
+        match = None
+        for m in matches:
+            if len(m.teams.filter(id__in=[team_one.id, team_two.id])) == 2:
+                match = m
+                break
+        print(match)
+        if match is None:
+            match = models.Match.objects.create(event=event)
+            match.teams.add(team_one)
+            match.teams.add(team_two)
+        print(match)
+        try:
+            game = models.Game.objects.get(game_number=1, match=match)
+        except models.Game.DoesNotExist:
+            left_participation = models.TeamParticipation.objects.create(team=team_one)
+            for i, p in enumerate(team_one.players.all()):
+                pp = models.PlayerParticipation.objects.create(player=p,
+                                                               team_participation=left_participation, player_index=i)
+                if i == 5:
+                    break
+            right_participation = models.TeamParticipation.objects.create(team=team_two)
+            for i, p in enumerate(team_two.players.all()):
+                pp = models.PlayerParticipation.objects.create(player=p,
+                                                               team_participation=right_participation, player_index=i)
+                if i == 5:
+                    break
+            game = models.Game.objects.create(game_number=1, match=match, left_team=left_participation,
+                                              right_team=right_participation, map = models.Map.objects.first())
+        for i, r_data in enumerate(request.data['rounds']):
+            print(r_data)
+            try:
+                print(Decimal(r_data['begin']), Decimal(str(r_data['begin'])))
+                print([(x.begin, x.end) for x in models.Round.objects.filter(game=game, stream_vod=vod)])
+                r = models.Round.objects.get(game=game, stream_vod=vod, begin=r_data['begin'], end=r_data['end'])
+                print('found it!')
+            except models.Round.DoesNotExist:
+                r = models.Round.objects.create(stream_vod=vod, round_number=i+1, game=game, begin=r_data['begin'], end=r_data['end'])
+        return Response({'success':True})
 
     @list_route(methods=['get'])
     def round_events(self, request):
@@ -1101,16 +1200,41 @@ class VodViewSet(viewsets.ModelViewSet):
         return Response(serializers.MatchSerializer(matches, many=True).data)
 
     @detail_route(methods=['get'])
+    def events(self, request, pk=None):
+        vod = self.get_object()
+        events = vod.channel.events.all()
+        return Response(serializers.EventSerializer(events, many=True).data)
+
+    @detail_route(methods=['get'])
     def rounds(self, request, pk=None):
         vod = self.get_object()
         rounds = vod.round_set.all()
         return Response(serializers.RoundEditSerializer(rounds, many=True).data)
 
+    @detail_route(methods=['get'])
+    def games(self, request, pk=None):
+        vod = self.get_object()
+        games = []
+        for r in vod.round_set.all():
+            for g in r.game.match.game_set.all():
+                if g not in games:
+                    games.append(g)
+        return Response(serializers.GameSerializer(games, many=True).data)
+
+    @detail_route(methods=['get'])
+    def matches(self, request, pk=None):
+        vod = self.get_object()
+        matches = []
+        for r in vod.round_set.all():
+            if r.game.match not in matches:
+                matches.append(r.game.match)
+        return Response(serializers.MatchEditSerializer(matches, many=True).data)
+
 
 class RoundViewSet(viewsets.ModelViewSet):
     model = models.Round
     queryset = models.Round.objects.all()
-    serializer_class = serializers.RoundEditSerializer
+    serializer_class = serializers.RoundDisplaySerializer
 
     def create(self, request, *args, **kwargs):
         print(request.data)
@@ -1123,6 +1247,7 @@ class RoundViewSet(viewsets.ModelViewSet):
         return Response(self.serializer_class(round).data)
 
     def update(self, request, *args, **kwargs):
+        print(request.data)
         from django.db.models import F
         instance = self.get_object()
         if request.data['stream_vod']:
@@ -1150,8 +1275,14 @@ class RoundViewSet(viewsets.ModelViewSet):
             instance.overtime_set.update(start_time=F('start_time') - begin_shift, end_time=F('end_time') - begin_shift)
         instance.begin = request.data['begin']
         instance.end = request.data['end']
-        instance.annotation_status = request.data['annotation_status']
-        instance.attacking_side = request.data['attacking_side']
+        if request.data['annotation_status']:
+            instance.annotation_status = request.data['annotation_status']
+        if instance.game.id != request.data['game']:
+            instance.game = models.Game.objects.get(id=request.data['game'])
+        if request.data['attacking_side']:
+            instance.attacking_side = request.data['attacking_side']
+        if request.data['round_number']:
+            instance.round_number = int(request.data['round_number'])
         instance.save()
         return Response(self.serializer_class(instance).data)
 

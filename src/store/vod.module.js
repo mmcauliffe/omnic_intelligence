@@ -8,6 +8,7 @@ const state = {
     vod_status_choices: {},
     stream_channels: {},
     timestamp: 0.0,
+    duration: 0,
     vod_status: {},
     pagination: {
         page: 1,
@@ -18,6 +19,8 @@ const state = {
     stream_vods: {},
     vod_event_matches: {},
     rounds: {},
+    matches: {},
+    games: {}
 };
 
 const actions = {
@@ -31,13 +34,13 @@ const actions = {
             );
 
     },
-    getOneMatches({commit}, id) {
-        commit('getOneMatchesRequest');
+    getOnePossibleMatches({commit}, id) {
+        commit('getOnePossibleMatchesRequest');
 
         vodService.getVodPossibleMatches(id)
             .then(
-                matches => commit('getOneMatchesSuccess', matches),
-                error => commit('getOneMatchesFailure', error)
+                matches => commit('getOnePossibleMatchesSuccess', matches),
+                error => commit('getOnePossibleMatchesFailure', error)
             );
 
     },
@@ -49,7 +52,24 @@ const actions = {
                 rounds => commit('getOneRoundsSuccess', rounds),
                 error => commit('getOneRoundsFailure', error)
             );
+    },
+    getOneGames({commit}, id) {
+        commit('getOneGamesRequest');
 
+        vodService.getGames(id)
+            .then(
+                games => commit('getOneGamesSuccess', games),
+                error => commit('getOneGamesFailure', error)
+            );
+    },
+    getOneMatches({commit}, id) {
+        commit('getOneMatchesRequest');
+
+        vodService.getMatches(id)
+            .then(
+                matches => commit('getOneMatchesSuccess', matches),
+                error => commit('getOneMatchesFailure', error)
+            );
     },
     createVod( { commit }, vod){
         commit('createRequest');
@@ -153,6 +173,9 @@ const actions = {
         console.log('update', timestamp)
        commit('updateTimestampSuccess', timestamp) ;
     },
+    updateDuration({ commit }, duration){
+       commit('updateDurationSuccess', duration) ;
+    },
     getVods({commit}, data) {
         commit('getVodsRequest');
         vodService.getVods(data)
@@ -218,13 +241,13 @@ const mutations = {
         state.one = {error, loading:false};
     },
 
-    getOneMatchesRequest(state) {
+    getOnePossibleMatchesRequest(state) {
         state.vod_event_matches = {loading: true};
     },
-    getOneMatchesSuccess(state, matches) {
+    getOnePossibleMatchesSuccess(state, matches) {
         state.vod_event_matches = {items: matches.data, loading: false};
     },
-    getOneMatchesFailure(state, error) {
+    getOnePossibleMatchesFailure(state, error) {
         state.vod_event_matches = {error, loading:false};
     },
 
@@ -238,8 +261,33 @@ const mutations = {
         state.rounds = {error, loading:false};
     },
 
+    getOneGamesRequest(state) {
+        state.games = {loading: true};
+    },
+    getOneGamesSuccess(state, games) {
+        state.games = {items: games.data, loading: false};
+    },
+    getOneGamesFailure(state, error) {
+        state.games = {error, loading:false};
+    },
+
+    getOneMatchesRequest(state) {
+        state.matches = {loading: true};
+    },
+    getOneMatchesSuccess(state, matches) {
+        state.matches = {items: matches.data, loading: false};
+    },
+    getOneMatchesFailure(state, error) {
+        state.matches = {error, loading:false};
+    },
+
     updateTimestampSuccess(state, timestamp){
         state.timestamp = timestamp
+        console.log('UPDATED TO', state.timestamp)
+    },
+
+    updateDurationSuccess(state, duration){
+        state.duration = duration
     },
     getAnnotationSourcesRequest(state) {
         state.annotation_sources = { loading: true };
