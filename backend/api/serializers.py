@@ -112,6 +112,14 @@ class TeamParticipationSerializer(serializers.ModelSerializer):
         return obj.get_color_display()
 
 
+class TeamParticipationEditSerializer(serializers.ModelSerializer):
+    players = PlayerParticipationSerializer(source='playerparticipation_set', many=True)
+
+    class Meta:
+        model = models.TeamParticipation
+        fields = '__all__'
+
+
 class EventSerializer(serializers.ModelSerializer):
     teams = TeamSerializer(many=True)
     class Meta:
@@ -160,6 +168,22 @@ class GameDisplaySerializer(serializers.ModelSerializer):
     map = MapSerializer()
     left_team = TeamParticipationSerializer()
     right_team = TeamParticipationSerializer()
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.Game
+        fields = ('id', 'name', 'game_number', 'match', 'left_team', 'right_team', 'map')
+
+    def get_name(self, obj):
+        teams = obj.match.teams.all()
+        return 'Game {} of {} vs {} on {}'.format(obj.game_number, teams[0].name, teams[1].name, obj.map.name)
+
+
+class GameEditSerializer(serializers.ModelSerializer):
+    match = MatchSerializer()
+    map = MapSerializer()
+    left_team = TeamParticipationEditSerializer()
+    right_team = TeamParticipationEditSerializer()
     name = serializers.SerializerMethodField()
 
     class Meta:

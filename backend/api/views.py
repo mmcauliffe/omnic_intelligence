@@ -1219,7 +1219,7 @@ class VodViewSet(viewsets.ModelViewSet):
             for g in r.game.match.game_set.all():
                 if g not in games:
                     games.append(g)
-        return Response(serializers.GameSerializer(games, many=True).data)
+        return Response(serializers.GameEditSerializer(games, many=True).data)
 
     @detail_route(methods=['get'])
     def matches(self, request, pk=None):
