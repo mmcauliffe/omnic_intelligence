@@ -88,12 +88,14 @@
                 this.saveTeams();
             },
             saveTeams(){
-                console.log('SAVING TEAMS')
                 const left_p = [... new Set(this.game.left_team.players.map(x=>x.player))];
                 const right_p = [... new Set(this.game.right_team.players.map(x=>x.player))];
+                console.log(left_p.length,this.game.left_team.players.map(x=>x.player),
+                    right_p.length, this.game.right_team.players.map(x=>x.player))
                 if (left_p.length < 6 || right_p < 6){
                     return
                 }
+                console.log('SAVING TEAMS')
                 this.updateTeams(this.game);
             },
         },
