@@ -180,8 +180,6 @@ class GameDisplaySerializer(serializers.ModelSerializer):
 
 
 class GameEditSerializer(serializers.ModelSerializer):
-    match = MatchSerializer()
-    map = MapSerializer()
     left_team = TeamParticipationEditSerializer()
     right_team = TeamParticipationEditSerializer()
     name = serializers.SerializerMethodField()
