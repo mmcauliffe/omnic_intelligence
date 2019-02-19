@@ -9,12 +9,14 @@
                 </v-flex>
             <v-flex sm3>
 
-            <v-select v-model="game.left_team.color" :items="team_colors.items"  v-on:change="saveTeams()"></v-select>
+            <v-select v-model="game.left_team.color" :items="team_colors.items"  v-on:change="saveTeams()"
+                      item-text="name" item-value="id"></v-select>
             </v-flex>
         <v-btn v-on:click="swapTeams()">Swap</v-btn>
                 <v-flex sm3>
 
-            <v-select v-model="game.right_team.color" :items="team_colors.items"  v-on:change="saveTeams()"></v-select>
+            <v-select v-model="game.right_team.color" :items="team_colors.items"  v-on:change="saveTeams()"
+                      item-text="name" item-value="id"></v-select>
                 </v-flex>
                 <v-flex>
                     {{right_team_name}}

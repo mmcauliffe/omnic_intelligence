@@ -499,6 +499,8 @@ class Round(models.Model):
             player_set = self.game.right_team.playerparticipation_set.all()
         for p in player_set:
             hero = p.player.get_hero_at_timepoint(self, time_point)
+            if not hero:
+                continue
             if hero.name.lower() == hero_name.lower():
                 return p.player
 

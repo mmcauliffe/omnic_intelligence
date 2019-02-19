@@ -90,7 +90,7 @@ class RelatedOrderingFilter(filters.OrderingFilter):
 
 class TeamColorViewSet(viewsets.ViewSet):
     def list(self, request):
-        choices = [x[1] for x in models.TeamParticipation.COLOR_CHOICES]
+        choices = [{'id': x[0], 'name':x[1]} for x in models.TeamParticipation.COLOR_CHOICES]
         return Response(choices)
 
 
