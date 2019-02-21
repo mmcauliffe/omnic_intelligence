@@ -32,7 +32,8 @@
             <div v-for="player in game.left_team.players"class="left player">
                 <v-layout row>
 
-                    <v-select v-model="player.player" :items="left_players" item-text="name" item-value="id"  v-on:change="saveTeams()"></v-select>
+                    <v-select v-model="player.player" :items="left_players"
+                              item-text="name" item-value="id"  v-on:change="saveTeams()"></v-select>
                 </v-layout>
             </div>
         </div>
@@ -40,7 +41,8 @@
         <div class="team" v-if="game.right_team" >
             <div v-for="player in game.right_team.players" v-if="game.right_team" class="right-player player">
                 <v-layout row>
-                    <v-select v-model="player.player" :items="right_players" item-text="name" item-value="id"  v-on:change="saveTeams()" ></v-select>
+                    <v-select v-model="player.player" :items="right_players"
+                              item-text="name" item-value="id"  v-on:change="saveTeams()" ></v-select>
                 </v-layout>
             </div>
         </div>
@@ -90,6 +92,13 @@
             saveTeams(){
                 const left_p = [... new Set(this.game.left_team.players.map(x=>x.player))];
                 const right_p = [... new Set(this.game.right_team.players.map(x=>x.player))];
+                let left_player_ids = this.game.left_team.players.map(x=>x.player);
+                let i;
+                console.log('LEFT PLAYERS')
+                for (i=0; i<left_player_ids.length; i++){
+                    console.log(this.left_players.filter(x=>x.id===left_player_ids[i])[0].name)
+                }
+                console.log(this.game.left_team.players.map(x=>x.player))
                 console.log(left_p.length,this.game.left_team.players.map(x=>x.player),
                     right_p.length, this.game.right_team.players.map(x=>x.player))
                 if (left_p.length < 6 || right_p < 6){
