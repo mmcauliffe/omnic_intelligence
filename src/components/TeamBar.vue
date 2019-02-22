@@ -90,22 +90,24 @@
                 this.saveTeams();
             },
             saveTeams(){
-                const left_p = [... new Set(this.game.left_team.players.map(x=>x.player))];
-                const right_p = [... new Set(this.game.right_team.players.map(x=>x.player))];
-                let left_player_ids = this.game.left_team.players.map(x=>x.player);
-                let i;
-                console.log('LEFT PLAYERS')
-                for (i=0; i<left_player_ids.length; i++){
-                    console.log(this.left_players.filter(x=>x.id===left_player_ids[i])[0].name)
-                }
-                console.log(this.game.left_team.players.map(x=>x.player))
-                console.log(left_p.length,this.game.left_team.players.map(x=>x.player),
-                    right_p.length, this.game.right_team.players.map(x=>x.player))
-                if (left_p.length < 6 || right_p < 6){
-                    return
-                }
-                console.log('SAVING TEAMS')
-                this.updateTeams(this.game);
+        this.$nextTick(() => {
+            const left_p = [... new Set(this.game.left_team.players.map(x => x.player))];
+            const right_p = [... new Set(this.game.right_team.players.map(x => x.player))];
+            let left_player_ids = this.game.left_team.players.map(x => x.player);
+            let i;
+            console.log('LEFT PLAYERS')
+            for (i = 0; i < left_player_ids.length; i++) {
+                console.log(this.left_players.filter(x => x.id === left_player_ids[i])[0].name)
+            }
+            console.log(this.game.left_team.players.map(x => x.player))
+            console.log(left_p.length, this.game.left_team.players.map(x => x.player),
+                right_p.length, this.game.right_team.players.map(x => x.player))
+            if (left_p.length < 6 || right_p < 6) {
+                return
+            }
+            console.log('SAVING TEAMS')
+            this.updateTeams(this.game);
+        });
             },
         },
         watch:{
