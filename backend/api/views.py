@@ -1150,15 +1150,18 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                                                      killed_player=killed_player, ability=ability, headshot=headshot))
                             deaths.append(models.Death(round=instance, time_point=time_point, player=killed_player))
                         else:
-                            m = models.Kill.objects.create(round=instance, time_point=time_point, killing_player=killing_player,
-                                        killed_player=killed_player, ability=ability, headshot=headshot)
-                            print(m)
-                            for a in assists:
-                                assisting_player = instance.get_player_of_hero(a, time_point, killing_side)
-                                print('assisting_player', assisting_player)
-                                if assisting_player is None:
-                                    continue
-                                m.assisting_players.add(assisting_player)
+                            try:
+                                m = models.Kill.objects.create(round=instance, time_point=time_point, killing_player=killing_player,
+                                            killed_player=killed_player, ability=ability, headshot=headshot)
+                                print(m)
+                                for a in assists:
+                                    assisting_player = instance.get_player_of_hero(a, time_point, killing_side)
+                                    print('assisting_player', assisting_player)
+                                    if assisting_player is None:
+                                        continue
+                                    m.assisting_players.add(assisting_player)
+                            except django.db.utils.IntegrityError:
+                                pass
         models.Revive.objects.bulk_create(revives)
         models.Death.objects.bulk_create(deaths)
         models.NPCDeath.objects.bulk_create(npcdeaths)
