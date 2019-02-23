@@ -240,6 +240,9 @@ class EventViewSet(viewsets.ModelViewSet):
                             headers={'Client-ID': key})
 
                     data = response.json()
+                    if 'data' not in data:
+                        print(data)
+                        break
                     for v in data['data']:
                         url = v['url']
                         if url in vod_urls:

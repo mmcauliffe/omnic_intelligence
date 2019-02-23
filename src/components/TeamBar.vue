@@ -1,6 +1,6 @@
 <template>
 <div>
-    <v-layout row align-content-space-between class="status" v-if="game.left_team">
+    <v-layout row justify-center class="status" v-if="game.left_team">
         <v-flex></v-flex>
         <div class="mid" v-if="game.left_team">
             <v-layout row>

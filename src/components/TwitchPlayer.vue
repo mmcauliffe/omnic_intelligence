@@ -19,6 +19,7 @@
         computed: {
             ...mapState({
                 timestamp: state => state.vods.timestamp,
+                duration: state => state.vods.duration,
             }),
         },
         beforeCreate() {
@@ -45,19 +46,28 @@
                     player = new window.Twitch.Player(this.$refs.player, options);
                     player.addEventListener('ended', () => (this.$emit('ended')));
                     player.addEventListener('pause', () => (this.$emit('pause')));
-                    player.addEventListener('play', () => (this.$emit('play')));
+                    player.addEventListener('play', () => {console.log(this.getDuration()); this.$emit('play')});
                     player.addEventListener('offline', () => (this.$emit('offline')));
                     player.addEventListener('online', () => (this.$emit('online')));
                     player.addEventListener('ready', () => {
                         player.seek(this.timestamp);
-                        console.log('READY', this.timestamp, this.getCurrentTime())
+                        console.log('READY', this.timestamp, this.getCurrentTime(), this.getDuration())
                         this.$emit('ready');
                         player.setQuality('720p60');
                         console.log('QUALITIES', player.getQualities(), player.getQuality());
+                        this.updateDuration(this.getDuration());
                     });
                 }).catch((e) => (this.$emit('error', e)));
         },
+        beforeDestroy: function () {
+
+    player.pause();
+    player.destroy();
+},
         methods: {
+            ...mapActions('vods', {
+                updateDuration: 'updateDuration',
+            }),
             play() { // Begins playing the specified video.
                 player.play();
             },
@@ -65,6 +75,7 @@
                 player.pause();
             },
             seek(timestamp) { // Seeks to the specified timestamp (in seconds) in the video and resumes playing if paused. Does not work for live streams.
+                console.log('SEEKING TO', timestamp)
                 player.seek(timestamp);
             },
             getCurrentTime() { // Returns the current video’s timestamp, in seconds. Works only for VODs, not live streams.

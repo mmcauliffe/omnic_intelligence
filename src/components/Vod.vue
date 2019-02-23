@@ -5,7 +5,7 @@
         <TwitchPlayer v-if="vod_type=='twitch'" :video="id" :timestamp="timestamp" :controls="controls"></TwitchPlayer>
         <YouTubePlayer v-if="vod_type=='youtube'" :video="id" :timestamp="timestamp" :controls="controls"></YouTubePlayer>
         <div id="player-controls" class="text-center controls-container">
-
+            <v-layout row v-if="duration">
             <v-slider
               v-model="timestamp"
               min="0"
@@ -21,7 +21,11 @@
           </span>
         </template>
             </v-slider>
-            <v-layout row>
+            <v-flex>
+                {{timestamp | secondsToMoment| moment('HH:mm:ss.S')}} / {{duration | secondsToMoment| moment('HH:mm:ss.S')}}
+            </v-flex>
+            </v-layout>
+            <v-layout row justify-center>
 
             <v-tooltip bottom>
                 <v-btn slot="activator" v-on:click="seekBackward(60)">
@@ -149,7 +153,7 @@
                 if (this.roundLock && this.round_begin && new_timestamp < this.round_begin) {
                     new_timestamp = this.round_begin;
                 }
-                this.updateTimestamp(new_timestamp);
+                this.timestamp = new_timestamp;
             },
             seekForward(time) {
                 let new_timestamp = this.timestamp + time;
@@ -158,7 +162,7 @@
                     new_timestamp = this.round_end;
                 }
                 console.log(new_timestamp);
-                this.updateTimestamp(new_timestamp);
+                this.timestamp = new_timestamp;
             }
         }
     }
