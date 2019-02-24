@@ -1283,8 +1283,11 @@ class RoundViewSet(viewsets.ModelViewSet):
         instance.end = request.data['end']
         if request.data['annotation_status']:
             instance.annotation_status = request.data['annotation_status']
-        if instance.game.id != request.data['game']:
-            instance.game = models.Game.objects.get(id=request.data['game'])
+        game = request.data['game']
+        if isinstance(game, dict):
+            game = game['id']
+        if instance.game.id != game:
+            instance.game = models.Game.objects.get(id=game)
         if request.data['attacking_side']:
             instance.attacking_side = request.data['attacking_side']
         if request.data['round_number']:
