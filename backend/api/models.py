@@ -193,7 +193,7 @@ class Player(models.Model):
                     segments.append({'begin': s, 'end': e, 'status': 'has_ult'})
                     if e not in switch_time_points and ultends:
                         for ue in ult_end_time_points:
-                            if ue >= e and (i == len(starts) -1 or (ue <= s)):
+                            if ue >= e and (i == len(starts) -1 or (ue >= s)):
                                 segments.append({'begin': e, 'end': ue, 'status': 'using_ult'})
                                 break
                     break
