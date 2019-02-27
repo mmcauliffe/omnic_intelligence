@@ -149,7 +149,6 @@
             seekBackward(time) {
                 let new_timestamp = this.timestamp - time;
                 new_timestamp = Math.round(new_timestamp * 10) / 10;
-                console.log(new_timestamp)
                 if (this.roundLock && this.round_begin && new_timestamp < this.round_begin) {
                     new_timestamp = this.round_begin;
                 }
@@ -161,7 +160,6 @@
                 if (this.roundLock && this.round_end && new_timestamp > this.round_end) {
                     new_timestamp = this.round_end;
                 }
-                console.log(new_timestamp);
                 this.timestamp = new_timestamp;
             }
         }

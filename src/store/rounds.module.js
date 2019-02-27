@@ -1,7 +1,7 @@
 import {gameService, roundService} from '../api';
 
 const kf_event_types = ['kills', 'kill_npcs', 'deaths', 'npc_deaths', 'revives', 'ult_denials'];
-const player_state_types = ['kills', 'deaths', 'revives', 'ult_gains', 'ult_uses', 'ult_ends'];
+const player_state_types = ['kills', 'deaths', 'revives', 'ult_gains', 'ult_uses', 'ult_ends', 'status_effects'];
 const event_types = ['switches', 'kills', 'kill_npcs', 'deaths', 'npc_deaths', 'ult_gains', 'ult_uses',
     'ult_ends', 'ult_denials', 'status_effects',
     'revives', 'point_gains', 'point_flips', 'pauses', 'replays', 'overtimes', 'smaller_windows'];
@@ -313,12 +313,7 @@ const getters = {
         for (i = 0; i < state.round_states.item.pauses.length; i++) {
 
             if (state.round_states.item.pauses[i].begin <= time_point && time_point < state.round_states.item.pauses[i].end) {
-                if (state.round_states.item.pauses[i].status === 'paused') {
-                    return true
-                }
-                else {
-                    return false
-                }
+                return state.round_states.item.pauses[i].status === 'paused'
             }
         }
 
@@ -332,12 +327,21 @@ const getters = {
         for (i = 0; i < state.round_states.item.overtimes.length; i++) {
 
             if (state.round_states.item.overtimes[i].begin <= time_point && time_point < state.round_states.item.overtimes[i].end) {
-                if (state.round_states.item.overtimes[i].status === 'paused') {
-                    return true
-                }
-                else {
-                    return false
-                }
+                return state.round_states.item.overtimes[i].status === 'overtime'
+            }
+        }
+
+    },
+    roundStateAtTime: (state) => (time_point) => {
+
+        if (state.round_states.loading) {
+            return false
+        }
+        let i;
+        for (i = 0; i < state.round_states.item.point_status.length; i++) {
+
+            if (state.round_states.item.point_status[i].begin <= time_point && time_point < state.round_states.item.point_status[i].end) {
+                return state.round_states.item.point_status[i].status
             }
         }
 
@@ -432,12 +436,7 @@ const getters = {
             }
             for (i = 0; i < ult_states.length; i++) {
                 if (ult_states[i].begin <= time_point && time_point < ult_states[i].end) {
-                    if (ult_states[i].status === 'has_ult') {
-                        return true
-                    }
-                    else {
-                        return false
-                    }
+                    return ult_states[i].status === 'has_ult'
                 }
             }
 
@@ -445,7 +444,6 @@ const getters = {
         return false
     },
     aliveAtTime: (state, getters) => (player_id, time_point) => {
-
         if (state.player_states.item) {
             let index, alive_states, i;
             index = getters.leftPlayerIndex(player_id);
@@ -456,24 +454,40 @@ const getters = {
                 index = getters.rightPlayerIndex(player_id);
                 if (index >= 0) {
                     alive_states = state.player_states.item.right[index].alive;
-
                 }
                 else {
                     return false
                 }
             }
             for (i = 0; i < alive_states.length; i++) {
-
-                if (alive_states[i].begin <= time_point && time_point <= alive_states[i].end) {
-                    if (alive_states[i].status === 'alive') {
-                        return true
-                    }
-                    else {
-                        return false
-                    }
+                if (alive_states[i].begin <= time_point && time_point < alive_states[i].end) {
+                    return alive_states[i].status === 'alive'
                 }
             }
-
+        }
+        return false
+    },
+    stateAtTime: (state, getters) => (player_id, time_point, state_name) => {
+        if (state.player_states.item) {
+            let index, states, i;
+            index = getters.leftPlayerIndex(player_id);
+            if (index >= 0) {
+                states = state.player_states.item.left[index][state_name];
+            }
+            else {
+                index = getters.rightPlayerIndex(player_id);
+                if (index >= 0) {
+                    states = state.player_states.item.right[index][state_name];
+                }
+                else {
+                    return false
+                }
+            }
+            for (i = 0; i < states.length; i++) {
+                if (states[i].begin <= time_point && time_point < states[i].end) {
+                    return states[i].status === state_name
+                }
+            }
         }
         return false
     },

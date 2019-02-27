@@ -171,7 +171,7 @@
                                 </v-icon>
                                 <span>Update end to current</span>
                             </v-tooltip>
-                            <v-tooltip bottom>
+                            <v-tooltip bottom v-if="props.item.annotation_status == 'N'">
                                 <v-icon class="clickable" slot="activator" v-on:click="removeRound(props.item.id)">
                             remove_circle
                                 </v-icon>

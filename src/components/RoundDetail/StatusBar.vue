@@ -34,16 +34,24 @@
 
                 </v-layout>
                 <span>{{ status.name}}</span><br>
-                <div>
+                <v-layout row>
                     <v-icon v-if="!status.alive">person_outline</v-icon>
-                    <v-icon v-else-if="status.alive">person</v-icon>
-                </div>
+                    <v-icon v-else-if="status.frozen">ac_unit</v-icon>
+                    <v-icon v-else-if="status.asleep">notifications_paused</v-icon>
+                    <v-icon v-else-if="status.stunned">star_rate</v-icon>
+                    <v-icon v-else>person</v-icon>
+                    <v-icon v-if="status.antiheal">block</v-icon>
+                </v-layout>
             </div>
         </div>
         <div class="mid">
-            <span>{{  currentTime |secondsToMoment | moment('mm:ss.S')}}</span>
-            <span v-if="isOvertime">Overtime</span>
-            <span v-if="isPaused">Paused</span>
+            <v-layout column>
+                <span>{{  currentTime |secondsToMoment | moment('mm:ss.S')}}</span>
+                <span>{{round_state}}</span>
+                <span v-if="isOvertime">Overtime</span>
+                <span v-if="isPaused">Paused</span>
+
+            </v-layout>
         </div>
         <div class="team">
             <div v-for="status in right_player_statuses" class="right-player player">
@@ -81,7 +89,11 @@
                 <span>{{ status.name}}</span><br>
                 <div>
                     <v-icon v-if="!status.alive">person_outline</v-icon>
-                    <v-icon v-else-if="status.alive">person</v-icon>
+                    <v-icon v-else-if="status.alive && status.frozen">ac_unit</v-icon>
+                    <v-icon v-else-if="status.alive && status.asleep">notifications_paused</v-icon>
+                    <v-icon v-else-if="status.alive && status.stunned">star_rate</v-icon>
+                    <v-icon v-else-if="status.alive && !status.frozen">person</v-icon>
+                    <v-icon v-if="status.alive && status.antiheal">block</v-icon>
                 </div>
             </div>
         </div>
@@ -117,6 +129,9 @@
             isOvertime(){
                return this.overtimeAtTime(this.currentTime)
             },
+            round_state(){
+               return this.roundStateAtTime(this.currentTime)
+            },
             isPaused(){
                 return this.pausedAtTime(this.currentTime)
             },
@@ -129,11 +144,13 @@
                 'ultStateAtTime',
                 'pausedAtTime',
                 'overtimeAtTime',
+                'roundStateAtTime',
                 'aliveAtTime',
+                'stateAtTime',
                 'allPlayers'
             ]),
             currentTime() {
-                return this.timestamp - this.round.begin
+                return  Math.round((this.timestamp - this.round.begin) * 10) / 10;
             },
             left_player_statuses() {
                 let statuses = [];
@@ -144,6 +161,10 @@
                         hero: this.heroAtTime(player.id, this.currentTime),
                         ult_state: this.ultStateAtTime(player.id, this.currentTime),
                         alive: this.aliveAtTime(player.id, this.currentTime),
+                        frozen: this.stateAtTime(player.id, this.currentTime, 'frozen'),
+                        stunned: this.stateAtTime(player.id, this.currentTime, 'stunned'),
+                        asleep: this.stateAtTime(player.id, this.currentTime, 'asleep'),
+                        antiheal: this.stateAtTime(player.id, this.currentTime, 'antiheal'),
                     })
                 });
                 return statuses
@@ -157,6 +178,10 @@
                         hero: this.heroAtTime(player.id, this.currentTime),
                         ult_state: this.ultStateAtTime(player.id, this.currentTime),
                         alive: this.aliveAtTime(player.id, this.currentTime),
+                        frozen: this.stateAtTime(player.id, this.currentTime, 'frozen'),
+                        stunned: this.stateAtTime(player.id, this.currentTime, 'stunned'),
+                        asleep: this.stateAtTime(player.id, this.currentTime, 'asleep'),
+                        antiheal: this.stateAtTime(player.id, this.currentTime, 'antiheal'),
                     })
                 });
                 return statuses
