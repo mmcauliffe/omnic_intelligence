@@ -88,6 +88,68 @@ class RelatedOrderingFilter(filters.OrderingFilter):
                 if self.is_valid_field(queryset.model, term.lstrip('-'))]
 
 
+class TrainInfoViewSet(viewsets.ViewSet):
+    def list(self, request):
+        max_heroes = 50
+        max_labels = 250
+        max_maps = 40
+        max_spectator_modes = 20
+        max_statuses = 15
+        heroes = models.Hero.objects.order_by('id').prefetch_related('npc_set').prefetch_related('abilities').all()
+        maps = models.Map.objects.order_by('id').all()
+        map_modes = [x[1].lower() for x in models.Map.MODE_CHOICES]
+        colors = [x[1].lower() for x in models.TeamParticipation.COLOR_CHOICES]
+        statuses = models.Status.objects.order_by('id').all()
+        spectator_modes = [x[1].lower() for x in models.Event.SPECTATOR_MODE_CHOICES]
+        npcs = []
+        labels = []
+        for c in colors:
+            labels.append(c)
+        for h in heroes:
+            labels.append(h.name.lower())
+            labels.append(h.name.lower() + '_assist')
+            for a in h.abilities.all():
+                name = a.name.lower()
+                if a.damaging_ability or a.revive_ability or name == 'defense matrix':
+                    if name not in labels:
+                        labels.append(name)
+                    headshot_name = name + ' headshot'
+                    if a.headshot_capable and headshot_name not in labels:
+                        labels.append(headshot_name)
+            for n in h.npc_set.all():
+                npcs.append(n.name.lower())
+                labels.append(n.name.lower() + '_npc')
+        heroes = [x.name.lower() for x in heroes]
+        while len(heroes) < max_heroes:
+            heroes.append('')
+
+        while len(labels) < max_labels:
+            labels.append('')
+
+        maps = [x.name.lower() for x in maps]
+        while len(maps) < max_maps:
+            maps.append('')
+
+        while len(spectator_modes) < max_spectator_modes:
+            spectator_modes.append('')
+        statuses = [x.name.lower() for x in statuses]
+        while len(statuses) < max_statuses:
+            statuses.append('')
+        data = {
+            'heroes': heroes,
+            'map_modes': map_modes,
+            'maps': maps,
+            'npcs': npcs,
+            'statuses': statuses,
+            'colors': colors,
+            'spectator_modes': spectator_modes,
+            'kill_feed_labels': labels
+        }
+        for k, v in data.items():
+            print(k, len(v))
+        return Response(data)
+
+
 class TeamColorViewSet(viewsets.ViewSet):
     def list(self, request):
         choices = [{'id': x[0], 'name':x[1]} for x in models.TeamParticipation.COLOR_CHOICES]
@@ -141,6 +203,11 @@ class HeroViewSet(viewsets.ModelViewSet):
     queryset = models.Hero.objects.all()
     serializer_class = serializers.HeroAbilitySerializer
 
+    @list_route(methods=['get'])
+    def training_hero_list(self, request):
+        queryset = models.Hero.objects.order_by('id')
+        return Response(self.serializer_class(queryset, many=True).data)
+
 
 class StatusEffectChoiceViewSet(viewsets.ModelViewSet):
     model = models.Status
@@ -176,6 +243,11 @@ class MapViewSet(viewsets.ModelViewSet):
     model = models.Map
     queryset = models.Map.objects.all()
     serializer_class = serializers.MapSerializer
+
+    @list_route(methods=['get'])
+    def training_map_list(self, request):
+        queryset = models.Map.objects.order_by('id')
+        return Response(self.serializer_class(queryset, many=True).data)
 
 
 class NPCViewSet(viewsets.ModelViewSet):

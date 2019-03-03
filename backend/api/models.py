@@ -424,6 +424,7 @@ class TeamParticipation(models.Model):
         ('O', 'Orange'),
         ('Y', 'Yellow'),
         ('P', 'Purple'),
+        ('I', 'Pink'),
         ('K', 'Black'),
     )
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
@@ -607,8 +608,8 @@ class Round(models.Model):
             return [[0, self.end - self.begin]]
         interruptions = sorted([x for x in replays] + [x for x in pauses], key=lambda x: x.start_time)
 
-        round_end = self.end - self.begin
-        cur_beg = 0
+        round_end = Decimal(self.end - self.begin)
+        cur_beg = Decimal('0.00')
         segments = []
         for i, s in enumerate(interruptions):
             segments.append([cur_beg, s.start_time])
