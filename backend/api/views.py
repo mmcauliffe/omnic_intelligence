@@ -1020,7 +1020,10 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
             match.teams.add(team_two)
         print(match)
         try:
-            game = models.Game.objects.get(game_number=1, match=match)
+            game_number = 1
+            if 'game_number' in request.data:
+                game_number = int(request.data['game_number'])
+            game = models.Game.objects.get(game_number=game_number, match=match)
         except models.Game.DoesNotExist:
             left_participation = models.TeamParticipation.objects.create(team=team_one)
             for i, p in enumerate(team_one.players.all()):
