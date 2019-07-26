@@ -283,15 +283,25 @@ class EventViewSet(viewsets.ModelViewSet):
     @detail_route(methods=['get'])
     def vods(self, request, pk=None):
         event = self.get_object()
+        start_date = event.start_date
+        end_date = event.end_date
         vods =[]
         for c in event.stream_channels.prefetch_related('streamvod_set').all():
-            vods.extend(c.streamvod_set.all())
+            for v in c.streamvod_set.all():
+                if start_date and v.broadcast_date.date() < start_date:
+                    continue
+                if end_date and v.broadcast_date.date() > end_date:
+                    continue
+                vods.append(v)
         return Response(serializers.StreamVodSerializer(vods, many=True).data)
 
     @detail_route(methods=['get'])
     def available_vods(self, request, pk=None):
         import requests
+        import datetime
         event = self.get_object()
+        start_date = event.start_date
+        end_date = event.end_date
         vods =[]
         for c in event.stream_channels.prefetch_related('streamvod_set').all():
             cursor = ''
@@ -301,6 +311,7 @@ class EventViewSet(viewsets.ModelViewSet):
                 data = response.json()['data'][0]
                 id = data['id']
                 key = 'fgjp7t0f365uazgs84n7t9xhf19xt2'
+                break_early = False
                 while True:
                     vod_urls = [x.url for x in c.streamvod_set.all()]
                     if not cursor:
@@ -316,6 +327,18 @@ class EventViewSet(viewsets.ModelViewSet):
                         print(data)
                         break
                     for v in data['data']:
+                        if v['published_at'] is None:
+                            continue
+                        published_at = datetime.datetime.strptime(v['published_at'], '%Y-%m-%dT%H:%M:%SZ').date()
+                        if event.channel_query_string is not None and event.channel_query_string not in v['title']:
+                            continue
+                        if end_date is not None:
+                            if published_at > end_date:
+                                continue
+                        if start_date is not None:
+                            if published_at < start_date:
+                                break_early = True
+                                break
                         url = v['url']
                         if url in vod_urls:
                             continue
@@ -324,6 +347,8 @@ class EventViewSet(viewsets.ModelViewSet):
                         v['channel_type'] = 'Twitch'
                         vods.append(v)
                         vod_urls.append(url)
+                    if break_early:
+                        break
                     try:
                         cursor = data['pagination']['cursor']
                     except KeyError:

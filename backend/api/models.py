@@ -355,6 +355,7 @@ class Event(models.Model):
     spectator_mode = models.CharField(max_length=1, choices=SPECTATOR_MODE_CHOICES, default='C')
     stream_channels = models.ManyToManyField(StreamChannel, related_name='events')
     teams = models.ManyToManyField(Team, through='EventParticipation')
+    channel_query_string = models.CharField(max_length=128, null=True, blank=True)
 
     class Meta:
         ordering = ['start_date']
