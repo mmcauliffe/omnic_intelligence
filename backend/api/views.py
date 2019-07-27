@@ -821,14 +821,14 @@ class GameViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         print(request.data)
         for c in instance.left_team.COLOR_CHOICES:
-            if request.data['left_team']['color'] == c[1]:
+            if request.data['left_team']['color'] in c:
                 value = c[0]
                 break
         instance.map = models.Map.objects.get(id=request.data['map'])
         instance.left_team.color = value
         instance.left_team.save()
         for c in instance.right_team.COLOR_CHOICES:
-            if request.data['right_team']['color'] == c[1]:
+            if request.data['right_team']['color'] in c:
                 value = c[0]
                 break
         instance.right_team.color = value
