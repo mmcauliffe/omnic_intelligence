@@ -3,7 +3,7 @@ from django.views.decorators.cache import never_cache
 
 from rest_framework import generics, permissions, viewsets
 from rest_framework.response import Response
-from rest_framework.decorators import detail_route, list_route
+from rest_framework.decorators import action
 from rest_framework import filters
 
 from rest_framework import pagination, status
@@ -41,7 +41,7 @@ class UserViewSet(viewsets.ModelViewSet):
         users = User.objects.all()
         return Response(self.serializer_class(users, many=True).data)
 
-    @list_route(methods=['get'])
+    @action(methods=['get'], detail=False)
     def current_user(self, request):
         #print(dir(request))
         #print(request.auth)
@@ -203,7 +203,7 @@ class HeroViewSet(viewsets.ModelViewSet):
     queryset = models.Hero.objects.all()
     serializer_class = serializers.HeroAbilitySerializer
 
-    @list_route(methods=['get'])
+    @action(methods=['get'], detail=False)
     def training_hero_list(self, request):
         queryset = models.Hero.objects.order_by('id')
         return Response(self.serializer_class(queryset, many=True).data)
@@ -226,13 +226,13 @@ class AbilityViewSet(viewsets.ModelViewSet):
     queryset = models.Ability.objects.all()
     serializer_class = serializers.AbilitySerializer
 
-    @list_route(methods=['get'])
+    @action(methods=['get'], detail=False)
     def damaging_abilities(self, request):
         abilities = models.Ability.objects.filter(damaging_ability=True).all()
         serializer = serializers.AbilitySerializer(abilities, many=True)
         return Response(serializer.data)
 
-    @list_route(methods=['get'])
+    @action(methods=['get'], detail=False)
     def reviving_abilities(self, request):
         abilities = models.Ability.objects.filter(revive_ability=True).all()
         serializer = serializers.AbilitySerializer(abilities, many=True)
@@ -244,7 +244,7 @@ class MapViewSet(viewsets.ModelViewSet):
     queryset = models.Map.objects.all()
     serializer_class = serializers.MapSerializer
 
-    @list_route(methods=['get'])
+    @action(methods=['get'], detail=False)
     def training_map_list(self, request):
         queryset = models.Map.objects.order_by('id')
         return Response(self.serializer_class(queryset, many=True).data)
@@ -273,14 +273,14 @@ class EventViewSet(viewsets.ModelViewSet):
     queryset = models.Event.objects.all()
     serializer_class = serializers.EventSerializer
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def matches(self, request, pk=None):
         event = self.get_object()
         matches = event.match_set.prefetch_related('teams').all()
         serializer = serializers.MatchSerializer(matches, many=True)
         return Response(serializer.data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def vods(self, request, pk=None):
         event = self.get_object()
         start_date = event.start_date
@@ -295,7 +295,7 @@ class EventViewSet(viewsets.ModelViewSet):
                 vods.append(v)
         return Response(serializers.StreamVodSerializer(vods, many=True).data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def available_vods(self, request, pk=None):
         import requests
         import datetime
@@ -394,14 +394,14 @@ class MatchViewSet(viewsets.ModelViewSet):
     queryset = models.Match.objects.all()
     serializer_class = serializers.MatchSerializer
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def games(self, request, pk=None):
         match = self.get_object()
         games = match.game_set.all()
         serializer = serializers.GameSerializer(games, many=True)
         return Response(serializer.data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def teams(self, request, pk=None):
         match = self.get_object()
         teams = match.teams.all()
@@ -476,7 +476,7 @@ class GameViewSet(viewsets.ModelViewSet):
                                           left_team=left_team_participation, right_team=right_team_participation)
         return Response(self.serializer_class(game).data)
 
-    @list_route(methods=['post'])
+    @action(methods=['post'], detail=False)
     def create_upload(self, request, *args, **kwargs):
         for k, v in request.data.items():
             if k == 'rounds':
@@ -836,7 +836,7 @@ class GameViewSet(viewsets.ModelViewSet):
         instance.save()
         return Response(self.serializer_class(instance).data)
 
-    @detail_route(methods=['put'])
+    @action(methods=['put'], detail=True)
     def update_teams(self, request, pk=None):
         game = self.get_object()
         left_t = models.TeamParticipation.objects.prefetch_related('playerparticipation_set').get(id=request.data['left_team']['id'])
@@ -858,14 +858,14 @@ class GameViewSet(viewsets.ModelViewSet):
         game.save()
         return Response('Success')
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def rounds(self, request, pk=None):
         game = self.get_object()
         rounds = game.round_set.all()
         serializer = serializers.RoundSerializer(rounds, many=True)
         return Response(serializer.data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def teams(self, request, pk=None):
         game = self.get_object()
         left = serializers.TeamParticipationSerializer(game.left_team).data
@@ -877,13 +877,13 @@ class StreamChannelViewSet(viewsets.ModelViewSet):
     queryset = models.StreamChannel.objects.all()
     serializer_class = serializers.StreamChannelSerializer
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def vods(self, request, pk=None):
         channel = self.get_object()
         vods = channel.streamvod_set.all()
         return Response(serializers.StreamVodSerializer(vods, many=True).data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def available_vods(self, request, pk=None):
         import requests
         c = self.get_object()
@@ -985,16 +985,32 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
     queryset = models.StreamVod.objects.all()
     serializer_class = serializers.VodDisplaySerializer
 
-    @list_route(methods=['get'])
+    @action(methods=['get'], detail=False)
     def in_out_game(self, request):
-        vods = models.StreamVod.objects.filter(status='N').all()
+        vods = models.StreamVod.objects.filter(status='N', pk__gte=2290).all()
         return Response(self.serializer_class(vods, many=True).data)
 
-    @list_route(methods=['post'])
+    @action(methods=['post'], detail=False)
     def upload_in_out_game(self, request):
         print(request.data)
         vod = models.StreamVod.objects.get(id=request.data['vod_id'])
-        event = vod.channel.events.all()[0] # FIXME just gets the first event
+        event = None
+        for e in vod.channel.events.all():
+            if e.start_date is None or e.end_date is None:
+                continue
+
+            if vod.broadcast_date.date() < e.start_date:
+                continue
+            if vod.broadcast_date.date() > e.end_date:
+                continue
+            if e.channel_query_string is not None and e.channel_query_string not in vod.title:
+                continue
+            event = e
+            break
+
+        if event is None:
+            return Response('Could not find an event for the vod',
+                            status=status.HTTP_400_BAD_REQUEST)
 
         try:
             team_one = event.teams.get(name=request.data['team_one'])
@@ -1050,7 +1066,7 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
                 r = models.Round.objects.create(stream_vod=vod, round_number=i+1, game=game, begin=r_data['begin'], end=r_data['end'])
         return Response({'success':True})
 
-    @list_route(methods=['get'])
+    @action(methods=['get'], detail=False)
     def round_events(self, request):
         vods = models.StreamVod.objects.filter(status='T').all()
         print(vods)
@@ -1296,7 +1312,7 @@ class VodViewSet(viewsets.ModelViewSet):
                                               broadcast_date=b, last_modified=t)
         return Response(self.serializer_class(vod).data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def possible_matches(self, request, pk=None):
         vod = self.get_object()
         events = vod.channel.events.prefetch_related('match_set').all()
@@ -1305,19 +1321,19 @@ class VodViewSet(viewsets.ModelViewSet):
             matches.extend(e.match_set.all())
         return Response(serializers.MatchSerializer(matches, many=True).data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def events(self, request, pk=None):
         vod = self.get_object()
         events = vod.channel.events.all()
         return Response(serializers.EventSerializer(events, many=True).data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def rounds(self, request, pk=None):
         vod = self.get_object()
         rounds = vod.round_set.all()
         return Response(serializers.RoundEditSerializer(rounds, many=True).data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def games(self, request, pk=None):
         vod = self.get_object()
         games = []
@@ -1327,7 +1343,7 @@ class VodViewSet(viewsets.ModelViewSet):
                     games.append(g)
         return Response(serializers.GameEditSerializer(games, many=True).data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def matches(self, request, pk=None):
         vod = self.get_object()
         matches = []
@@ -1395,19 +1411,19 @@ class RoundViewSet(viewsets.ModelViewSet):
         instance.save()
         return Response(self.serializer_class(instance).data)
 
-    @detail_route(methods=['post'])
+    @action(methods=['post'], detail=True)
     def download(self, request, pk=None):
         round = self.get_object()
         round.download_video()
         return Response({'success': True})
 
-    @detail_route(methods=['post'])
+    @action(methods=['post'], detail=True)
     def export(self, request, pk=None):
         round = self.get_object()
         round.extract_video_segments()
         return Response({'success': True})
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def players(self, request, pk=None):
         round = self.get_object()
         game = round.game
@@ -1418,7 +1434,7 @@ class RoundViewSet(viewsets.ModelViewSet):
                               game.right_team.playerparticipation_set.all()]
         return Response(data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def round_states(self, request, pk=None):
         r = self.get_object()
         data = {}
@@ -1428,12 +1444,12 @@ class RoundViewSet(viewsets.ModelViewSet):
         data['point_status'] = r.get_point_status_states()
         return Response(data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def kill_feed_events(self, request, pk=None):
         r = self.get_object()
         return Response(r.get_kill_feed_events())
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def player_states(self, request, pk=None):
         r = self.get_object()
         data = r.get_player_states()
@@ -1444,7 +1460,7 @@ class RoundViewSet(viewsets.ModelViewSet):
 
         return Response(data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def hero_at_time(self, request, pk=None):
         round_object = self.get_object()
         player_id = request.query_params.get('player_id')
@@ -1452,7 +1468,7 @@ class RoundViewSet(viewsets.ModelViewSet):
         time_point = round(float(request.query_params.get('time_point', 0)), 1)
         return Response(serializers.HeroSerializer(player.get_hero_at_timepoint(round_object, time_point)).data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def killfeed_at_time(self, request, pk=None):
         window = 7.3
         time_point = round(float(request.query_params.get('time_point', 0)), 1)
@@ -1484,133 +1500,133 @@ class RoundViewSet(viewsets.ModelViewSet):
 
         return Response(events)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def switches(self, request, pk=None):
         round = self.get_object()
         switches = round.switch_set.all()
         serializer = serializers.SwitchDisplaySerializer(switches, many=True)
         return Response(serializer.data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def all_deaths(self, request, pk=None):
         round = self.get_object()
         deaths = round.death_set.all()
         serializer = serializers.DeathDisplaySerializer(deaths, many=True)
         return Response(serializer.data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def deaths(self, request, pk=None):
         round = self.get_object()
         deaths = round.get_nonkill_deaths()
         serializer = serializers.DeathDisplaySerializer(deaths, many=True)
         return Response(serializer.data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def all_npc_deaths(self, request, pk=None):
         round = self.get_object()
         npcdeaths = round.npcdeath_set.all()
         serializer = serializers.NPCDeathDisplaySerializer(npcdeaths, many=True)
         return Response(serializer.data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def npc_deaths(self, request, pk=None):
         round = self.get_object()
         npcdeaths = round.get_nonkill_npcdeaths()
         serializer = serializers.NPCDeathDisplaySerializer(npcdeaths, many=True)
         return Response(serializer.data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def ult_uses(self, request, pk=None):
         round = self.get_object()
         ultuses = round.ultuse_set.all()
         serializer = serializers.UltUseDisplaySerializer(ultuses, many=True)
         return Response(serializer.data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def ult_gains(self, request, pk=None):
         round = self.get_object()
         ultgains = round.ultgain_set.all()
         serializer = serializers.UltGainDisplaySerializer(ultgains, many=True)
         return Response(serializer.data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def ult_ends(self, request, pk=None):
         round = self.get_object()
         ult_ends = round.ultend_set.all()
         serializer = serializers.UltEndDisplaySerializer(ult_ends, many=True)
         return Response(serializer.data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def ult_denials(self, request, pk=None):
         round = self.get_object()
         ult_denials = round.ultdenial_set.all()
         serializer = serializers.UltDenialEditSerializer(ult_denials, many=True)
         return Response(serializer.data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def status_effects(self, request, pk=None):
         round = self.get_object()
         status_effects = round.statuseffect_set.all()
         serializer = serializers.StatusEffectDisplaySerializer(status_effects, many=True)
         return Response(serializer.data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def revives(self, request, pk=None):
         round = self.get_object()
         revives = round.revive_set.all()
         serializer = serializers.ReviveDisplaySerializer(revives, many=True)
         return Response(serializer.data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def point_gains(self, request, pk=None):
         round = self.get_object()
         pointgains = round.pointgain_set.all()
         serializer = serializers.PointGainSerializer(pointgains, many=True)
         return Response(serializer.data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def point_flips(self, request, pk=None):
         round = self.get_object()
         pointflips = round.pointflip_set.all()
         serializer = serializers.PointFlipSerializer(pointflips, many=True)
         return Response(serializer.data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def pauses(self, request, pk=None):
         round = self.get_object()
         pauses = round.pause_set.all()
         serializer = serializers.PauseSerializer(pauses, many=True)
         return Response(serializer.data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def kills(self, request, pk=None):
         round = self.get_object()
         kills = round.kill_set.all()
         serializer = serializers.KillEditSerializer(kills, many=True)
         return Response(serializer.data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def kill_npcs(self, request, pk=None):
         round = self.get_object()
         killnpcs = round.killnpc_set.all()
         serializer = serializers.KillNPCEditSerializer(killnpcs, many=True)
         return Response(serializer.data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def overtimes(self, request, pk=None):
         round = self.get_object()
         overtimes = round.overtime_set.all()
         serializer = serializers.OvertimeSerializer(overtimes, many=True)
         return Response(serializer.data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def replays(self, request, pk=None):
         round = self.get_object()
         replaystarts = round.replay_set.all()
         serializer = serializers.ReplaySerializer(replaystarts, many=True)
         return Response(serializer.data)
 
-    @detail_route(methods=['get'])
+    @action(methods=['get'], detail=True)
     def smaller_windows(self, request, pk=None):
         round = self.get_object()
         smaller_windows = round.smallerwindow_set.all()

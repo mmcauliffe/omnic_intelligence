@@ -43,7 +43,7 @@ const actions = {
 
         overwatchService.getMaps()
             .then(
-                events => commit('getMapsSuccess', events),
+                maps => commit('getMapsSuccess', maps),
                 error => commit('getMapsFailure', error)
             );
     },
@@ -168,6 +168,7 @@ const mutations = {
         state.maps = {loading: true};
     },
     getMapsSuccess(state, maps) {
+        console.log('MAPS', maps)
         state.maps = {items: maps};
     },
     getMapsFailure(state, error) {

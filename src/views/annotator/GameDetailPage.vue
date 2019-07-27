@@ -22,8 +22,8 @@
                                                  :items="game.teams" item-text="name" item-value="id" label="'Team">
 
                             </v-select>
-                            <v-select v-model="game.item.left_team.color"
-                                                  :items="colors" label="Color">
+                            <v-select v-model="game.item.left_team.color" item-text="name" item-value="name"
+                                                  :items="colors.items" label="Color">
 
                             </v-select>
                             <v-input type="text" v-model="game.item.left_team.points" label="Points" />
@@ -41,12 +41,12 @@
                         <div class="col-xs-6">
                             <h3>Right team</h3>
                             <v-select label="Team" v-model="game.item.right_team.team"
-                                                 :items="teams" item-text="name" item-value="id">
+                                                 :items="game.teams" item-text="name" item-value="id">
 
                             </v-select>
 
-                            <v-select label="Color" v-model="game.item.right_team.color"
-                                                  :items="colors" >
+                            <v-select label="Color" v-model="game.item.right_team.color" item-text="name" item-value="name"
+                                                  :items="colors.items" >
 
                             </v-select>
                             <v-input type="text" v-model="game.item.right_team.points" label="Points"/>
@@ -121,7 +121,7 @@ import { mapState, mapActions } from 'vuex'
             rounds: state => state.games.rounds,
             teams: state => state.matches.teams,
             maps: state => state.overwatch.maps,
-            colors: state => state.overwatch.colors,
+            colors: state => state.overwatch.team_colors,
         }),
         leftPlayers(){
             if (this.$store.state.games.one.loading){
@@ -155,6 +155,7 @@ import { mapState, mapActions } from 'vuex'
     created () {
         this.getOneGame(this.$route.params.id);
         this.getRounds(this.$route.params.id);
+        this.getTeamColors();
         this.getMaps();
         this.round_headers = [{text: 'Round'}, {text: 'Begin'}, {text: 'End'},  {text: 'Actions'}]
     },
@@ -166,6 +167,7 @@ import { mapState, mapActions } from 'vuex'
         }),
         ...mapActions('overwatch', {
             getMaps: 'getMaps',
+            getTeamColors: 'getTeamColors',
         }),
         seekTo(time){
             console.log(time)

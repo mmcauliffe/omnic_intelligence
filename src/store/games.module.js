@@ -14,7 +14,7 @@ const actions = {
 
         gameService.getAll()
             .then(
-                games => commit('getAllSuccess', games),
+                games => commit('getAllSuccess', games.data),
                 error => commit('getAllFailure', error)
             );
     },
@@ -54,9 +54,11 @@ const actions = {
         gameService.getById(id)
             .then(
                 game => {
+                    game = game.data;
+                    console.log(game)
                 console.log(game.match)
                     matchService.getTeams(game.match).then(
-                        teams => commit('getOneSuccess', {game:game, teams:teams}),
+                        teams => commit('getOneSuccess', {game:game, teams:teams.data}),
                         error => commit('getOneFailure', error)
                     )
                 },
@@ -69,7 +71,7 @@ const actions = {
 
         gameService.getRounds(id)
             .then(
-                rounds => commit('getOneRoundsSuccess', rounds),
+                rounds => commit('getOneRoundsSuccess', rounds.data),
                 error => commit('getOneRoundsFailure', error)
             );
     },
@@ -99,8 +101,10 @@ const mutations = {
         state.one = { loading: true };
     },
     getOneSuccess(state, game) {
+        console.log('GETONE')
         console.log(game.game)
         console.log(game.game.left_team)
+        console.log(game.teams)
         state.one = { item: game.game, teams: game.teams };
     },
     getOneFailure(state, error) {
