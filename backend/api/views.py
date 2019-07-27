@@ -1035,10 +1035,10 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
             match.teams.add(team_one)
             match.teams.add(team_two)
         print(match)
+        game_number = 1
+        if 'game_number' in request.data:
+            game_number = int(request.data['game_number'])
         try:
-            game_number = 1
-            if 'game_number' in request.data:
-                game_number = int(request.data['game_number'])
             game = models.Game.objects.get(game_number=game_number, match=match)
         except models.Game.DoesNotExist:
             left_participation = models.TeamParticipation.objects.create(team=team_one)
@@ -1053,7 +1053,7 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
                                                                team_participation=right_participation, player_index=i)
                 if i == 5:
                     break
-            game = models.Game.objects.create(game_number=1, match=match, left_team=left_participation,
+            game = models.Game.objects.create(game_number=game_number, match=match, left_team=left_participation,
                                               right_team=right_participation, map = models.Map.objects.first())
         for i, r_data in enumerate(request.data['rounds']):
             print(r_data)
