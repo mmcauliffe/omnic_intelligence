@@ -1116,10 +1116,18 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
             instance.switch_set.all().delete()
         instance.ultgain_set.all().delete()
         instance.ultuse_set.all().delete()
+        instance.ultend_set.all().delete()
         instance.replay_set.all().delete()
+        instance.statuseffect_set.all().delete()
         switches = []
         ult_gains = []
         ult_uses = []
+        ult_ends = []
+        status_models = {}
+        status_effects = []
+
+        for s in ['antiheal', 'asleep', 'frozen', 'hacked', 'stunned']:
+            status_models[s] = models.Status.objects.get(name__iexact=s)
         replays = []
         for r in request.data['replays']:
             replays.append(models.Replay(round=instance, start_time=r['begin'], end_time=r['end']))
@@ -1141,6 +1149,10 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                         continue
                     hero = models.Hero.objects.get(name__iexact=s[1])
                     switches.append(models.Switch(round=instance, player=p, new_hero=hero, time_point=s[0]))
+            for s in ['antiheal', 'asleep', 'frozen', 'hacked', 'stunned']:
+                m = status_models[s]
+                for st in v[s]:
+                    status_effects.append(models.StatusEffect(player=p,round=instance, start_time=st['begin'], end_time=st['end'], status=m))
             for ug in v['ult_gains']:
                 for seq in sequences:
                     if seq[0] <= ug <= seq[1]:
@@ -1155,10 +1167,19 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                 else:
                     continue
                 ult_uses.append(models.UltUse(player=p, round=instance, time_point=uu))
+            for ue in v['ult_ends']:
+                for seq in sequences:
+                    if seq[0] <= ue <= seq[1]:
+                        break
+                else:
+                    continue
+                ult_ends.append(models.UltUse(player=p, round=instance, time_point=ue))
         if not request.data.get('ignore_switches', False):
             models.Switch.objects.bulk_create(switches)
         models.UltGain.objects.bulk_create(ult_gains)
         models.UltUse.objects.bulk_create(ult_uses)
+        models.UltEnd.objects.bulk_create(ult_ends)
+        models.StatusEffect.objects.bulk_create(status_effects)
 
         instance.kill_set.all().delete()
         instance.killnpc_set.all().delete()
@@ -1291,7 +1312,7 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                 f.write('{}\n'.format('\t'.join(map(str, e))))
         instance.annotation_status = 'O'
         instance.save()
-        return Response()
+        return Response({'success':True})
 
 
 class VodViewSet(viewsets.ModelViewSet):
