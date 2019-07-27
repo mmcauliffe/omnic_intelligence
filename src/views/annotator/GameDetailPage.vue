@@ -86,7 +86,12 @@
                             </td>
                         <td>
 
-                            <span class='badge' v-on:click="deleteRound(props.item.id)">X</span>
+                    <v-tooltip bottom>
+                        <v-icon class="clickable" slot="activator" v-on:click="deleteRound(props.item.id)">
+                            remove_circle
+                        </v-icon>
+                        <span>Remove</span>
+                    </v-tooltip>
 
                         </td>
                     </template>
@@ -163,7 +168,9 @@ import { mapState, mapActions } from 'vuex'
         ...mapActions('games', {
             getOneGame: 'getOne',
             getRounds: 'getOneRounds',
-            deleteRound: 'delete'
+        }),
+        ...mapActions('rounds', {
+            deleteRound: 'deleteRound'
         }),
         ...mapActions('overwatch', {
             getMaps: 'getMaps',
