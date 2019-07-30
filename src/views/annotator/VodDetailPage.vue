@@ -332,7 +332,10 @@
                 this.updateTimestamp(time);
             },
             updateGames(){
-                this.getOneMatchGames(this.match);
+        this.$nextTick(() => {
+            console.log(this.match)
+            this.getOneMatchGames(this.match);
+        });
             },
             selectGame(game){
                 this.selectedMatch = this.matches.items.filter(x => {return x.id === game.match})[0];

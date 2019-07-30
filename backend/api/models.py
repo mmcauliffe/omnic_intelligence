@@ -386,7 +386,7 @@ class Match(models.Model):
         return 'Match between {} in {}'.format(' and '.join(x.name for x in self.teams.all()), str(self.event))
 
     class Meta:
-        ordering = []
+        ordering = ['-id']
         verbose_name_plural = "matches"
 
     @property
@@ -412,7 +412,7 @@ class Game(models.Model):
 
     class Meta:
         unique_together = (("match", "game_number"),)
-        ordering = ['game_number']
+        ordering = ['-match__id', 'game_number']
 
 
 class TeamParticipation(models.Model):
