@@ -21,7 +21,7 @@
                 </div>
                 <div v-else-if="status.ult_state==='using_ult'">
                     <v-tooltip bottom>
-                        <v-icon slot="activator"
+                        <v-icon slot="activator" @click="addUltEndPlayer(status.id)"
                                 :disabled="!can_edit">new_releases
                         </v-icon>
                         <span>Using ult</span></v-tooltip>
@@ -206,6 +206,14 @@
                 newEvent.round = this.$store.state.rounds.one.item.id;
                 newEvent.player = player_id;
                 this.addRoundEvent({type: 'ult_gains', event: newEvent});
+            },
+            addUltEndPlayer(player_id) {
+
+                let newEvent = {};
+                newEvent.time_point = this.currentTime;
+                newEvent.round = this.$store.state.rounds.one.item.id;
+                newEvent.player = player_id;
+                this.addRoundEvent({type: 'ult_ends', event: newEvent});
             },
             make_safe(name){
                 if (name !== undefined){

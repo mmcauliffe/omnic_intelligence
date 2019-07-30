@@ -183,6 +183,7 @@ class Player(models.Model):
         ult_end_time_points = [round(x.time_point, 1) for x in ultends]
         ends = sorted([round(x.time_point, 1) for x in ultuses] + switch_time_points)
         segments = []
+        show_using_ults = round_object.game.match.event.spectator_mode == 'S'
         for i, s in enumerate(starts):
             if segments:
                 segments.append({'begin': segments[-1]['end'], 'end': s, 'status': 'no_ult'})
@@ -352,7 +353,7 @@ class Event(models.Model):
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
     liquipedia_id = models.CharField(max_length=128, null=True, blank=True)
-    spectator_mode = models.CharField(max_length=1, choices=SPECTATOR_MODE_CHOICES, default='C')
+    spectator_mode = models.CharField(max_length=1, choices=SPECTATOR_MODE_CHOICES, default='S')
     stream_channels = models.ManyToManyField(StreamChannel, related_name='events')
     teams = models.ManyToManyField(Team, through='EventParticipation')
     channel_query_string = models.CharField(max_length=128, null=True, blank=True)

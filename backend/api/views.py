@@ -1114,6 +1114,28 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
         print(right)
         if not request.data.get('ignore_switches', False):
             instance.switch_set.all().delete()
+
+        instance.pointgain_set.all().delete()
+        instance.pointflip_set.all().delete()
+        instance.overtime_set.all().delete()
+        point_gains = []
+        point_flips = []
+        overtimes = []
+        for o in request.data['overtimes']:
+            overtimes.append(models.Overtime(round=instance, start_time=o['begin'], end_time=o['end']))
+        for p in request.data['point_flips']:
+            point_flips.append(models.PointFlip(round=instance, time_point=p['time_point'],
+                                                controlling_side=p['controlling_side']))
+        for p in request.data['point_gains']:
+            point_gains.append(models.PointGain(round=instance, time_point=p['time_point'], point_total=int(p['point_total'])))
+
+        if point_gains:
+            models.PointGain.objects.bulk_create(point_gains)
+        if point_flips:
+            models.PointFlip.objects.bulk_create(point_flips)
+        if overtimes:
+            models.Overtime.objects.bulk_create(overtimes)
+
         instance.ultgain_set.all().delete()
         instance.ultuse_set.all().delete()
         instance.ultend_set.all().delete()
@@ -1123,11 +1145,9 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
         ult_gains = []
         ult_uses = []
         ult_ends = []
-        status_models = {}
         status_effects = []
 
-        for s in ['antiheal', 'asleep', 'frozen', 'hacked', 'stunned']:
-            status_models[s] = models.Status.objects.get(name__iexact=s)
+        status_models = {x.name.lower(): x for x in models.Status.objects.all()}
         replays = []
         for r in request.data['replays']:
             replays.append(models.Replay(round=instance, start_time=r['begin'], end_time=r['end']))
@@ -1149,10 +1169,10 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                         continue
                     hero = models.Hero.objects.get(name__iexact=s[1])
                     switches.append(models.Switch(round=instance, player=p, new_hero=hero, time_point=s[0]))
-            for s in ['antiheal', 'asleep', 'frozen', 'hacked', 'stunned']:
-                m = status_models[s]
+            for s, m in status_models.items():
                 for st in v[s]:
-                    status_effects.append(models.StatusEffect(player=p,round=instance, start_time=st['begin'], end_time=st['end'], status=m))
+                    status_effects.append(models.StatusEffect(player=p,round=instance, start_time=st['begin'],
+                                                              end_time=st['end'], status=m))
             for ug in v['ult_gains']:
                 for seq in sequences:
                     if seq[0] <= ug <= seq[1]:
