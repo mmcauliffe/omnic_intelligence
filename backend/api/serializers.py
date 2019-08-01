@@ -314,7 +314,7 @@ class RoundDisplaySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Round
         fields = (
-            'id', 'round_number', 'game', 'attacking_side', 'attacking_color', 'begin', 'end', 'annotation_status',
+            'id', 'round_number', 'game', 'attacking_side', 'begin', 'end', 'annotation_status',
             'spectator_mode',
             'sequences', 'stream_vod')
 

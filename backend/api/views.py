@@ -1096,7 +1096,7 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
     model = models.Round
     #queryset = models.Round.objects.filter(annotation_status__in=['O']).filter(
     #    game__match__event__name='overwatch league - season 1').order_by('game__match__film_format', 'pk').all()
-    queryset = models.Round.objects.filter(annotation_status__in=['O', 'N']).all()
+    queryset = models.Round.objects.filter(annotation_status__in=['N']).all()
     serializer_class = serializers.RoundDisplaySerializer
 
     def create(self, request, *args, **kwargs):
@@ -1331,6 +1331,7 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
             for e in errors:
                 f.write('{}\n'.format('\t'.join(map(str, e))))
         instance.annotation_status = 'O'
+        instance.attacking_side = request.data.get('attacking_side', 'N')
         instance.save()
         return Response({'success':True})
 

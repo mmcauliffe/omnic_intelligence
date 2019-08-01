@@ -471,16 +471,6 @@ class Round(models.Model):
                                                                self.game.left_team.team, self.game.right_team.team,
                                                                self.game.match.event)
 
-    @property
-    def attacking_color(self):
-        if self.attacking_side == 'L':
-            color = self.game.left_team.get_color_display()
-        elif self.attacking_side == 'R':
-            color = self.game.right_team.get_color_display()
-        else:
-            color = 'n/a'
-        return color
-
     def fix_switch_end_points(self):
         switches = self.switch_set.order_by('-time_point').prefetch_related('player').all()
         last_switches = {}
@@ -688,7 +678,7 @@ class Round(models.Model):
             flips = self.pointflip_set.all()
             for i, f in enumerate(flips):
                 if not states:
-                    states.append({'begin': 0, 'end': f.time_point, 'status': 'Control_none'})
+                    states.append({'begin': 0, 'end': f.time_point, 'status': 'Control_neither'})
 
                 if i != len(flips) - 1:
                     end_point = flips[i + 1].time_point
