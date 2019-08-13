@@ -59,7 +59,7 @@ class TeamInline(admin.TabularInline):
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name')
+    list_display = ('id', 'name', 'spectator_mode', 'start_date', 'end_date')
     inlines = [TeamInline]
 
 
