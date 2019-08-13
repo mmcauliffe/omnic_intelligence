@@ -340,15 +340,10 @@ class Affiliation(models.Model):
 
 
 class Event(models.Model):
-    SPECTATOR_MODE_CHOICES = (('C', 'Color'),
+    SPECTATOR_MODE_CHOICES = (('O', 'Original'),
                               ('W', 'World Cup'),
                               ('L', 'Overwatch League'),
-                              ('A', 'Ability'),
-                              ('S', 'Status'),
-                              ('N', 'Contenders'),
-                              ('H', 'China Contenders'),
-                              ('K', 'Korea Contenders'),
-                              ('O', 'Original'))
+                              ('C', 'Contenders'),)
     name = models.CharField(max_length=128)
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
@@ -393,6 +388,10 @@ class Match(models.Model):
     @property
     def team_description(self):
         return ' and '.join(x.name for x in self.teams.all())
+
+    @property
+    def date(self):
+        return self.game_set.first().round_set.first().streamvod_set.first().published_at.date()
 
     @property
     def start_time(self):
