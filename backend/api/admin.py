@@ -1,7 +1,7 @@
 from django.contrib import admin
 # Register your models here.
 from .models import Map, Hero, Ability, NPC, Team, Player, Event, Match, Round, StreamChannel, StreamVod, \
-    TeamParticipation, Affiliation, Game, Status
+    TeamParticipation, Affiliation, Game, Status, StatusEffect
 
 
 @admin.register(Map)
@@ -30,6 +30,15 @@ class AbilityAdmin(admin.ModelAdmin):
 class NPCAdmin(admin.ModelAdmin):
     pass
 
+@admin.register(StatusEffect)
+class StatusEffectAdmin(admin.ModelAdmin):
+    list_display = ('id', 'round', 'get_status_name', 'start_time', 'end_time', 'player')
+
+    def get_status_name(self, obj):
+        return obj.status.name
+
+    get_status_name.admin_order_field = 'status__name'  # Allows column order sorting
+    get_status_name.short_description = 'Status name'  # Renames column head
 
 @admin.register(Status)
 class StatusAdmin(admin.ModelAdmin):
