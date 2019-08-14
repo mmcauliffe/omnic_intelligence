@@ -2011,6 +2011,7 @@ class KillNPCViewSet(viewsets.ModelViewSet):
         corresponding_death.time_point = request.data['time_point']
         corresponding_death.save()
         instance.time_point = request.data['time_point']
+        instance.ability_id = request.data['ability']['id']
         instance.save()
         return Response()
 
