@@ -1064,6 +1064,8 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
                 print('found it!')
             except models.Round.DoesNotExist:
                 r = models.Round.objects.create(stream_vod=vod, round_number=i+1, game=game, begin=r_data['begin'], end=r_data['end'])
+        vod.status = 'G'
+        vod.save()
         return Response({'success':True})
 
     @action(methods=['get'], detail=False)

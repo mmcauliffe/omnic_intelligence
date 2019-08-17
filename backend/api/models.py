@@ -39,8 +39,8 @@ class StreamVod(models.Model):
     STATUS_CHOICES = (
         ('N', 'Not analyzed'),
         ('G', 'Automatically annotated for in-game/out-of-game'),
-        ('A', 'Rounds automatically annotated'),
         ('T', 'Game boundaries manually checked'),
+        ('A', 'Rounds automatically annotated'),
         ('M', 'Round events manually corrected')
                       )
     TYPE_CHOICES = (
@@ -53,7 +53,7 @@ class StreamVod(models.Model):
     title = models.CharField(max_length=256)
     broadcast_date = models.DateTimeField(blank=True, null=True)
     film_format = models.CharField(max_length=1, choices=FILM_FORMAT_CHOICES, default=ORIGINAL)
-    status = models.CharField(max_length=1, choices=STATUS_CHOICES, default='A')
+    status = models.CharField(max_length=1, choices=STATUS_CHOICES, default='N')
     type = models.CharField(max_length=1, choices=TYPE_CHOICES, default='M')
     last_modified = models.DateTimeField(blank=True, null=True)
 
@@ -114,6 +114,10 @@ class Hero(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def ability_denier(self):
+        return self.abilities.filter(denying_ability=True).count() > 0
+
 
 class Status(models.Model):
     name = models.CharField(max_length=128, unique=True)
@@ -142,9 +146,11 @@ class Ability(models.Model):
     name = models.CharField(max_length=128)
     revive_ability = models.BooleanField(default=False)
     damaging_ability = models.BooleanField(default=True)
+    denying_ability = models.BooleanField(default=False)
     headshot_capable = models.BooleanField(default=False)
     ultimate_ability = models.BooleanField(default=False)
     matrixable = models.BooleanField(default=False)
+    denyable = models.BooleanField(default=False)
 
     class Meta:
         verbose_name_plural = "abilities"
