@@ -4,7 +4,6 @@
             <v-layout row justify-center>
         <table class="kill-feed-table">
             <tr v-for="item in kill_feed">
-                {{item}}
                 <td class="first-hero" :class="item.first_color">
                 <v-tooltip bottom v-if="item.first_hero != 'N/A'">
                     <img class="hero-icon" slot="activator"

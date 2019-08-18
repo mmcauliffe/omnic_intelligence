@@ -123,7 +123,7 @@ class TeamParticipationEditSerializer(serializers.ModelSerializer):
 
 class EventSerializer(serializers.ModelSerializer):
     teams = TeamSerializer(many=True)
-    
+
     class Meta:
         model = models.Event
         fields = '__all__'
