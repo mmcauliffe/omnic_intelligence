@@ -96,6 +96,9 @@ const actions = {
 
 
 const getters = {
+    denying_heroes: (state) => {
+        return state.heroes.items.filter(x => x.ability_denier).map(x=> x.name);
+    },
     sides: (state) => {
         return state.sides.items.filter(x => x.id !== 'N');
     },
@@ -168,7 +171,6 @@ const mutations = {
         state.maps = {loading: true};
     },
     getMapsSuccess(state, maps) {
-        console.log('MAPS', maps)
         state.maps = {items: maps};
     },
     getMapsFailure(state, error) {

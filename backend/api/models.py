@@ -149,8 +149,7 @@ class Ability(models.Model):
     denying_ability = models.BooleanField(default=False)
     headshot_capable = models.BooleanField(default=False)
     ultimate_ability = models.BooleanField(default=False)
-    matrixable = models.BooleanField(default=False)
-    denyable = models.BooleanField(default=False)
+    deniable = models.BooleanField(default=False)
 
     class Meta:
         verbose_name_plural = "abilities"
@@ -791,7 +790,7 @@ class Round(models.Model):
             else:
                 killing_color = self.game.right_team.get_color_display()
                 dying_color = self.game.left_team.get_color_display()
-            ability = denying_hero.abilities.get(name='Defense Matrix').name
+            ability = denying_hero.abilities.get(denying_ability=True).name
             kf_item = {'time_point': u.time_point, 'first_hero': denying_hero.name, 'first_player': u.denying_player.name,
                        'ability':ability, 'second_hero': u.ability.name, 'headshot': False,
                      'assisting_heroes': [],

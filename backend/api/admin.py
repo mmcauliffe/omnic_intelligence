@@ -23,12 +23,14 @@ class HeroAdmin(admin.ModelAdmin):
 
 @admin.register(Ability)
 class AbilityAdmin(admin.ModelAdmin):
-    list_display = ('name', 'damaging_ability', 'headshot_capable', 'revive_ability', 'ultimate_ability')
+    list_display = ('name', 'damaging_ability', 'headshot_capable', 'revive_ability',
+                    'ultimate_ability', 'denying_ability', 'deniable')
 
 
 @admin.register(NPC)
 class NPCAdmin(admin.ModelAdmin):
     pass
+
 
 @admin.register(StatusEffect)
 class StatusEffectAdmin(admin.ModelAdmin):

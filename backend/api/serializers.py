@@ -24,7 +24,8 @@ class HeroAbilitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Hero
-        fields = ('id', 'name', 'hero_type', 'damaging_abilities', 'reviving_abilities', 'deniable_abilities')
+        fields = ('id', 'name', 'hero_type', 'ability_denier',
+                  'damaging_abilities', 'reviving_abilities', 'deniable_abilities')
 
     def get_damaging_abilities(self, obj):
         return AbilitySerializer(obj.abilities.filter(damaging_ability=True).all(), many=True).data
@@ -33,7 +34,7 @@ class HeroAbilitySerializer(serializers.ModelSerializer):
         return AbilitySerializer(obj.abilities.filter(revive_ability=True).all(), many=True).data
 
     def get_deniable_abilities(self, obj):
-        return AbilitySerializer(obj.abilities.filter(matrixable=True).all(), many=True).data
+        return AbilitySerializer(obj.abilities.filter(deniable=True).all(), many=True).data
 
 
 class AbilitySerializer(serializers.ModelSerializer):

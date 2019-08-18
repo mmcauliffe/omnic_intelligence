@@ -1,38 +1,43 @@
 <template>
     <v-layout column style="background-color: #1b2b3a;">
-        <div v-for="item in kill_feed">
 
             <v-layout row justify-center>
-
-            <div class="first-hero text-xs-left" :class="item.first_color">
+        <table class="kill-feed-table">
+            <tr v-for="item in kill_feed">
+                {{item}}
+                <td class="first-hero" :class="item.first_color">
                 <v-tooltip bottom v-if="item.first_hero != 'N/A'">
                     <img class="hero-icon" slot="activator"
                          :src="require('../../assets/'+ make_safe(item.first_hero) +'.png')"/>
 
                     <span>{{ item.first_hero}}</span>
                 </v-tooltip>
+
+                </td>
+                <td class="assisting-heroes" :class="item.first_color">
                 <v-tooltip v-for="h in item.assisting_heroes" v-bind:key="h" bottom>
                     <img class="hero-icon" slot="activator" :src="require('../../assets/'+ make_safe(h) +'.png')"/>
 
                     <span>{{ h }}</span>
                 </v-tooltip>
-
-            </div>
-            <div class="ability text-xs-center">
-                <v-tooltip bottom v-if="item.first_hero === 'N/A'|| item.ability === 'Primary' || item.ability === 'Melee'">
-                    <v-icon slot="activator" color="red" v-if="item.headshot">arrow_right_alt</v-icon>
-                    <v-icon slot="activator" color="white" v-else>arrow_right_alt</v-icon>
-                    <span>{{ item.ability}}</span>
-                </v-tooltip>
-                <v-tooltip bottom v-if="item.first_hero !== 'N/A' &&item.ability !== 'Primary' && item.ability !== 'Melee'">
+                </td>
+                <td class="ability">
+                <v-tooltip bottom v-if="item.first_hero === 'N/A'">
                     <img class="hero-icon" slot="activator"
+                         :src="require('../../assets/Primary.png')"/>
+                    <span>death</span>
+                </v-tooltip>
+                <v-tooltip bottom v-else>
+                    <img class="hero-icon" v-if="item.headshot" slot="activator"
+                         :src="require('../../assets/'+ make_safe(item.ability) +' headshot.png')"/>
+                    <img class="hero-icon" v-else slot="activator"
                          :src="require('../../assets/'+ make_safe(item.ability) +'.png')"/>
 
                     <span>{{ item.ability}}</span>
                 </v-tooltip>
 
-            </div>
-            <div class="second-hero text-xs-right" :class="item.second_color">
+                </td>
+                <td class="second-hero" :class="item.second_color">
                 <v-tooltip bottom>
                     <img class="hero-icon" slot="activator"
                          :src="require('../../assets/'+ make_safe(item.second_hero) +'.png')"/>
@@ -40,10 +45,11 @@
                     <span>{{ item.second_hero}}</span>
                 </v-tooltip>
 
-            </div>
+                </td>
+            </tr>
+        </table>
             </v-layout>
 
-        </div>
     </v-layout>
 </template>
 
@@ -105,20 +111,43 @@
 
     .hero-icon {
         height: 40px;
+        background-color: #000000;
     }
     .first-hero{
-        width: 150px;
+        width: 100px;
     }
     .ability {
-        width:50px;
+        width:40px;
     }
     .second-hero{
         width:100px;
+        text-align: right;
+    }
+    .Blue {
+        background-color: #54fefd;
     }
     .Red {
         background-color: #ff122c;
     }
-    .Blue {
-        background-color: #54fefd;
+    .White {
+        background-color: #ffffff;
+    }
+    .Green {
+        background-color: #8cba11;
+    }
+    .Orange {
+        background-color: #f99d2a;
+    }
+    .Yellow {
+        background-color: #fedb00;
+    }
+    .Purple {
+        background-color: #381460;
+    }
+    .Pink {
+        background-color: #fb7299;
+    }
+    .Black {
+        background-color: #000000;
     }
 </style>

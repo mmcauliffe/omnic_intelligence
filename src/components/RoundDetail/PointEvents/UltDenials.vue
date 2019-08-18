@@ -3,7 +3,7 @@
 
         <v-layout row v-if="can_edit">
             <div>
-                <v-select v-model="newEvent.denying_player" :items="dvaPlayers"
+                <v-select v-model="newEvent.denying_player" :items="denyingPlayers"
                           item-text="name" item-value="id" label="Denying player">
 
                 </v-select>
@@ -69,7 +69,7 @@
         data() {
             return {
                 newEvent: {},
-                dvaPlayers: [],
+                denyingPlayers: [],
                 deniablePlayers: [],
                 deniableAbilities: [],
                 can_edit: true,
@@ -81,6 +81,9 @@
             ...mapGetters('rounds', [
                 'ult_denials',
             ]),
+            ...mapGetters('overwatch', [
+                'denying_heroes',
+            ]),
             headers() {
                 return [
                     {text: 'Time', sortable: false, width: "5px"},
@@ -91,15 +94,16 @@
             }
         },
         methods: {
-            generate_dva_players() {
+            generate_denying_players() {
                 if (!this.currentTime) {
-                    this.dvaPlayers = []
+                    this.denyingPlayers = []
                 }
-                this.dvaPlayers = this.leftPlayers.filter(x=> {
-                    return this.heroAtTime(x.id, this.currentTime).name === 'D.Va'
+                let deniers = this.denying_heroes;
+                this.denyingPlayers = this.leftPlayers.filter(x=> {
+                    return deniers.indexOf(this.heroAtTime(x.id, this.currentTime).name) > -1
                 });
-                this.dvaPlayers = this.dvaPlayers.concat(this.rightPlayers.filter(x=> {
-                    return this.heroAtTime(x.id, this.currentTime).name === 'D.Va'
+                this.denyingPlayers = this.denyingPlayers.concat(this.rightPlayers.filter(x=> {
+                    return deniers.indexOf(this.heroAtTime(x.id, this.currentTime).name) > -1
                 }));
             },
             generate_deniable_players(player_id) {
@@ -145,9 +149,9 @@
                 }
             },
             timeChangeHandler(new_timestamp) {
-                this.generate_dva_players();
+                this.generate_denying_players();
                 if (this.newEvent.denying_player) {
-                    if (this.dvaPlayers.filter(player => {
+                    if (this.denyingPlayers.filter(player => {
                         return player.id === this.newEvent.denied_player
                     }).length === 0) {
                         this.newEvent.denying_player = undefined;
