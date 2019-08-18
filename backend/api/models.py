@@ -345,6 +345,12 @@ class Affiliation(models.Model):
 
 
 class Event(models.Model):
+    ORIGINAL = 'O'
+    FILM_FORMAT_CHOICES = ((ORIGINAL, 'Original'),
+                           ('W', 'World Cup 2017'),
+                           ('A', 'APEX'),
+                           ('K', 'Korean Contenders'),
+                           ('2', 'Overwatch league season 2'))
     SPECTATOR_MODE_CHOICES = (('O', 'Original'),
                               ('W', 'World Cup'),
                               ('L', 'Overwatch League'),
@@ -354,6 +360,7 @@ class Event(models.Model):
     end_date = models.DateField(null=True, blank=True)
     liquipedia_id = models.CharField(max_length=128, null=True, blank=True)
     spectator_mode = models.CharField(max_length=1, choices=SPECTATOR_MODE_CHOICES, default='S')
+    film_format = models.CharField(max_length=1, choices=FILM_FORMAT_CHOICES, default=ORIGINAL)
     stream_channels = models.ManyToManyField(StreamChannel, related_name='events')
     teams = models.ManyToManyField(Team, through='EventParticipation')
     channel_query_string = models.CharField(max_length=128, null=True, blank=True)
