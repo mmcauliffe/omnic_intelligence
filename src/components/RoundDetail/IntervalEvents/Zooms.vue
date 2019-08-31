@@ -2,10 +2,14 @@
     <div>
 
         <v-layout layout="row" layout-align="space-between start" v-if="can_edit">
+            <v-select v-model="newEvent.side" :items="sides"
+                      item-text="name" item-value="id" label="Sides">
 
-            <v-btn class='primary raised' v-on:click="addEvent">Add smaller window</v-btn>
+            </v-select>
+
+            <v-btn class='primary raised' v-on:click="addEvent">Add bar zoom</v-btn>
         </v-layout>
-        <v-data-table :headers="headers" :items="smaller_windows" v-if="smaller_windows" :rows-per-page-items="rowsPerPage">
+        <v-data-table :headers="headers" :items="zooms" v-if="zooms" :rows-per-page-items="rowsPerPage">
 
             <template slot="items" slot-scope="props">
                 <td>
@@ -34,6 +38,10 @@
                     v-bind:class="{ active: closeToCurrent(props.item.end_time) }">
                     {{ props.item.end_time | secondsToMoment | moment('mm:ss.S') }}
                 </td>
+                <td>
+                  <span v-if=" props.item.side ==='L'">Left</span>
+<span v-if="props.item.side ==='R'">Right</span>
+                </td>
                 <td v-if="can_edit">
 
                     <v-tooltip bottom>
@@ -55,19 +63,19 @@
     import interval_events from './BaseIntervalEvents';
 
     export default {
-        name: "smaller_windows",
+        name: "zooms",
         extends: interval_events,
         data() {
             return {
                 newEvent: {},
                 can_edit: true,
-                event_type: 'smaller_windows',
+                event_type: 'zooms',
                 rowsPerPage: [5]
             }
         },
         computed: {
             ...mapGetters('rounds', [
-                'smaller_windows',
+                'zooms',
             ]),
         },
         methods: {

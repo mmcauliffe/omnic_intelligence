@@ -150,6 +150,7 @@
                                     <Pauses></Pauses>
                                     <Replays></Replays>
                                     <SmallerWindows></SmallerWindows>
+                                    <Zooms></Zooms>
 
                                 </v-card-text>
                             </v-card>
@@ -182,6 +183,7 @@
     import Pauses from '../../components/RoundDetail/IntervalEvents/Pauses';
     import Replays from '../../components/RoundDetail/IntervalEvents/Replays';
     import SmallerWindows from '../../components/RoundDetail/IntervalEvents/SmallerWindows';
+    import Zooms from '../../components/RoundDetail/IntervalEvents/Zooms';
     import StatusBar from '../../components/RoundDetail/StatusBar';
     import KillFeed from '../../components/RoundDetail/KillFeed';
     import {mapState, mapActions, mapGetters} from 'vuex'
@@ -233,6 +235,7 @@
             SmallerWindows,
             StatusBar,
             KillFeed,
+            Zooms
         },
 
         computed: {
@@ -262,7 +265,7 @@
                 'ult_gains', 'ult_uses', 'ult_ends', 'ult_denials', 'status_effects'];
             this.round_event_types = ['overtimes', 'point_gains', 'point_flips'];
 
-            this.broadcast_event_types = ['replays', 'pauses', 'smaller_windows'];
+            this.broadcast_event_types = ['replays', 'pauses', 'smaller_windows', 'zooms'];
 
             this.player_event_types.forEach(type => {
                 this.getRoundEvents({round: this.$route.params.id, type: type})

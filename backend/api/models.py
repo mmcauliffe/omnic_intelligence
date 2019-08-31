@@ -1092,6 +1092,17 @@ class SmallerWindow(models.Model):
         ordering = ['round', 'start_time']
 
 
+class Zoom(models.Model):
+    start_time = models.DecimalField(max_digits=6, decimal_places=1, default=Decimal('0.0'))
+    end_time = models.DecimalField(max_digits=6, decimal_places=1, blank=True, null=True)
+    round = models.ForeignKey(Round, on_delete=models.CASCADE)
+    side = models.CharField(max_length=1, choices=SIDE_CHOICES, default=NEITHER)
+
+    class Meta:
+        unique_together = (("round", "start_time", "side"),)
+        ordering = ['round', 'start_time', "side"]
+
+
 class Overtime(models.Model):
     start_time = models.DecimalField(max_digits=6, decimal_places=1, default=Decimal('0.0'))
     end_time = models.DecimalField(max_digits=6, decimal_places=1, blank=True, null=True)

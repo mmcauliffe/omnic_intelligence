@@ -4,7 +4,7 @@ const kf_event_types = ['kills', 'kill_npcs', 'deaths', 'npc_deaths', 'revives',
 const player_state_types = ['kills', 'deaths', 'revives', 'ult_gains', 'ult_uses', 'ult_ends', 'status_effects'];
 const event_types = ['switches', 'kills', 'kill_npcs', 'deaths', 'npc_deaths', 'ult_gains', 'ult_uses',
     'ult_ends', 'ult_denials', 'status_effects',
-    'revives', 'point_gains', 'point_flips', 'pauses', 'replays', 'overtimes', 'smaller_windows'];
+    'revives', 'point_gains', 'point_flips', 'pauses', 'replays', 'overtimes', 'smaller_windows', 'zooms'];
 const state = {
     all: {},
     round_status: {},
@@ -30,6 +30,7 @@ const state = {
     replays: [],
     overtimes: [],
     smaller_windows: [],
+    zooms: [],
     kill_feed_events: {},
     player_states: {},
     round_states: {},
@@ -84,7 +85,7 @@ const actions = {
                     roundService.getPlayers(round.data.id).then(
                         teams => {
                             commit('getOneRoundSuccess', {round: round, teams: teams});
-                        console.log('hello??')},
+                            },
                         error => {console.log('booooo', error)
                             commit('getOneRoundFailure', error)}
                     )
@@ -94,7 +95,6 @@ const actions = {
 
     },
     getRoundEvents({commit}, data) {
-        console.log('GETTING EVENTS', data)
         roundService.getRoundEvents(data.round, data.type)
             .then(
                 events => commit('getEventsSuccess', {type: data.type, events: events.data}),
@@ -106,7 +106,6 @@ const actions = {
         roundService.addRoundEvent(data.type, data.event)
             .then(
                 event => {
-                    console.log('ADDED EVENT', event, data)
                     dispatch('getRoundEvents', {round: data.event.round, type: data.type})
                     if (kf_event_types.indexOf(data.type) >= 0) {
                         console.log('GETTING NEW KILL FEED')
@@ -131,7 +130,6 @@ const actions = {
                 event => {
                     console.log('UPDATED EVENT', event, data, getters.round_id)
                     dispatch('getRoundEvents', {round: getters.round_id, type: data.type})
-                    console.log('CHECK', kf_event_types.indexOf(data.type) >= 0)
                     if (kf_event_types.indexOf(data.type) >= 0) {
                         console.log('GETTING NEW KILL FEED')
                         dispatch('getKillFeedEvents', getters.round_id)
@@ -299,6 +297,9 @@ const getters = {
     smaller_windows: (state) => {
         return state.smaller_windows;
     },
+    zooms: (state) => {
+        return state.zooms;
+    },
 
     round_id: (state) => {
         console.log(state.one.item)
@@ -366,7 +367,6 @@ const getters = {
         return hero
     },
     killFeedAtTime: (state, getters) => (time_point) => {
-        console.log('KILL FEED EVENTS', state.kill_feed_events.error)
         if (state.kill_feed_events.loading || state.kill_feed_events.item == undefined) {
             return []
         }
@@ -377,12 +377,10 @@ const getters = {
             if (event.time_point < time_point - 7) {
                 continue
             }
-            console.log(event.time_point, time_point)
             if (event.time_point > time_point) {
                 break
             }
             events.push(event);
-            console.log(event);
 
         }
         events.reverse();
@@ -394,7 +392,6 @@ const getters = {
             let index, ult_states, i;
             index = getters.leftPlayerIndex(player_id);
             if (index >= 0) {
-                console.log(index, state.player_states.item.left[index])
                 ult_states = state.player_states.item.left[index].ult;
             }
             else {
@@ -421,7 +418,6 @@ const getters = {
             let index, ult_states, i;
             index = getters.leftPlayerIndex(player_id);
             if (index >= 0) {
-                console.log(index, state.player_states.item.left[index])
                 ult_states = state.player_states.item.left[index].ult;
             }
             else {
@@ -576,12 +572,7 @@ const mutations = {
     getOneRoundRequest(state) {
         state.one = {loading: true};
     },
-    arghSuccess(state, round) {
-        console.log("HELLOOOOOO")
-    },
     getOneRoundSuccess(state, round) {
-        console.log("HELLOOOOOO")
-        console.log('SUCCESS', round)
         state.one = {item: round.round.data, teams: round.teams.data, loading:false};
         console.log(state.one)
     },
@@ -611,7 +602,6 @@ const mutations = {
 
     getEventsSuccess(state, data) {
         state[data.type] = data.events;
-        console.log(data.type, data.events)
     },
     getEventsFailure(state, error) {
         console.log(error)

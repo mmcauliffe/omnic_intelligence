@@ -80,6 +80,7 @@ api_router.register(r'kill_npcs', api.KillNPCViewSet, base_name='kill_npcs')
 api_router.register(r'replays', api.ReplayViewSet, base_name='replays')
 api_router.register(r'overtimes', api.OvertimeViewSet, base_name='overtimes')
 api_router.register(r'smaller_windows', api.SmallerWindowViewSet, base_name='smaller_windows')
+api_router.register(r'zooms', api.ZoomViewSet, base_name='zooms')
 
 urlpatterns = [
 

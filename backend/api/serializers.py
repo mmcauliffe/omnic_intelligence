@@ -475,6 +475,12 @@ class SmallerWindowSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class ZoomSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Zoom
+        fields = '__all__'
+
+
 class KillSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Kill

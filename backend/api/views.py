@@ -1677,6 +1677,13 @@ class RoundViewSet(viewsets.ModelViewSet):
         serializer = serializers.SmallerWindowSerializer(smaller_windows, many=True)
         return Response(serializer.data)
 
+    @action(methods=['get'], detail=True)
+    def zooms(self, request, pk=None):
+        round = self.get_object()
+        zooms = round.zoom_set.all()
+        serializer = serializers.ZoomSerializer(zooms, many=True)
+        return Response(serializer.data)
+
 
 class SwitchViewSet(viewsets.ModelViewSet):
     model = models.Switch
@@ -1800,6 +1807,27 @@ class SmallerWindowViewSet(viewsets.ModelViewSet):
         if end_time is not None:
             request.data['end_time'] = round(end_time, 1)
         return super(SmallerWindowViewSet, self).create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.start_time = request.data['start_time']
+        instance.end_time = request.data['end_time']
+        instance.save()
+        return Response()
+
+
+class ZoomViewSet(viewsets.ModelViewSet):
+    model = models.Zoom
+    queryset = models.Zoom.objects.all()
+    serializer_class = serializers.ZoomSerializer
+
+    def create(self, request, *args, **kwargs):
+        request.data['start_time'] = round(request.data['start_time'], 1)
+        end_time = request.data.get('end_time', None)
+        if end_time is not None:
+            request.data['end_time'] = round(end_time, 1)
+        print(request.data)
+        return super(ZoomViewSet, self).create(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
