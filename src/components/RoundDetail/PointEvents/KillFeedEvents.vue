@@ -44,12 +44,8 @@
                     {{ props.item.time_point | secondsToMoment | moment('mm:ss.S') }}
                 </td>
                 <td>
-                    <v-select v-model="props.item.killing_player" v-if="playerOnLeftTeam(props.item.dying_player)"
-                              item-text="name" item-value="id" :items="rightPlayers" clearable
-                     v-on:change="updateEvent(props.item)">
-                    </v-select>
-                    <v-select v-model="props.item.killing_player" v-else-if="!playerOnLeftTeam(props.item.dying_player)"
-                              item-text="name" item-value="id" :items="leftPlayers" clearable
+                    <v-select v-model="props.item.killing_player"
+                              item-text="name" item-value="id" :items="possible_killers(props.item.dying_player, props.item.ability)" clearable
                      v-on:change="updateEvent(props.item)">
                     </v-select>
                 </td>
@@ -201,6 +197,26 @@
                     function (res) {
                         this.resetEvent();
                     });
+            },
+            possible_killers(dying_player, ability){
+                if (ability && ability.type === 'R'){
+                    if ( this.playerOnLeftTeam(dying_player.id)){
+                        return this.leftPlayers;
+                    }
+                    else{
+                        return this.rightPlayers;
+                    }
+
+                }
+                else{
+                    if ( this.playerOnLeftTeam(dying_player.id)){
+                        return this.rightPlayers;
+                    }
+                    else{
+                        return this.leftPlayers;
+                    }
+                }
+
             },
             generate_deniable_abilities(player_id) {
                 console.log(this.currentTime, player_id)
