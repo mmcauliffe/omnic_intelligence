@@ -104,7 +104,7 @@ class Command(BaseCommand):
                 hero = d.denying_player.get_hero_at_timepoint(r, d.time_point)
                 print(hero.abilities.all())
                 print([x.denying_ability for x in hero.abilities.all()])
-                denying_ability = hero.abilities.get(denying_ability=True)
+                denying_ability = hero.abilities.get(type=models.Ability.DENYING_TYPE)
                 kill_feed_events.append(
                     models.KillFeedEvent(time_point=d.time_point, round=d.round,
                                          killing_player=d.denying_player,
