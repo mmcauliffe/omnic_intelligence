@@ -465,17 +465,14 @@ const getters = {
         return false
     },
     stateAtTime: (state, getters) => (player_id, time_point, state_name) => {
-        console.log(state.player_states.item)
         if (state.player_states.item) {
             let index, states, i;
             index = getters.leftPlayerIndex(player_id);
-                console.log(index)
             if (index >= 0) {
                 states = state.player_states.item.left[index][state_name];
             }
             else {
                 index = getters.rightPlayerIndex(player_id);
-                console.log(index)
                 if (index >= 0) {
                     states = state.player_states.item.right[index][state_name];
                 }
