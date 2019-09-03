@@ -483,7 +483,9 @@ const getters = {
                     return false
                 }
             }
-            console.log(states)
+            if (!states){
+                    return false
+            }
             for (i = 0; i < states.length; i++) {
                 if (states[i].begin <= time_point && time_point < states[i].end) {
             if (state_name === 'status'){
