@@ -6,7 +6,7 @@
                  :round_begin="round.item.begin" :round_end="round.item.end"></Vod>
             <KillFeed></KillFeed>
         </div>
-        <v-col :style="{width: window.colWidth + 'px'}" height="100%">
+        <v-flex :style="{width: window.colWidth + 'px'}" height="100%">
             <v-tabs :style="{width: window.colWidth + 'px'}" md-border-bottom md-dynamic-height v-if="round.item">
                 <v-tab>
                     Round
@@ -140,7 +140,7 @@
 
 
             </v-tabs>
-        </v-col>
+        </v-flex>
     </v-layout>
 </template>
 
