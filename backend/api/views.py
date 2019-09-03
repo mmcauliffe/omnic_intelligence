@@ -99,7 +99,6 @@ class TrainInfoViewSet(viewsets.ViewSet):
         maps = models.Map.objects.order_by('id').all()
         map_modes = [x[1].lower() for x in models.Map.MODE_CHOICES]
         colors = [x[1].lower() for x in models.TeamParticipation.COLOR_CHOICES]
-        statuses = models.Status.objects.order_by('id').all()
         spectator_modes = [x[1].lower() for x in models.Event.SPECTATOR_MODE_CHOICES]
         npcs = []
         labels = []
@@ -133,15 +132,19 @@ class TrainInfoViewSet(viewsets.ViewSet):
 
         while len(spectator_modes) < max_spectator_modes:
             spectator_modes.append('')
-        statuses = [x.name.lower() for x in statuses]
-        while len(statuses) < max_statuses:
-            statuses.append('')
+        extra_statuses = models.Status.objects.filter(independent=True).order_by('id').all()
+        status_values = [x.name.lower() for x in models.Status.objects.filter(independent=False).order_by('id').all()]
+
+        extra_statuses = [x.name.lower() for x in extra_statuses]
+        while len(status_values) < max_statuses:
+            status_values.append('')
         data = {
             'heroes': heroes,
             'map_modes': map_modes,
             'maps': maps,
             'npcs': npcs,
-            'statuses': statuses,
+            'status': status_values,
+            'extra_statuses': extra_statuses,
             'colors': colors,
             'spectator_modes': spectator_modes,
             'kill_feed_labels': labels
