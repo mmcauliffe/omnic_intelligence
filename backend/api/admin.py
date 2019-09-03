@@ -17,14 +17,14 @@ class AbilityInline(admin.TabularInline):
 
 @admin.register(Hero)
 class HeroAdmin(admin.ModelAdmin):
-    list_display = ('name', 'hero_type')
+    list_display = ('name', 'type')
     inlines = [AbilityInline]
 
 
 @admin.register(Ability)
 class AbilityAdmin(admin.ModelAdmin):
-    list_display = ('name', 'damaging_ability', 'headshot_capable', 'revive_ability',
-                    'ultimate_ability', 'denying_ability', 'deniable')
+    list_display = ('name', 'type', 'headshot_capable',
+                    'ultimate', 'deniable')
 
 
 @admin.register(NPC)
@@ -42,9 +42,10 @@ class StatusEffectAdmin(admin.ModelAdmin):
     get_status_name.admin_order_field = 'status__name'  # Allows column order sorting
     get_status_name.short_description = 'Status name'  # Renames column head
 
+
 @admin.register(Status)
 class StatusAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('id', 'name', 'independent')
 
 
 class AffiliationInline(admin.TabularInline):

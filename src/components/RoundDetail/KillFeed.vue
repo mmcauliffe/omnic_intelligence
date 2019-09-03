@@ -21,7 +21,7 @@
                 </v-tooltip>
                 </td>
                 <td class="ability">
-                <v-tooltip bottom v-if="item.first_hero === 'N/A'">
+                <v-tooltip bottom v-if="item.ability === 'N/A'">
                     <img class="hero-icon" slot="activator"
                          :src="require('../../assets/Primary.png')"/>
                     <span>death</span>
@@ -91,6 +91,7 @@
                 'killFeedAtTime',
             ]),
             kill_feed() {
+                console.log("KILLFEED", this.killFeedAtTime(this.currentTime))
                 return this.killFeedAtTime(this.currentTime);
             },
             currentTime() {

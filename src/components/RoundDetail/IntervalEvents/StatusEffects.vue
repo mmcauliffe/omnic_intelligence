@@ -77,7 +77,7 @@
                 newEvent: {},
                 can_edit: true,
                 event_type: 'status_effects',
-                rowsPerPage: [5]
+                rowsPerPage: [15]
             }
         },
         computed: {

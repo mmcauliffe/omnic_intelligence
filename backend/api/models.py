@@ -105,22 +105,26 @@ class Hero(models.Model):
         (SUPPORT, 'Support'),
     )
     name = models.CharField(max_length=128, unique=True)
-    hero_type = models.CharField(max_length=1, choices=TYPE_CHOICES)
+    type = models.CharField(max_length=1, choices=TYPE_CHOICES)
+    ult_duration = models.DecimalField(max_digits=6, decimal_places=1, default=Decimal('1.0'))
 
     class Meta:
         verbose_name_plural = "heroes"
-        ordering = ['hero_type', 'name']
+        ordering = ['type', 'name']
 
     def __str__(self):
         return self.name
 
     @property
     def ability_denier(self):
-        return self.abilities.filter(denying_ability=True).count() > 0
+        return self.abilities.filter(type=Ability.DENYING_TYPE).count() > 0
 
 
 class Status(models.Model):
     name = models.CharField(max_length=128, unique=True)
+    independent = models.BooleanField(default=False)
+    helpful = models.BooleanField(default=False)
+    causing_hero = models.ForeignKey(Hero, on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta:
         verbose_name_plural = "statuses"
@@ -142,13 +146,17 @@ class NPC(models.Model):
 
 
 class Ability(models.Model):
+    DAMAGING_TYPE = 'D'
+    REVIVING_TYPE = 'R'
+    DENYING_TYPE = 'E'
+    ABILITY_TYPES = ((DAMAGING_TYPE, 'Damaging'),
+                     (REVIVING_TYPE, 'Reviving'),
+                     (DENYING_TYPE, 'Denying'))
     heroes = models.ManyToManyField(Hero, related_name='abilities')
     name = models.CharField(max_length=128)
-    revive_ability = models.BooleanField(default=False)
-    damaging_ability = models.BooleanField(default=True)
-    denying_ability = models.BooleanField(default=False)
+    type = models.CharField(max_length=1, choices=ABILITY_TYPES, default=DAMAGING_TYPE)
     headshot_capable = models.BooleanField(default=False)
-    ultimate_ability = models.BooleanField(default=False)
+    ultimate = models.BooleanField(default=False)
     deniable = models.BooleanField(default=False)
 
     class Meta:
@@ -168,53 +176,48 @@ class Player(models.Model):
 
     def get_hero_at_timepoint(self, round_object, time_point):
         time_point = round(time_point, 1)
-        s = self.switch_set.filter(time_point__lte=time_point, round=round_object).order_by(
+        s = self.heropick_set.filter(time_point__lte=time_point, round=round_object).order_by(
             '-time_point').prefetch_related('new_hero', 'new_hero__abilities').first()
         if s is not None:
             return s.new_hero
         return ''
 
     def get_ult_states(self, round_object):
-        ultgains = self.ultgain_set.filter(round=round_object).all()
+        ultimates = self.ultimate_set.filter(round=round_object).all()
         round_end = round(round_object.end - round_object.begin, 1)
-        if len(ultgains) == 0:
+        if len(ultimates) == 0:
             return [{'begin': 0, 'end': round_end, 'status': 'no_ult'}]
 
-        ultuses = self.ultuse_set.filter(round=round_object).all()
-        ultends = self.ultend_set.filter(round=round_object).all()
-        switches = self.switch_set.filter(round=round_object).all()
-        starts = sorted([round(x.time_point, 1) for x in ultgains])
+        switches = self.heropick_set.filter(round=round_object).all()
         switch_time_points = [round(x.time_point, 1) for x in switches]
-        ult_end_time_points = [round(x.time_point, 1) for x in ultends]
-        ends = sorted([round(x.time_point, 1) for x in ultuses] + switch_time_points)
         segments = []
-        show_using_ults = round_object.game.match.event.spectator_mode == 'S'
-        for i, s in enumerate(starts):
+        for u in ultimates:
             if segments:
-                segments.append({'begin': segments[-1]['end'], 'end': s, 'status': 'no_ult'})
+                segments.append({'begin': segments[-1]['end'], 'end': u.gained, 'status': 'no_ult'})
             else:
-                segments.append({'begin': 0, 'end': s, 'status': 'no_ult'})
-            for e in ends:
-                if e >= s:
-                    segments.append({'begin': s, 'end': e, 'status': 'has_ult'})
-                    if e not in switch_time_points and ultends:
-                        for ue in ult_end_time_points:
-                            if ue >= e and (i == len(starts) -1 or (ue >= s)):
-                                segments.append({'begin': e, 'end': ue, 'status': 'using_ult'})
-                                break
+                segments.append({'begin': 0, 'end': u.gained, 'status': 'no_ult'})
+            if u.used:
+                segments.append({'begin': u.gained, 'end': u.used, 'status': 'has_ult', 'id':u.id})
+                if u.ended:
+                    segments.append({'begin': u.used, 'end': u.ended, 'status': 'using_ult', 'id':u.id})
+            else:
+                for stp in switch_time_points:
+                    if stp < u.gained:
+                        continue
+                    segments.append({'begin': u.gained, 'end': stp, 'status': 'has_ult', 'id':u.id})
                     break
-            else:
-                segments.append({'begin': s, 'end': round_end, 'status': 'has_ult'})
+                else:
+                    segments.append({'begin': u.gained, 'end': round_end, 'status': 'has_ult', 'id':u.id})
         if segments[-1]['end'] < round_end:
             segments.append({'begin': segments[-1]['end'], 'end': round_end, 'status': 'no_ult'})
         return segments
 
     def get_alive_states(self, round_object):
-        deaths = self.death_set.filter(round=round_object).all()
+        deaths = self.deaths.filter(round=round_object, ability__type=Ability.DAMAGING_TYPE).all()
         round_end = round_object.end - round_object.begin
         if len(deaths) == 0:
             return [{'begin': 0, 'end': round_end, 'status': 'alive'}]
-        revives = self.revived_player.filter(round=round_object).all()
+        revives = self.deaths.filter(round=round_object, ability__type=Ability.REVIVING_TYPE).all()
         segments = []
         for d in deaths:
             actual_death = d.time_point - Decimal('0.2')
@@ -238,25 +241,44 @@ class Player(models.Model):
 
         return segments
 
-    def get_status_effect_states(self, round_object, status):
-        status_effects = self.statuseffect_set.filter(round=round_object, status=status).all()
+    def get_status_effect_states(self, round_object):
+        status_effects = self.statuseffect_set.filter(round=round_object, status__independent=False).all()
         round_end = round_object.end - round_object.begin
-        status_name = status.name.lower()
         if len(status_effects) == 0:
-            return [{'begin': 0, 'end': round_end, 'status': 'not_'+ status_name}]
-        segments = []
-        for s in status_effects:
-            if segments:
-                segments.append({'begin': segments[-1]['end'], 'end': s.start_time, 'status': 'not_'+status_name})
+            segments = [{'begin': 0, 'end': round_end, 'status': 'normal'}]
+        else:
+            segments = []
+            for s in status_effects:
+                status_name = s.status.name.lower()
+                if segments:
+                    segments.append({'begin': segments[-1]['end'], 'end': s.start_time, 'status': 'normal'})
+                else:
+                    segments.append({'begin': Decimal('0.0'), 'end':  s.start_time, 'status': 'normal'})
+                segments.append({'begin': s.start_time, 'end': s.end_time, 'status': status_name})
+            if segments[-1]['end'] < round_end:
+                segments.append({'begin': segments[-1]['end'], 'end': round_end, 'status': 'normal'})
+        effects = {'status':segments}
+        status = Status.objects.filter(independent=True).all()
+        for stat in status:
+            status_name = stat.name.lower()
+            status_effects = self.statuseffect_set.filter(round=round_object, status=stat).all()
+            if len(status_effects) == 0:
+                segments = [{'begin': 0, 'end': round_end, 'status': 'not_'+ status_name}]
             else:
-                segments.append({'begin': Decimal('0.0'), 'end':  s.start_time, 'status': 'not_'+status_name})
-            segments.append({'begin': s.start_time, 'end': s.end_time, 'status': status_name})
-        if segments[-1]['end'] < round_end:
-            segments.append({'begin': segments[-1]['end'], 'end': round_end, 'status': 'not_'+status_name})
-        return segments
+                segments = []
+                for s in status_effects:
+                    if segments:
+                        segments.append({'begin': segments[-1]['end'], 'end': s.start_time, 'status': 'not_'+ status_name})
+                    else:
+                        segments.append({'begin': Decimal('0.0'), 'end':  s.start_time, 'status': 'not_'+ status_name})
+                    segments.append({'begin': s.start_time, 'end': s.end_time, 'status': status_name})
+                if segments[-1]['end'] < round_end:
+                    segments.append({'begin': segments[-1]['end'], 'end': round_end, 'status': 'not_'+ status_name})
+            effects[status_name] = segments
+        return effects
 
     def get_hero_states(self, round_object):
-        switches = self.switch_set.filter(round=round_object).all()
+        switches = self.heropick_set.filter(round=round_object).all()
         round_end = round_object.end - round_object.begin
         if len(switches) == 1:
             return [{'begin': 0, 'end': round_end, 'hero': switches[0].new_hero}]
@@ -267,50 +289,6 @@ class Player(models.Model):
             else:
                 segments.append({'begin': segments[-1]['end'], 'end': round_end, 'hero': s.new_hero})
         return segments
-
-    def get_ult_at_timepoint(self, round_object, time_point):
-        time_point = round(time_point, 1)
-        last_ult_gain = UltGain.objects.filter(time_point__lte=time_point, round=round_object,
-                                               player=self).order_by(
-            '-time_point').first()
-        if last_ult_gain is None:
-            return False
-        last_ult_gain = round(last_ult_gain.time_point, 1)
-        last_ult_use = UltUse.objects.filter(time_point__lte=time_point, round=round_object,
-                                             player=self).order_by(
-            '-time_point').first()
-        if last_ult_use is not None and time_point == round(last_ult_use.time_point, 1) == last_ult_gain:
-            return True
-        elif last_ult_use is not None and round(last_ult_use.time_point, 1) >= last_ult_gain:
-            return False
-        last_switch = Switch.objects.filter(time_point__lte=time_point, round=round_object,
-                                            player=self).order_by(
-            '-time_point').first()
-        if last_switch is not None and round(last_switch.time_point, 1) >= last_ult_gain:
-            return False
-        return True
-
-    def get_alive_at_timepoint(self, round_object, time_point):
-        time_point = round(time_point, 1)
-        last_death = Death.objects.filter(time_point__lte=time_point, round=round_object, player=self).order_by(
-            '-time_point').first()
-        if last_death is None:
-            return True
-        last_death_time = round(last_death.time_point, 1)
-        respawn_time = last_death.time_point + 10
-        if round_object.is_overtime(time_point):
-            respawn_time += 2
-        respawn_time = round(respawn_time, 1)
-        if time_point >= respawn_time:
-            return True
-        last_revive = Revive.objects.filter(time_point__lte=respawn_time, time_point__gte=last_death_time,
-                                            round=round_object, revived_player=self).order_by(
-            '-time_point').first()
-        if last_revive is not None:
-            last_revive_time = round(last_revive.time_point, 1)
-            if respawn_time >= last_revive_time >= last_death_time and last_revive_time <= time_point:
-                return True
-        return False
 
     class Meta:
         ordering = ['name']
@@ -512,10 +490,8 @@ class Round(models.Model):
         deaths = self.death_set.prefetch_related('player').all()
         nonkills = []
         for d in deaths:
-            try:
-                k = Kill.objects.get(round=self, time_point=d.time_point,
-                                     killed_player=d.player)
-            except Kill.DoesNotExist:
+            if Kill.objects.filter(round=self, time_point=d.time_point,
+                                     killed_player=d.player).count() == 0:
                 nonkills.append(d)
         return nonkills
 
@@ -523,38 +499,27 @@ class Round(models.Model):
         deaths = self.npcdeath_set.prefetch_related('npc').all()
         nonkills = []
         for d in deaths:
-            try:
-                k = KillNPC.objects.get(round=self, time_point=d.time_point, killed_npc=d.npc)
-            except KillNPC.DoesNotExist:
+            if KillNPC.objects.filter(round=self, time_point=d.time_point, killed_npc=d.npc).count() == 0:
                 nonkills.append(d)
         return nonkills
 
     def get_player_states(self):
         data = {'left': {}, 'right': {}}
-        left_team = self.game.left_team.playerparticipation_set.prefetch_related('player', 'player__switch_set',
-                                                                                 'player__death_set',
-                                                                                 'player__statuseffect_set',
-                                                                                 'player__ultuse_set',
-                                                                                 'player__ultgain_set',
-                                                                                 'player__ultend_set',
-                                                                                 'player__revived_player').all()
+        left_team = self.game.left_team.playerparticipation_set.all()
         right_team = self.game.right_team.playerparticipation_set.all()
-        statuses = Status.objects.all()
         for p in left_team:
             pp = p.player
             hero_states = pp.get_hero_states(self)
 
             data['left'][p.player_index] = {'ult': pp.get_ult_states(self), 'alive': pp.get_alive_states(self),
                                             'hero': hero_states, 'player': pp.name}
-            for s in statuses:
-                data['left'][p.player_index][s.name.lower()] = pp.get_status_effect_states(self, s)
+            data['left'][p.player_index].update(pp.get_status_effect_states(self))
         for p in right_team:
             pp = p.player
             hero_states = pp.get_hero_states(self)
             data['right'][p.player_index] = {'ult': pp.get_ult_states(self), 'alive': pp.get_alive_states(self),
                                              'hero': hero_states, 'player': pp.name}
-            for s in statuses:
-                data['right'][p.player_index][s.name.lower()] = pp.get_status_effect_states(self, s)
+            data['right'][p.player_index].update(pp.get_status_effect_states(self))
         return data
 
     def get_heroes_used(self):
@@ -770,122 +735,42 @@ class Round(models.Model):
 
     def get_kill_feed_events(self):
         potential_killfeed = []
-        kills = self.kill_set.all()
-        for k in kills:
-            killing_hero = k.killing_player.get_hero_at_timepoint(self, k.time_point).name
-            if self.game.left_team.playerparticipation_set.filter(player=k.killing_player).count():
-                killing_color = self.game.left_team.get_color_display()
-                dying_color = self.game.right_team.get_color_display()
-            else:
-                killing_color = self.game.right_team.get_color_display()
+        items = self.killfeedevent_set.prefetch_related('killing_player', 'dying_player', 'ability').all()
+        for event in items:
+            killing_hero = 'N/A'
+            killing_color = 'N/A'
+            killing_player = 'N/A'
+            if event.killing_player is not None:
+                killing_hero = event.killing_player.get_hero_at_timepoint(self, event.time_point).name
+                killing_player = event.killing_player.name
+                if self.game.left_team.playerparticipation_set.filter(player=event.killing_player).count():
+                    killing_color = self.game.left_team.get_color_display()
+                else:
+                    killing_color = self.game.right_team.get_color_display()
+
+            if self.game.left_team.playerparticipation_set.filter(player=event.dying_player).count():
                 dying_color = self.game.left_team.get_color_display()
-            assisting_players = k.assisting_players.all()
+            else:
+                dying_color = self.game.right_team.get_color_display()
+            assisting_players = event.assisting_players.all()
             assisting_heroes = []
             for p in assisting_players:
-                assisting_heroes.append(p.get_hero_at_timepoint(self, k.time_point).name)
-            dying_hero = k.killed_player.get_hero_at_timepoint(self, k.time_point).name
+                assisting_heroes.append(p.get_hero_at_timepoint(self, event.time_point).name)
+            if event.denied_ult is not None:
+                dying_hero = event.denied_ult.name
+            elif event.dying_npc is not None:
+                dying_hero = event.dying_npc.name
+            else:
+                dying_hero = event.dying_player.get_hero_at_timepoint(self, event.time_point).name
+            ability_name = 'N/A'
+            if event.ability is not None:
+                ability_name = event.ability.name
             potential_killfeed.append(
-                {'time_point': k.time_point, 'first_hero': killing_hero, 'first_player': k.killing_player.name,
+                {'time_point': event.time_point, 'first_hero': killing_hero, 'first_player': killing_player,
                  'first_color': killing_color, 'assisting_heroes': assisting_heroes,
-                 'ability': k.ability.name, 'headshot': k.headshot,
-                 'second_hero': dying_hero, 'second_player': k.killed_player.name, 'second_color': dying_color})
-        for u in self.ultdenial_set.all():
-            denying_hero = u.denying_player.get_hero_at_timepoint(self, u.time_point)
-            if self.game.left_team.playerparticipation_set.filter(player=u.denying_player).count():
-                killing_color = self.game.left_team.get_color_display()
-                dying_color = self.game.right_team.get_color_display()
-            else:
-                killing_color = self.game.right_team.get_color_display()
-                dying_color = self.game.left_team.get_color_display()
-            ability = denying_hero.abilities.get(denying_ability=True).name
-            kf_item = {'time_point': u.time_point, 'first_hero': denying_hero.name, 'first_player': u.denying_player.name,
-                       'ability':ability, 'second_hero': u.ability.name, 'headshot': False,
-                     'assisting_heroes': [],
-                       'first_color': killing_color,'second_player': u.denied_player.name, 'second_color': dying_color}
-            potential_killfeed.append(kf_item)
+                 'ability': ability_name, 'headshot': event.headshot,
+                 'second_hero': dying_hero, 'second_player': event.dying_player.name, 'second_color': dying_color})
 
-        killnpcs = self.killnpc_set.all()
-        for k in killnpcs:
-            killing_hero = k.killing_player.get_hero_at_timepoint(self, k.time_point).name
-            dying_player = 'N/A'
-            if self.game.left_team.playerparticipation_set.filter(player=k.killing_player).count():
-                killing_color = self.game.left_team.get_color_display()
-                dying_color = self.game.right_team.get_color_display()
-                for p in self.game.right_team.players.all():
-                    if p.get_hero_at_timepoint(self, k.time_point) == k.killed_npc.spawning_hero:
-                        dying_player = p.name
-                        break
-            else:
-                killing_color = self.game.right_team.get_color_display()
-                dying_color = self.game.left_team.get_color_display()
-                for p in self.game.left_team.players.all():
-
-                    if p.get_hero_at_timepoint(self, k.time_point) == k.killed_npc.spawning_hero:
-                        dying_player = p.name
-                        break
-            assisting_players = k.assisting_players.all()
-            assisting_heroes = []
-            for p in assisting_players:
-                assisting_heroes.append(p.get_hero_at_timepoint(self, k.time_point).name)
-            dying_npc = k.killed_npc.name
-            potential_killfeed.append(
-                {'time_point': k.time_point, 'first_hero': killing_hero, 'first_player': k.killing_player.name,
-                 'first_color': killing_color, 'assisting_heroes': assisting_heroes, 'ability': k.ability.name,
-                 'headshot': False, 'second_hero': dying_npc,
-                 'second_player': dying_player, 'second_color': dying_color})
-        deaths = self.death_set.all()
-        for d in deaths:
-            for k in kills:
-                if d.time_point == k.time_point and d.player == k.killed_player:
-                    break
-            else:
-                dying_hero = d.player.get_hero_at_timepoint(self, d.time_point).name
-                if self.game.left_team.playerparticipation_set.filter(player=d.player).count():
-                    dying_color = self.game.left_team.get_color_display()
-                else:
-                    dying_color = self.game.right_team.get_color_display()
-                potential_killfeed.append(
-                    {'time_point': d.time_point, 'first_hero': 'N/A', 'first_player': 'N/A', 'first_color': 'N/A',
-                     'assisting_heroes': [],
-                     'ability': 'primary', 'headshot': False, 'second_hero': dying_hero, 'second_player': d.player.name,
-                     'second_color': dying_color})
-        npcdeaths = self.npcdeath_set.all()
-        for d in npcdeaths:
-            for k in killnpcs:
-                if d.time_point == k.time_point and d.npc == k.killed_npc:
-                    break
-            else:
-                dying_npc = d.npc.name
-                dying_player = 'N/A'
-                if d.side == 'L':
-                    dying_color = self.game.left_team.get_color_display()
-                    for p in self.game.left_team.players.all():
-                        if p.get_hero_at_timepoint(self, d.time_point) == d.npc.spawning_hero:
-                            dying_player = p.name
-                            break
-                else:
-                    dying_color = self.game.right_team.get_color_display()
-                    for p in self.game.right_team.players.all():
-                        if p.get_hero_at_timepoint(self, d.time_point) == d.npc.spawning_hero:
-                            dying_player = p.name
-                            break
-                potential_killfeed.append(
-                    {'time_point': d.time_point, 'first_hero': 'N/A', 'first_player': 'N/A', 'first_color': 'N/A',
-                     'assisting_heroes': [],
-                     'ability': 'primary', 'headshot': False, 'second_hero': dying_npc, 'second_player': dying_player,
-                     'second_color': dying_color})
-        revives = self.revive_set.all()
-        for r in revives:
-            reviving_hero = r.reviving_player.get_hero_at_timepoint(self, r.time_point).name
-            if self.game.left_team.playerparticipation_set.filter(player=r.reviving_player).count():
-                reviving_color = self.game.left_team.get_color_display()
-            else:
-                reviving_color = self.game.right_team.get_color_display()
-            revived_hero = r.revived_player.get_hero_at_timepoint(self, r.time_point).name
-            potential_killfeed.append(
-                {'time_point': r.time_point, 'first_hero': reviving_hero, 'first_player': r.reviving_player.name,
-                 'first_color': reviving_color, 'assisting_heroes': [], 'ability': r.ability.name, 'headshot': False,
-                 'second_hero': revived_hero, 'second_player': r.revived_player.name, 'second_color': reviving_color})
         potential_killfeed = sorted(potential_killfeed, key=lambda x: x['time_point'])
         return potential_killfeed
 
@@ -1148,7 +1033,99 @@ class PointFlip(models.Model):
         ordering = ['round', 'time_point']
 
 
-class Switch(models.Model):
+class KillFeedEvent(models.Model):
+    time_point = models.DecimalField(max_digits=6, decimal_places=1)
+    round = models.ForeignKey(Round, on_delete=models.CASCADE)
+    killing_player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='kills', blank=True, null=True)
+    assisting_players = models.ManyToManyField(Player, related_name='assisted_kills')
+    ability = models.ForeignKey(Ability, on_delete=models.CASCADE, blank=True, null=True)
+    headshot = models.BooleanField(default=False)
+    dying_player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='deaths')
+    dying_npc = models.ForeignKey(NPC, on_delete=models.CASCADE, blank=True, null=True)
+    denied_ult = models.ForeignKey(Ability, on_delete=models.CASCADE, related_name='denials', blank=True, null=True)
+
+    class Meta:
+        unique_together = (("round", "time_point", "killing_player", "dying_player", 'dying_npc', 'denied_ult'),)
+        ordering = ['round', 'time_point', 'killing_player', 'dying_player']
+
+    def __str__(self):
+        dying_entity = str(self.dying_player)
+        if self.dying_npc is not None:
+            dying_entity += ' ({})'.format(self.dying_npc)
+        if self.denied_ult is not None:
+            dying_entity += ' ({})'.format(self.denied_ult)
+        verb = 'killed'
+        if self.ability.type == Ability.REVIVING_TYPE:
+            verb = 'revived'
+        if self.ability.type == Ability.DENYING_TYPE:
+            verb = 'denied'
+        return 'Round {} at {}: {} {} {}'.format(self.round_id, self.time_point, self.killing_player, verb,
+                                                    dying_entity)
+
+    @property
+    def event_type(self):
+        if self.ability is None:
+            return 'death'
+        if self.ability.type == Ability.REVIVING_TYPE:
+            return 'revive'
+        if self.ability.type == Ability.DAMAGING_TYPE:
+            return 'kill'
+        if self.ability.type == Ability.DENYING_TYPE:
+            return 'deny'
+
+    @property
+    def possible_dying_npcs(self):
+        hero = self.dying_player.get_hero_at_timepoint(self.round, self.time_point)
+        return hero.npc_set.all()
+
+    @property
+    def possible_killing_players(self):
+        left_players = self.round.game.left_team.players.all()
+        right_players = self.round.game.right_team.players.all()
+        if self.event_type in ['death', 'kill', 'deny']:
+            if self.dying_player in left_players:
+                return right_players
+            else:
+                return left_players
+        else:
+            return []
+
+    @property
+    def possible_abilities(self):
+        if self.killing_player is None:
+            return []
+        hero = self.killing_player.get_hero_at_timepoint(self.round, self.time_point)
+        if hero == '':
+            return []
+        current_type = self.ability.type
+        return hero.abilities.filter(type=current_type).all()
+
+    @property
+    def possible_assists(self):
+        if self.killing_player is None:
+            return []
+        if self.ability is None or self.ability.type != Ability.DAMAGING_TYPE:
+            return []
+        left_players = self.round.game.left_team.players.all()
+        if self.killing_player in left_players:
+            return [x for x in left_players if x != self.killing_player]
+        else:
+            right_players = self.round.game.right_team.players.all()
+            return [x for x in right_players if x != self.killing_player]
+
+
+class Ultimate(models.Model):
+    round = models.ForeignKey(Round, on_delete=models.CASCADE)
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    gained = models.DecimalField(max_digits=6, decimal_places=1)
+    used = models.DecimalField(max_digits=6, decimal_places=1, blank=True, null=True)
+    ended = models.DecimalField(max_digits=6, decimal_places=1, blank=True, null=True)
+
+    class Meta:
+        ordering = ['round', 'gained', 'player']
+
+
+class HeroPick(models.Model):
     time_point = models.DecimalField(max_digits=6, decimal_places=1)
     end_time_point = models.DecimalField(max_digits=6, decimal_places=1, null=True, blank=True)
     round = models.ForeignKey(Round, on_delete=models.CASCADE)
@@ -1232,8 +1209,8 @@ class UltEnd(models.Model):
 class Kill(models.Model):
     time_point = models.DecimalField(max_digits=6, decimal_places=1)
     round = models.ForeignKey(Round, on_delete=models.CASCADE)
-    killing_player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='kills')
-    assisting_players = models.ManyToManyField(Player, related_name='assisted_kills')
+    killing_player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='kill_kills')
+    assisting_players = models.ManyToManyField(Player, related_name='assists')
     killed_player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='killeds')
     ability = models.ForeignKey(Ability, on_delete=models.CASCADE)
     headshot = models.BooleanField(default=False)

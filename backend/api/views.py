@@ -200,7 +200,7 @@ class VodTypeChoiceViewSet(viewsets.ViewSet):
 
 class HeroViewSet(viewsets.ModelViewSet):
     model = models.Hero
-    queryset = models.Hero.objects.all()
+    queryset = models.Hero.objects.prefetch_related('abilities', 'npc_set').all()
     serializer_class = serializers.HeroAbilitySerializer
 
     @action(methods=['get'], detail=False)
@@ -1399,7 +1399,7 @@ class VodViewSet(viewsets.ModelViewSet):
 
 class RoundViewSet(viewsets.ModelViewSet):
     model = models.Round
-    queryset = models.Round.objects.all()
+    queryset = models.Round.objects.prefetch_related('game').all()
     serializer_class = serializers.RoundDisplaySerializer
 
     def create(self, request, *args, **kwargs):
@@ -1489,7 +1489,7 @@ class RoundViewSet(viewsets.ModelViewSet):
         return Response(data)
 
     @action(methods=['get'], detail=True)
-    def kill_feed_events(self, request, pk=None):
+    def kill_feed_items(self, request, pk=None):
         r = self.get_object()
         return Response(r.get_kill_feed_events())
 
@@ -1545,66 +1545,24 @@ class RoundViewSet(viewsets.ModelViewSet):
         return Response(events)
 
     @action(methods=['get'], detail=True)
-    def switches(self, request, pk=None):
+    def hero_picks(self, request, pk=None):
         round = self.get_object()
-        switches = round.switch_set.all()
-        serializer = serializers.SwitchDisplaySerializer(switches, many=True)
+        hero_pickes = round.heropick_set.all()
+        serializer = serializers.HeroPickDisplaySerializer(hero_pickes, many=True)
         return Response(serializer.data)
 
     @action(methods=['get'], detail=True)
-    def all_deaths(self, request, pk=None):
+    def kill_feed_events(self, request, pk=None):
         round = self.get_object()
-        deaths = round.death_set.all()
-        serializer = serializers.DeathDisplaySerializer(deaths, many=True)
+        kills = round.killfeedevent_set.all()
+        serializer = serializers.KillFeedEventEditSerializer(kills, many=True)
         return Response(serializer.data)
 
     @action(methods=['get'], detail=True)
-    def deaths(self, request, pk=None):
+    def ultimates(self, request, pk=None):
         round = self.get_object()
-        deaths = round.get_nonkill_deaths()
-        serializer = serializers.DeathDisplaySerializer(deaths, many=True)
-        return Response(serializer.data)
-
-    @action(methods=['get'], detail=True)
-    def all_npc_deaths(self, request, pk=None):
-        round = self.get_object()
-        npcdeaths = round.npcdeath_set.all()
-        serializer = serializers.NPCDeathDisplaySerializer(npcdeaths, many=True)
-        return Response(serializer.data)
-
-    @action(methods=['get'], detail=True)
-    def npc_deaths(self, request, pk=None):
-        round = self.get_object()
-        npcdeaths = round.get_nonkill_npcdeaths()
-        serializer = serializers.NPCDeathDisplaySerializer(npcdeaths, many=True)
-        return Response(serializer.data)
-
-    @action(methods=['get'], detail=True)
-    def ult_uses(self, request, pk=None):
-        round = self.get_object()
-        ultuses = round.ultuse_set.all()
-        serializer = serializers.UltUseDisplaySerializer(ultuses, many=True)
-        return Response(serializer.data)
-
-    @action(methods=['get'], detail=True)
-    def ult_gains(self, request, pk=None):
-        round = self.get_object()
-        ultgains = round.ultgain_set.all()
-        serializer = serializers.UltGainDisplaySerializer(ultgains, many=True)
-        return Response(serializer.data)
-
-    @action(methods=['get'], detail=True)
-    def ult_ends(self, request, pk=None):
-        round = self.get_object()
-        ult_ends = round.ultend_set.all()
-        serializer = serializers.UltEndDisplaySerializer(ult_ends, many=True)
-        return Response(serializer.data)
-
-    @action(methods=['get'], detail=True)
-    def ult_denials(self, request, pk=None):
-        round = self.get_object()
-        ult_denials = round.ultdenial_set.all()
-        serializer = serializers.UltDenialEditSerializer(ult_denials, many=True)
+        ultimates = round.ultimate_set.all()
+        serializer = serializers.UltimateDisplaySerializer(ultimates, many=True)
         return Response(serializer.data)
 
     @action(methods=['get'], detail=True)
@@ -1612,13 +1570,6 @@ class RoundViewSet(viewsets.ModelViewSet):
         round = self.get_object()
         status_effects = round.statuseffect_set.all()
         serializer = serializers.StatusEffectDisplaySerializer(status_effects, many=True)
-        return Response(serializer.data)
-
-    @action(methods=['get'], detail=True)
-    def revives(self, request, pk=None):
-        round = self.get_object()
-        revives = round.revive_set.all()
-        serializer = serializers.ReviveDisplaySerializer(revives, many=True)
         return Response(serializer.data)
 
     @action(methods=['get'], detail=True)
@@ -1640,20 +1591,6 @@ class RoundViewSet(viewsets.ModelViewSet):
         round = self.get_object()
         pauses = round.pause_set.all()
         serializer = serializers.PauseSerializer(pauses, many=True)
-        return Response(serializer.data)
-
-    @action(methods=['get'], detail=True)
-    def kills(self, request, pk=None):
-        round = self.get_object()
-        kills = round.kill_set.all()
-        serializer = serializers.KillEditSerializer(kills, many=True)
-        return Response(serializer.data)
-
-    @action(methods=['get'], detail=True)
-    def kill_npcs(self, request, pk=None):
-        round = self.get_object()
-        killnpcs = round.killnpc_set.all()
-        serializer = serializers.KillNPCEditSerializer(killnpcs, many=True)
         return Response(serializer.data)
 
     @action(methods=['get'], detail=True)
@@ -1685,13 +1622,13 @@ class RoundViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class SwitchViewSet(viewsets.ModelViewSet):
-    model = models.Switch
-    queryset = models.Switch.objects.all()
-    serializer_class = serializers.SwitchSerializer
+class HeroPickViewSet(viewsets.ModelViewSet):
+    model = models.HeroPick
+    queryset = models.HeroPick.objects.all()
+    serializer_class = serializers.HeroPickSerializer
 
     def create(self, request, *args, **kwargs):
-        instance = models.Switch.objects.create(time_point=round(request.data['time_point'], 1), player_id=request.data['player'], round_id=request.data['round'], new_hero_id=request.data['new_hero'])
+        instance = models.HeroPick.objects.create(time_point=round(request.data['time_point'], 1), player_id=request.data['player'], round_id=request.data['round'], new_hero_id=request.data['new_hero'])
         instance.round.fix_switch_end_points()
         return Response(self.serializer_class(instance).data)
 
@@ -1837,26 +1774,29 @@ class ZoomViewSet(viewsets.ModelViewSet):
         return Response()
 
 
-class KillViewSet(viewsets.ModelViewSet):
-    model = models.Kill
-    queryset = models.Kill.objects.all()
-    serializer_class = serializers.KillSerializer
+class KillFeedEventViewSet(viewsets.ModelViewSet):
+    model = models.KillFeedEvent
+    queryset = models.KillFeedEvent.objects.prefetch_related('ability', 'dying_player').all()
+    serializer_class = serializers.KillFeedEventSerializer
 
     def create(self, request, *args, **kwargs):
+        event_type = request.data.pop('event_type')
+
         request.data['time_point'] = round(request.data['time_point'], 1)
-        m = models.Kill(round_id=request.data['round'], time_point=request.data['time_point'],
-                        killing_player_id=request.data['killing_player'],
-                        killed_player_id=request.data['killed_player'],
-                        ability_id=request.data['ability'], headshot=request.data.get('headshot', False))
+        m = models.KillFeedEvent(round_id=request.data['round'], time_point=request.data['time_point'],
+                                 dying_player_id=request.data['dying_player'])
+        if event_type in ['kill', 'death'] and request.data.get('dying_npc', None):
+            m.dying_npc_id = request.data['dying_npc']
+        if event_type in ['kill', 'revive', 'deny']:
+            m.killing_player_id = request.data['killing_player']
+            m.ability_id = request.data['ability']
+        if event_type == 'kill':
+            if m.ability.headshot_capable:
+                m.headshot = request.data.get('headshot', False)
+        elif event_type == 'deny':
+            m.denied_ult_id = request.data['denied_ult']
         m.save()
         return Response(self.serializer_class(m).data)
-
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        death = instance.get_corresponding_death()
-        death.delete()
-        instance.delete()
-        return Response()
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -1864,12 +1804,26 @@ class KillViewSet(viewsets.ModelViewSet):
         for p in request.data['assisting_players']:
             instance.assisting_players.add(models.Player.objects.get(pk=p))
 
-        corresponding_death = instance.get_corresponding_death()
-        corresponding_death.time_point = request.data['time_point']
-        corresponding_death.save()
+        if instance.killing_player is None and request.data.get('killing_player', None):
+            instance.killing_player_id = request.data['killing_player']
+            instance.ability = models.Ability.objects.get(name='Primary')
+        elif request.data.get('killing_player', None):
+            instance.killing_player_id = request.data['killing_player']
+            instance.ability_id = request.data['ability']['id']
+            if instance.ability.headshot_capable:
+                instance.headshot = request.data['headshot']
+            else:
+                instance.headshot = False
+        else:
+            instance.killing_player = None
+            instance.ability = None
+
+        if request.data.get('dying_npc', None):
+            instance.dying_npc_id = request.data['dying_npc']
+        else:
+            instance.dying_npc = None
+
         instance.time_point = round(request.data['time_point'], 1)
-        instance.ability_id = request.data['ability']['id']
-        instance.headshot = request.data['headshot']
         instance.save()
         return Response()
 
@@ -1888,6 +1842,51 @@ class ReviveViewSet(viewsets.ModelViewSet):
         instance.time_point = request.data['time_point']
         instance.save()
         return Response()
+
+
+class UltimateViewSet(viewsets.ModelViewSet):
+    model = models.Ultimate
+    queryset = models.Ultimate.objects.all()
+    serializer_class = serializers.UltimateSerializer
+
+    def create(self, request, *args, **kwargs):
+        request.data['gained'] = round(request.data['gained'], 1)
+        return super(UltimateViewSet, self).create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.gained = request.data['gained']
+        instance.ended = request.data.get('ended', None)
+        if request.data.get('used', None):
+            use_default = instance.used is None
+            instance.used = request.data['used']
+            if use_default:
+                hero = instance.player.get_hero_at_timepoint(instance.round, instance.used)
+                instance.ended = hero.ult_duration + instance.used
+        else:
+            instance.used = request.data.get('used', None)
+
+        instance.save()
+        return Response(self.serializer_class(instance).data)
+
+    @action(methods=['PUT'], detail=True)
+    def add_use(self, request, *args, **kwargs):
+        instance = self.get_object()
+        use_default = instance.used is None
+        instance.used = request.data['used']
+        if use_default:
+            hero = instance.player.get_hero_at_timepoint(instance.round, instance.used)
+            instance.ended = hero.ult_duration + instance.used
+        instance.save()
+        return Response(self.serializer_class(instance).data)
+
+    @action(methods=['PUT'], detail=True)
+    def clear_use(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.used = None
+        instance.ended = None
+        instance.save()
+        return Response(self.serializer_class(instance).data)
 
 
 class UltGainViewSet(viewsets.ModelViewSet):

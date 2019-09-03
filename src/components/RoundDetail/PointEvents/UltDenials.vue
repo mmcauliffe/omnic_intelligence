@@ -106,26 +106,6 @@
                     return deniers.indexOf(this.heroAtTime(x.id, this.currentTime).name) > -1
                 }));
             },
-            generate_deniable_players(player_id) {
-                console.log(this.currentTime, player_id)
-                if (!this.currentTime || !player_id) {
-                    this.deniablePlayers = []
-                }
-                if (this.playerOnLeftTeam(player_id)) {
-                    this.deniablePlayers = this.rightPlayers;
-                }
-                else {
-                    this.deniablePlayers = this.leftPlayers;
-                }
-            },
-            generate_deniable_abilities(player_id) {
-                console.log(this.currentTime, player_id)
-                if (!this.currentTime || !player_id) {
-                    this.deniableAbilities = []
-                }
-                let current_hero = this.heroAtTime(player_id, this.currentTime);
-                this.deniableAbilities = this.heroDeniableAbilities(current_hero.id);
-            },
             eventChangeHandler(newNewEvent) {
                 if (newNewEvent.denying_player) {
                     this.generate_deniable_players(newNewEvent.denying_player);

@@ -1,9 +1,8 @@
 import {gameService, roundService} from '../api';
 
-const kf_event_types = ['kills', 'kill_npcs', 'deaths', 'npc_deaths', 'revives', 'ult_denials'];
-const player_state_types = ['kills', 'deaths', 'revives', 'ult_gains', 'ult_uses', 'ult_ends', 'status_effects'];
-const event_types = ['switches', 'kills', 'kill_npcs', 'deaths', 'npc_deaths', 'ult_gains', 'ult_uses',
-    'ult_ends', 'ult_denials', 'status_effects',
+const kf_event_types = ['kill_feed_events'];
+const player_state_types = ['kill_feed_events','ultimates', 'status_effects'];
+const event_types = ['hero_picks', 'kill_feed_events', 'ultimates', 'status_effects',
     'revives', 'point_gains', 'point_flips', 'pauses', 'replays', 'overtimes', 'smaller_windows', 'zooms'];
 const state = {
     all: {},
@@ -13,15 +12,9 @@ const state = {
         rowsPerPage: 10,
     },
     one: {},
-    switches: [],
-    kills: [],
-    kill_npcs: [],
-    deaths: [],
-    npc_deaths: [],
-    ult_gains: [],
-    ult_uses: [],
-    ult_ends: [],
-    ult_denials: [],
+    hero_picks: [],
+    kill_feed_events: [],
+    ultimates: [],
     status_effects: [],
     revives: [],
     point_gains: [],
@@ -31,7 +24,7 @@ const state = {
     overtimes: [],
     smaller_windows: [],
     zooms: [],
-    kill_feed_events: {},
+    kill_feed_items: {},
     player_states: {},
     round_states: {},
 };
@@ -109,7 +102,7 @@ const actions = {
                     dispatch('getRoundEvents', {round: data.event.round, type: data.type})
                     if (kf_event_types.indexOf(data.type) >= 0) {
                         console.log('GETTING NEW KILL FEED')
-                        dispatch('getKillFeedEvents', getters.round_id)
+                        dispatch('getKillFeedItems', getters.round_id)
                     }
                     if (player_state_types.indexOf(data.type) >= 0) {
                         console.log('GETTING NEW PLAYER STATES')
@@ -123,6 +116,32 @@ const actions = {
             );
 
     },
+    addUltimateUse({commit, dispatch, getters}, data) {
+        roundService.addUltimateUse(data.id, data.time_point).then(
+
+                event => {
+                    dispatch('getRoundEvents', {round: getters.round_id, type: 'ultimates'});
+                        dispatch('getPlayerStates', getters.round_id)
+                }
+        ).catch(
+            error => {
+                console.log("ERROR", error)
+                commit('addUltimateUseFailure', error)
+            });
+    },
+    clearUltimateUse({commit, dispatch, getters}, data) {
+        roundService.clearUltimateUse(data.id).then(
+
+                event => {
+                    dispatch('getRoundEvents', {round: getters.round_id, type: 'ultimates'});
+                        dispatch('getPlayerStates', getters.round_id)
+                }
+        ).catch(
+            error => {
+                console.log("ERROR", error)
+                commit('clearUltimateUseFailure', error)
+            });
+    },
     updateRoundEvent({commit, dispatch, getters}, data) {
         roundService.updateRoundEvent(data.type, data.event)
 
@@ -132,7 +151,7 @@ const actions = {
                     dispatch('getRoundEvents', {round: getters.round_id, type: data.type})
                     if (kf_event_types.indexOf(data.type) >= 0) {
                         console.log('GETTING NEW KILL FEED')
-                        dispatch('getKillFeedEvents', getters.round_id)
+                        dispatch('getKillFeedItems', getters.round_id)
 
                     }
                     if (player_state_types.indexOf(data.type) >= 0) {
@@ -156,7 +175,7 @@ const actions = {
                     dispatch('getRoundEvents', {round: getters.round_id, type: data.type})
                     if (kf_event_types.indexOf(data.type) >= 0) {
                         console.log('GETTING NEW KILL FEED')
-                        dispatch('getKillFeedEvents', getters.round_id)
+                        dispatch('getKillFeedItems', getters.round_id)
 
                     }
                     if (player_state_types.indexOf(data.type) >= 0) {
@@ -171,10 +190,10 @@ const actions = {
             });
 
     },
-    getKillFeedEvents({commit}, id) {
+    getKillFeedItems({commit}, id) {
         commit('getKillFeedRequest');
 
-        roundService.getKillFeedEvents(id)
+        roundService.getKillFeedItems(id)
             .then(
                 events => commit('getKillFeedSuccess', events.data),
                 error => commit('getKillFeedFailure', error)
@@ -219,7 +238,7 @@ const actions = {
 
                         }
                         dispatch('getPlayerStates', data.id);
-                        dispatch('getKillFeedEvents', data.id);
+                        dispatch('getKillFeedItems', data.id);
                         dispatch('getRoundStates', data.id);
 
                     }
@@ -246,35 +265,16 @@ const getters = {
     pagination (state) {
       return state.pagination
     },
-    switches: (state) => {
-        return state.switches;
+    hero_picks: (state) => {
+        console.log('HEROPICKS', state.hero_picks)
+        return state.hero_picks;
     },
-    kills: (state) => {
-        return state.kills;
+    kill_feed_events: (state) => {
+        return state.kill_feed_events;
     },
-    kill_npcs: (state) => {
-        return state.kill_npcs;
-    },
-    deaths: (state) => {
-        return state.deaths;
-    },
-    npc_deaths: (state) => {
-        return state.npc_deaths;
-    },
-    revives: (state) => {
-        return state.revives;
-    },
-    ult_gains: (state) => {
-        return state.ult_gains;
-    },
-    ult_uses: (state) => {
-        return state.ult_uses;
-    },
-    ult_ends: (state) => {
-        return state.ult_ends;
-    },
-    ult_denials: (state) => {
-        return state.ult_denials;
+    ultimates: (state) => {
+        console.log('ULTIMATES', state.ultimates)
+        return state.ultimates;
     },
     status_effects: (state) => {
         return state.status_effects;
@@ -351,29 +351,30 @@ const getters = {
         if (state.one.loading) {
             return ''
         }
-        if (!state.switches) {
+        if (!state.hero_picks) {
             return ''
         }
         let i, hero = '';
 
-        for (i = 0; i < state.switches.length; i++) {
-            if (state.switches[i].player.id === player_id) {
-                if (state.switches[i].time_point > time_point) {
+        for (i = 0; i < state.hero_picks.length; i++) {
+            if (state.hero_picks[i].player.id === player_id) {
+                if (state.hero_picks[i].time_point > time_point) {
                     break;
                 }
-                hero = state.switches[i].new_hero;
+                hero = state.hero_picks[i].new_hero;
             }
         }
         return hero
     },
     killFeedAtTime: (state, getters) => (time_point) => {
-        if (state.kill_feed_events.loading || state.kill_feed_events.item == undefined) {
+        if (state.kill_feed_items.loading || state.kill_feed_items.item === undefined) {
             return []
         }
+        console.log('KILLFEEDITEMS', state.kill_feed_items.item)
         let i, event, events = [];
 
-        for (i = 0; i < state.kill_feed_events.item.length; i++) {
-            event = state.kill_feed_events.item[i];
+        for (i = 0; i < state.kill_feed_items.item.length; i++) {
+            event = state.kill_feed_items.item[i];
             if (event.time_point < time_point - 7) {
                 continue
             }
@@ -406,7 +407,7 @@ const getters = {
             }
             for (i = 0; i < ult_states.length; i++) {
                 if (ult_states[i].begin <= time_point && time_point < ult_states[i].end) {
-                    return ult_states[i].status
+                    return {'state': ult_states[i].status, 'id':ult_states[i].id}
                 }
             }
 
@@ -481,7 +482,13 @@ const getters = {
             }
             for (i = 0; i < states.length; i++) {
                 if (states[i].begin <= time_point && time_point < states[i].end) {
+            if (state_name === 'status'){
+                return states[i].status
+            }
+            else{
                     return states[i].status === state_name
+
+            }
                 }
             }
         }
@@ -609,14 +616,14 @@ const mutations = {
     },
 
     getKillFeedRequest(state) {
-        state.kill_feed_events = {loading: true};
+        state.kill_feed_items = {loading: true};
     },
-    getKillFeedSuccess(state, kill_feed_events) {
-        state.kill_feed_events = {item: kill_feed_events};
+    getKillFeedSuccess(state, kill_feed_items) {
+        state.kill_feed_items = {item: kill_feed_items};
     },
     getKillFeedFailure(state, error) {
         console.log(error)
-        state.kill_feed_events = {error};
+        state.kill_feed_items = {error};
     },
 
     getPlayerStatesRequest(state) {

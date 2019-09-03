@@ -1,181 +1,156 @@
 <template>
-    <v-layout row>
+    <v-layout row flex-nowrap>
         <div class="vod-column" v-if="round.item">
-        <StatusBar></StatusBar>
-        <Vod :vod_type="round.item.stream_vod.vod_link[0]" :id="round.item.stream_vod.vod_link[1]"
-             :round_begin="round.item.begin" :round_end="round.item.end"></Vod>
+            <StatusBar></StatusBar>
+            <Vod :vod_type="round.item.stream_vod.vod_link[0]" :id="round.item.stream_vod.vod_link[1]"
+                 :round_begin="round.item.begin" :round_end="round.item.end"></Vod>
             <KillFeed></KillFeed>
         </div>
-        <v-flex style="height:100%" xs4>
-                <v-tabs md-border-bottom md-dynamic-height v-if="round.item">
-                    <v-tab>
-                        Round
-                    </v-tab>
-                    <v-tab>
-                        Switches
-                    </v-tab>
-                    <v-tab>
-                        Player
-                    </v-tab>
-                    <v-tab>
-                        NPCs
-                    </v-tab>
-                    <v-tab>
-                        Revives
-                    </v-tab>
-                    <v-tab>
-                        Ultimates
-                    </v-tab>
-                    <v-tab>
-                        Points
-                    </v-tab>
-                    <v-tab>
-                        Broadcast events
-                    </v-tab>
-                    <v-tabs-items>
-                        <v-tab-item>
-                            <v-card>
-                                <v-card-title>
-                                    <span class="headline mb-0">Round {{ round.item.round_number }} of Game {{ round.item.game.game_number }} ({{ round.item.game.map.name }})</span>
+        <v-col :style="{width: window.colWidth + 'px'}" height="100%">
+            <v-tabs :style="{width: window.colWidth + 'px'}" md-border-bottom md-dynamic-height v-if="round.item">
+                <v-tab>
+                    Round
+                </v-tab>
+                <v-tab>
+                    Switches
+                </v-tab>
+                <v-tab>
+                    Kill Feed
+                </v-tab>
+                <v-tab>
+                    Status Effects
+                </v-tab>
+                <v-tab>
+                    Ultimates
+                </v-tab>
+                <v-tab>
+                    Points
+                </v-tab>
+                <v-tab>
+                    Broadcast events
+                </v-tab>
+                <v-tabs-items>
+                    <v-tab-item>
+                        <v-card>
+                            <v-card-title>
+                                <span class="headline mb-0">Round {{ round.item.round_number }} of Game {{ round.item.game.game_number }} ({{ round.item.game.map.name }})</span>
 
-                                </v-card-title>
-                                <v-card-text>
+                            </v-card-title>
+                            <v-card-text>
+                                <div>
+                                    <p>{{round.item.stream_vod.title }}</p>
                                     <div>
-                                        <p>{{round.item.stream_vod.title }}</p>
-                                        <div>
-                                            <label>Begin
-                                            </label><span>
+                                        <label>Begin
+                                        </label><span>
                                             {{round.item.begin | secondsToMoment | moment('HH:mm:ss.S')}}
                                         </span>
-                                            <v-btn class="raised" v-on:click="updateBegin">Update from current timestamp
-                                            </v-btn>
-                                        </div>
-                                        <div>
-                                            <label>End
-                                            </label>
-                                            <span>
+                                        <v-btn class="raised" v-on:click="updateBegin">Update from current timestamp
+                                        </v-btn>
+                                    </div>
+                                    <div>
+                                        <label>End
+                                        </label>
+                                        <span>
                                                 {{ round.item.end |secondsToMoment | moment('HH:mm:ss.S')}}
                                             </span>
-                                            <v-btn class="raised" v-on:click="updateEnd">Update from current timestamp
-                                            </v-btn>
-                                        </div>
-
-                                        <v-select v-model="round.item.annotation_status"
-                                                  v-on:change="saveRound" :items="annotation_sources"
-                                                  item-text="name" item-value="id" label="Annotation status">
-                                        </v-select>
-                                        <v-select v-model="round.item.attacking_side"
-                                                  v-on:change="saveRound" :items="sides"
-                                                  item-text="name" item-value="id" label="Attacking side">
-
-                                        </v-select>
-                                        <v-btn class='raised primary' v-on:click="saveRound">Save</v-btn>
+                                        <v-btn class="raised" v-on:click="updateEnd">Update from current timestamp
+                                        </v-btn>
                                     </div>
 
+                                    <v-select v-model="round.item.annotation_status"
+                                              v-on:change="saveRound" :items="annotation_sources"
+                                              item-text="name" item-value="id" label="Annotation status">
+                                    </v-select>
+                                    <v-select v-model="round.item.attacking_side"
+                                              v-on:change="saveRound" :items="sides"
+                                              item-text="name" item-value="id" label="Attacking side">
 
-                                </v-card-text>
-                            </v-card>
-                        </v-tab-item>
-                        <v-tab-item>
-                            <v-card>
-                                <v-card-text>
-
-                                    <Switches></Switches>
-
-                                </v-card-text>
-                            </v-card>
-
-                        </v-tab-item>
-                        <v-tab-item>
-                            <v-card>
-                                <v-card-text>
-
-                                    <Kills></Kills>
-                                    <Deaths></Deaths>
-                                    <StatusEffects></StatusEffects>
-                                </v-card-text>
-                            </v-card>
-
-                        </v-tab-item>
-                        <v-tab-item>
-                            <v-card>
-                                <v-card-text>
+                                    </v-select>
+                                    <v-btn class='raised primary' v-on:click="saveRound">Save</v-btn>
+                                </div>
 
 
-                                    <KillNPCs></KillNPCs>
-                                    <NPCDeaths></NPCDeaths>
-                                    <UltDenials></UltDenials>
-                                </v-card-text>
-                            </v-card>
+                            </v-card-text>
+                        </v-card>
+                    </v-tab-item>
+                    <v-tab-item>
+                        <v-card>
+                            <v-card-text>
 
-                        </v-tab-item>
-                        <v-tab-item>
-                            <v-card>
-                                <v-card-text>
+                                <HeroPicks></HeroPicks>
 
-                                    <Revives></Revives>
+                            </v-card-text>
+                        </v-card>
 
-                                </v-card-text>
-                            </v-card>
+                    </v-tab-item>
+                    <v-tab-item>
+                        <v-card>
+                            <v-card-text>
 
-                        </v-tab-item>
-                        <v-tab-item>
-                            <v-card>
-                                <v-card-text>
+                                <KillFeedEvents></KillFeedEvents>
+                            </v-card-text>
+                        </v-card>
 
-                                    <UltGains></UltGains>
-                                    <UltUses></UltUses>
-                                    <UltEnds></UltEnds>
+                    </v-tab-item>
+                    <v-tab-item>
+                        <v-card>
+                            <v-card-text>
+                                <StatusEffects></StatusEffects>
 
-                                </v-card-text>
-                            </v-card>
+                            </v-card-text>
+                        </v-card>
 
-                        </v-tab-item>
-                        <v-tab-item>
-                            <v-card>
-                                <v-card-text>
+                    </v-tab-item>
+                    <v-tab-item>
+                        <v-card>
+                            <v-card-text>
 
-                                    <PointGains v-if="round.item.game.map.mode!=='Control'"></PointGains>
-                                    <PointFlips v-if="round.item.game.map.mode==='Control'"></PointFlips>
-                                    <Overtimes></Overtimes>
+                                <Ultimates></Ultimates>
 
-                                </v-card-text>
-                            </v-card>
+                            </v-card-text>
+                        </v-card>
 
-                        </v-tab-item>
-                        <v-tab-item>
-                            <v-card>
-                                <v-card-text>
+                    </v-tab-item>
+                    <v-tab-item>
+                        <v-card>
+                            <v-card-text>
 
-                                    <Pauses></Pauses>
-                                    <Replays></Replays>
-                                    <SmallerWindows></SmallerWindows>
-                                    <Zooms></Zooms>
+                                <PointGains v-if="round.item.game.map.mode!=='Control'"></PointGains>
+                                <PointFlips v-if="round.item.game.map.mode==='Control'"></PointFlips>
+                                <Overtimes></Overtimes>
 
-                                </v-card-text>
-                            </v-card>
+                            </v-card-text>
+                        </v-card>
 
-                        </v-tab-item>
-                    </v-tabs-items>
+                    </v-tab-item>
+                    <v-tab-item>
+                        <v-card>
+                            <v-card-text>
+
+                                <Pauses></Pauses>
+                                <Replays></Replays>
+                                <SmallerWindows></SmallerWindows>
+                                <Zooms></Zooms>
+
+                            </v-card-text>
+                        </v-card>
+
+                    </v-tab-item>
+                </v-tabs-items>
 
 
-                </v-tabs>
-        </v-flex>
+            </v-tabs>
+        </v-col>
     </v-layout>
 </template>
 
 <script>
     import Vod from '../../components/Vod';
-    import Switches from '../../components/RoundDetail/PointEvents/Switches';
-    import Kills from '../../components/RoundDetail/PointEvents/Kills';
-    import KillNPCs from '../../components/RoundDetail/PointEvents/KillNPCs';
-    import Deaths from '../../components/RoundDetail/PointEvents/Deaths';
-    import NPCDeaths from '../../components/RoundDetail/PointEvents/NPCDeaths';
-    import Revives from '../../components/RoundDetail/PointEvents/Revives';
-    import UltGains from '../../components/RoundDetail/PointEvents/UltGains';
-    import UltUses from '../../components/RoundDetail/PointEvents/UltUses';
-    import UltEnds from '../../components/RoundDetail/PointEvents/UltEnds';
-    import UltDenials from '../../components/RoundDetail/PointEvents/UltDenials';
+    import HeroPicks from '../../components/RoundDetail/PointEvents/HeroPicks';
+    import KillFeedEvents from '../../components/RoundDetail/PointEvents/KillFeedEvents';
+
+    import Ultimates from '../../components/RoundDetail/IntervalEvents/Ultimates';
+
     import StatusEffects from '../../components/RoundDetail/IntervalEvents/StatusEffects';
     import PointGains from '../../components/RoundDetail/PointEvents/PointGains';
     import PointFlips from '../../components/RoundDetail/PointEvents/PointFlips';
@@ -216,16 +191,9 @@
             VLayout,
             VFlex,
             Vod,
-            Switches,
-            Kills,
-            KillNPCs,
-            Deaths,
-            NPCDeaths,
-            Revives,
-            UltGains,
-            UltUses,
-            UltEnds,
-            UltDenials,
+            HeroPicks,
+            KillFeedEvents,
+            Ultimates,
             StatusEffects,
             PointGains,
             PointFlips,
@@ -238,6 +206,15 @@
             Zooms
         },
 
+        data() {
+            return {
+                window: {
+                    width: 0,
+                    height: 0,
+                    colWidth: 0
+                }
+            }
+        },
         computed: {
             ...mapState({
                 account: state => state.account,
@@ -258,11 +235,11 @@
             this.getStatusEffectChoices();
 
             this.getPlayerStates(this.$route.params.id);
-            this.getKillFeedEvents(this.$route.params.id);
+            this.getKillFeedItems(this.$route.params.id);
             this.getRoundStates(this.$route.params.id);
 
-            this.player_event_types = ['switches', 'kills', 'kill_npcs', 'deaths', 'npc_deaths', 'revives',
-                'ult_gains', 'ult_uses', 'ult_ends', 'ult_denials', 'status_effects'];
+            this.player_event_types = ['hero_picks', 'kill_feed_events',
+                'ultimates', 'status_effects'];
             this.round_event_types = ['overtimes', 'point_gains', 'point_flips'];
 
             this.broadcast_event_types = ['replays', 'pauses', 'smaller_windows', 'zooms'];
@@ -276,12 +253,17 @@
             this.broadcast_event_types.forEach(type => {
                 this.getRoundEvents({round: this.$route.params.id, type: type});
             });
+            window.addEventListener('resize', this.handleResize)
+            this.handleResize();
+        },
+        destroyed() {
+            window.removeEventListener('resize', this.handleResize)
         },
         methods: {
             ...mapActions('rounds', {
                 getOne: 'getOne',
                 getRoundEvents: 'getRoundEvents',
-                getKillFeedEvents: 'getKillFeedEvents',
+                getKillFeedItems: 'getKillFeedItems',
                 getPlayerStates: 'getPlayerStates',
                 getRoundStates: 'getRoundStates',
                 updateRound: 'updateRound',
@@ -300,22 +282,30 @@
             updateBegin() {
                 this.round.item.begin = this.timestamp;
 
-                this.updateRound({data:this.round.item, refresh:true});
+                this.updateRound({data: this.round.item, refresh: true});
             },
             updateEnd() {
                 this.round.item.end = this.timestamp;
 
-                this.updateRound({data:this.round.item, refresh:false});
+                this.updateRound({data: this.round.item, refresh: false});
 
             },
             saveRound() {
-                this.updateRound({data:this.round.item, refresh:false});
+                this.updateRound({data: this.round.item, refresh: false});
+            },
+            handleResize() {
+                this.window.width = window.innerWidth;
+                this.window.height = window.innerHeight;
+                this.window.colWidth = this.window.width - 1280 - 40;
+                if (this.window.colWidth < 400){
+                    this.window.colWidth = 600;
+                }
             }
         },
 
         watch: {
             round(newRound) {
-                if (newRound.item !== undefined){
+                if (newRound.item !== undefined) {
                     this.updateTimestamp(newRound.item.begin);
 
                 }
@@ -325,7 +315,7 @@
 </script>
 
 <style scoped>
-.vod-column {
-    width:1280px;
-}
+    .vod-column {
+        width: 1280px;
+    }
 </style>

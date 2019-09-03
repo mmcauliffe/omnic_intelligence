@@ -4,24 +4,24 @@
         <div class="team">
             <div v-for="status in left_player_statuses" class="left player">
                 <v-layout row>
-                <div v-if="status.ult_state==='has_ult'">
+                <div v-if="status.ult_state.state==='has_ult'">
                     <v-tooltip bottom>
-                        <v-icon slot="activator" @click="addUltUsePlayer(status.id)"
+                        <v-icon slot="activator" @click="addUltUsePlayer(status.ult_state.id)"
                                 :disabled="!can_edit">check_circle
                         </v-icon>
                         <span>Use ult</span></v-tooltip>
 
                 </div>
-                <div v-else-if="status.ult_state==='no_ult'">
+                <div v-else-if="status.ult_state.state==='no_ult'">
                     <v-tooltip bottom>
                         <v-icon slot="activator" @click="addUltGainPlayer(status.id)"
                                 :disabled="!can_edit">check_circle_outline
                         </v-icon>
                         <span>Gain ult</span></v-tooltip>
                 </div>
-                <div v-else-if="status.ult_state==='using_ult'">
+                <div v-else-if="status.ult_state.state==='using_ult'">
                     <v-tooltip bottom>
-                        <v-icon slot="activator" @click="addUltEndPlayer(status.id)"
+                        <v-icon slot="activator"
                                 :disabled="!can_edit">new_releases
                         </v-icon>
                         <span>Using ult</span></v-tooltip>
@@ -36,11 +36,13 @@
                 <span>{{ status.name}}</span><br>
                 <v-layout row>
                     <v-icon v-if="!status.alive">person_outline</v-icon>
-                    <v-icon v-else-if="status.frozen">ac_unit</v-icon>
-                    <v-icon v-else-if="status.asleep">notifications_paused</v-icon>
-                    <v-icon v-else-if="status.stunned">star_rate</v-icon>
+                    <v-icon v-else-if="status.status === 'frozen'">ac_unit</v-icon>
+                    <v-icon v-else-if="status.status === 'asleep'">notifications_paused</v-icon>
+                    <v-icon v-else-if="status.status === 'stunned'">star_rate</v-icon>
+                    <v-icon v-else-if="status.status === 'hacked'">wifi_lock</v-icon>
                     <v-icon v-else>person</v-icon>
                     <v-icon v-if="status.antiheal">block</v-icon>
+                    <v-icon v-if="status.immortal">android</v-icon>
                 </v-layout>
             </div>
         </div>
@@ -89,11 +91,13 @@
                 <span>{{ status.name}}</span><br>
                 <div>
                     <v-icon v-if="!status.alive">person_outline</v-icon>
-                    <v-icon v-else-if="status.alive && status.frozen">ac_unit</v-icon>
-                    <v-icon v-else-if="status.alive && status.asleep">notifications_paused</v-icon>
-                    <v-icon v-else-if="status.alive && status.stunned">star_rate</v-icon>
-                    <v-icon v-else-if="status.alive && !status.frozen">person</v-icon>
-                    <v-icon v-if="status.alive && status.antiheal">block</v-icon>
+                    <v-icon v-else-if="status.status === 'frozen'">ac_unit</v-icon>
+                    <v-icon v-else-if="status.status === 'asleep'">notifications_paused</v-icon>
+                    <v-icon v-else-if="status.status === 'stunned'">star_rate</v-icon>
+                    <v-icon v-else-if="status.status === 'hacked'">wifi_lock</v-icon>
+                    <v-icon v-else>person</v-icon>
+                    <v-icon v-if="status.antiheal">block</v-icon>
+                    <v-icon v-if="status.immortal">android</v-icon>
                 </div>
             </div>
         </div>
@@ -161,10 +165,9 @@
                         hero: this.heroAtTime(player.id, this.currentTime),
                         ult_state: this.ultStateAtTime(player.id, this.currentTime),
                         alive: this.aliveAtTime(player.id, this.currentTime),
-                        frozen: this.stateAtTime(player.id, this.currentTime, 'frozen'),
-                        stunned: this.stateAtTime(player.id, this.currentTime, 'stunned'),
-                        asleep: this.stateAtTime(player.id, this.currentTime, 'asleep'),
+                        status: this.stateAtTime(player.id, this.currentTime, 'status'),
                         antiheal: this.stateAtTime(player.id, this.currentTime, 'antiheal'),
+                        immortal: this.stateAtTime(player.id, this.currentTime, 'immortal'),
                     })
                 });
                 return statuses
@@ -178,10 +181,9 @@
                         hero: this.heroAtTime(player.id, this.currentTime),
                         ult_state: this.ultStateAtTime(player.id, this.currentTime),
                         alive: this.aliveAtTime(player.id, this.currentTime),
-                        frozen: this.stateAtTime(player.id, this.currentTime, 'frozen'),
-                        stunned: this.stateAtTime(player.id, this.currentTime, 'stunned'),
-                        asleep: this.stateAtTime(player.id, this.currentTime, 'asleep'),
+                        status: this.stateAtTime(player.id, this.currentTime, 'status'),
                         antiheal: this.stateAtTime(player.id, this.currentTime, 'antiheal'),
+                        immortal: this.stateAtTime(player.id, this.currentTime, 'immortal'),
                     })
                 });
                 return statuses
@@ -189,31 +191,20 @@
         },
         methods: {
             ...mapActions('rounds', {
-                addRoundEvent: 'addRoundEvent'
+                addRoundEvent: 'addRoundEvent',
+                addUltimateUse: 'addUltimateUse',
             }),
-            addUltUsePlayer(player_id) {
-                let newEvent = {};
-                newEvent.time_point = this.currentTime;
-                newEvent.round = this.$store.state.rounds.one.item.id;
-                newEvent.player = player_id;
-                this.addRoundEvent({type: 'ult_uses', event: newEvent});
+            addUltUsePlayer(ultimate_id) {
+                this.addUltimateUse({id: ultimate_id, time_point: this.currentTime});
 
             },
             addUltGainPlayer(player_id) {
 
                 let newEvent = {};
-                newEvent.time_point = this.currentTime;
+                newEvent.gained = this.currentTime;
                 newEvent.round = this.$store.state.rounds.one.item.id;
                 newEvent.player = player_id;
-                this.addRoundEvent({type: 'ult_gains', event: newEvent});
-            },
-            addUltEndPlayer(player_id) {
-
-                let newEvent = {};
-                newEvent.time_point = this.currentTime;
-                newEvent.round = this.$store.state.rounds.one.item.id;
-                newEvent.player = player_id;
-                this.addRoundEvent({type: 'ult_ends', event: newEvent});
+                this.addRoundEvent({type: 'ultimates', event: newEvent});
             },
             make_safe(name){
                 if (name !== undefined){

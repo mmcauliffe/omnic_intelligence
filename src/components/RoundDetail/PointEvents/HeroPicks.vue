@@ -14,7 +14,7 @@
 
             <v-btn class='primary raised' v-on:click="addEvent">Add switch</v-btn>
         </v-layout>
-        <v-data-table :headers="headers" :items="switches" v-if="switches" :rows-per-page-items="rowsPerPage">
+        <v-data-table :headers="headers" :items="hero_picks" v-if="hero_picks" :rows-per-page-items="rowsPerPage">
 
             <template slot="items" slot-scope="props">
                 <td class="clickable" v-on:click="seekTo(props.item.time_point)"
@@ -58,13 +58,13 @@
                 newEvent: {},
                 availableHeroes: [],
                 can_edit: true,
-                event_type: 'switches',
+                event_type: 'hero_picks',
                 rowsPerPage: [10]
             }
         },
         computed: {
             ...mapGetters('rounds', [
-                'switches',
+                'hero_picks',
             ]),
             headers(){
                 return  [

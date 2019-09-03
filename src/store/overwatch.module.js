@@ -122,11 +122,17 @@ const getters = {
     heroDamagingAbilities: (state, getters) => (hero_id) => {
         return getters.hero(hero_id).damaging_abilities
     },
+    heroRevivingAbilities: (state, getters) => (hero_id) => {
+        return getters.hero(hero_id).reviving_abilities
+    },
+    heroDenyingAbilities: (state, getters) => (hero_id) => {
+        return getters.hero(hero_id).denying_abilities
+    },
     heroDeniableAbilities: (state, getters) => (hero_id) => {
         return getters.hero(hero_id).deniable_abilities
     },
-    heroRevivingAbilities: (state, getters) => (hero_id) => {
-        return getters.hero(hero_id).reviving_abilities
+    heroNPCs: (state, getters) => (hero_id) => {
+        return getters.hero(hero_id).npcs
     },
     availableNPCs: (state, getters) => (hero_id_list) => {
         let hero, i, npcs=[], j;

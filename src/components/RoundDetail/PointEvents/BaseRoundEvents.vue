@@ -53,8 +53,9 @@
                 'sides',
                 'status_effect_choices',
                 'heroDamagingAbilities',
-                'heroDeniableAbilities',
+                'heroDenyingAbilities',
                 'heroRevivingAbilities',
+                'heroDeniableAbilities',
                 'availableNPCs'
             ]),
             currentTime() {
@@ -135,13 +136,13 @@
             generate_revivable_players(player_id) {
                 console.log(this.currentTime, player_id)
                 if (!this.currentTime || !player_id) {
-                    this.revivablePlayers = []
+                    this.killablePlayers = []
                 }
                 if (this.playerOnLeftTeam(player_id)) {
-                    this.revivablePlayers = this.leftPlayers.filter(x=> x.id !== player_id);
+                    this.killablePlayers = this.leftPlayers.filter(x=> x.id !== player_id);
                 }
                 else {
-                    this.revivablePlayers = this.rightPlayers.filter(x=> x.id !== player_id);
+                    this.killablePlayers = this.rightPlayers.filter(x=> x.id !== player_id);
                 }
             },
             generate_killable_npcs(player_id) {
@@ -150,12 +151,8 @@
                 if (!this.currentTime || !player_id) {
                     this.killableNPCs = []
                 }
-                if (this.playerOnLeftTeam(player_id)) {
-                    hero_ids = this.rightPlayers.map(x => {return this.heroAtTime(x.id, this.currentTime).id});
-                }
-                else {
-                    hero_ids = this.leftPlayers.map(x => {return this.heroAtTime(x.id, this.currentTime).id});
-                }
+                hero_ids = [this.heroAtTime(player_id, this.currentTime).id]
+
                 this.killableNPCs = this.availableNPCs(hero_ids)
                 console.log('killable npcs', this.killableNPCs)
             },

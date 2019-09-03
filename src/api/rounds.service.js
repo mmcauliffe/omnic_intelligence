@@ -10,10 +10,12 @@ export const roundService = {
     deleteRound,
     getPlayers,
     getRoundStates,
-    getKillFeedEvents,
+    getKillFeedItems,
     getPlayerStates,
     getRoundEvents,
     addRoundEvent,
+    addUltimateUse,
+    clearUltimateUse,
     updateRoundEvent,
     deleteRoundEvent,
 
@@ -79,12 +81,12 @@ function getRoundStates(id) {
 }
 
 
-function getKillFeedEvents(id) {
+function getKillFeedItems(id) {
     const requestOptions = {
         headers: authHeader()
     };
 
-    return axios.get(`${config.apiUrl}/rounds/${id}/kill_feed_events/`, requestOptions);
+    return axios.get(`${config.apiUrl}/rounds/${id}/kill_feed_items/`, requestOptions);
 }
 
 
@@ -112,6 +114,24 @@ function addRoundEvent(type, event) {
     };
 
     return axios.post(`${config.apiUrl}/${type}/`, event, requestOptions);
+}
+
+
+function addUltimateUse(ultimate_id, time_point) {
+    const requestOptions = {
+        headers: { ...authHeader(), 'Content-Type': 'application/json' },
+    };
+
+    return axios.put(`${config.apiUrl}/ultimates/${ultimate_id}/add_use/`, {used: time_point}, requestOptions);
+}
+
+
+function clearUltimateUse(ultimate_id) {
+    const requestOptions = {
+        headers: { ...authHeader(), 'Content-Type': 'application/json' },
+    };
+
+    return axios.put(`${config.apiUrl}/ultimates/${ultimate_id}/clear_use/`, {}, requestOptions);
 }
 
 

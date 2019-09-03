@@ -63,22 +63,23 @@ api_router.register(r'train_rounds_plus', api.TrainRoundPlusViewSet, base_name='
 api_router.register(r'annotate_rounds', api.AnnotateRoundViewSet, base_name='annotate_rounds')
 api_router.register(r'round_status', api.RoundStatusViewSet, base_name='round_status')
 api_router.register(r'vod_status', api.VodStatusViewSet, base_name='vod_status')
-api_router.register(r'switches', api.SwitchViewSet, base_name='switches')
-api_router.register(r'deaths', api.DeathViewSet, base_name='deaths')
-api_router.register(r'ult_uses', api.UltUseViewSet, base_name='ult_uses')
-api_router.register(r'ult_ends', api.UltEndViewSet, base_name='ult_ends')
-api_router.register(r'ult_denials', api.UltDenialViewSet, base_name='ult_denials')
-api_router.register(r'ult_gains', api.UltGainViewSet, base_name='ult_gains')
+
+api_router.register(r'hero_picks', api.HeroPickViewSet, base_name='hero_picks')
+
+api_router.register(r'ultimates', api.UltimateViewSet, base_name='ultimates')
 api_router.register(r'status_effects', api.StatusEffectViewSet, base_name='status_effects')
-api_router.register(r'revives', api.ReviveViewSet, base_name='revives')
+api_router.register(r'kill_feed_events', api.KillFeedEventViewSet, base_name='kill_feed_events')
+
+# Points
+
 api_router.register(r'point_gains', api.PointGainViewSet, base_name='point_gains')
 api_router.register(r'point_flips', api.PointFlipViewSet, base_name='point_flips')
-api_router.register(r'pauses', api.PauseViewSet, base_name='pauses')
-api_router.register(r'npc_deaths', api.NPCDeathViewSet, base_name='npc_deaths')
-api_router.register(r'kills', api.KillViewSet, base_name='kill')
-api_router.register(r'kill_npcs', api.KillNPCViewSet, base_name='kill_npcs')
-api_router.register(r'replays', api.ReplayViewSet, base_name='replays')
 api_router.register(r'overtimes', api.OvertimeViewSet, base_name='overtimes')
+
+# Broadcast events
+
+api_router.register(r'pauses', api.PauseViewSet, base_name='pauses')
+api_router.register(r'replays', api.ReplayViewSet, base_name='replays')
 api_router.register(r'smaller_windows', api.SmallerWindowViewSet, base_name='smaller_windows')
 api_router.register(r'zooms', api.ZoomViewSet, base_name='zooms')
 

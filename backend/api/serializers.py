@@ -20,27 +20,43 @@ class HeroSerializer(serializers.ModelSerializer):
 class HeroAbilitySerializer(serializers.ModelSerializer):
     damaging_abilities = serializers.SerializerMethodField()
     reviving_abilities = serializers.SerializerMethodField()
+    denying_abilities = serializers.SerializerMethodField()
     deniable_abilities = serializers.SerializerMethodField()
+    npcs = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Hero
-        fields = ('id', 'name', 'hero_type', 'ability_denier',
-                  'damaging_abilities', 'reviving_abilities', 'deniable_abilities')
+        fields = ('id', 'name', 'type', 'ability_denier',
+                  'damaging_abilities', 'reviving_abilities', 'denying_abilities', 'deniable_abilities',
+                  'npcs'
+                  )
 
     def get_damaging_abilities(self, obj):
-        return AbilitySerializer(obj.abilities.filter(damaging_ability=True).all(), many=True).data
+        return AbilityDisplaySerializer(obj.abilities.filter(type=models.Ability.DAMAGING_TYPE).all(), many=True).data
 
     def get_reviving_abilities(self, obj):
-        return AbilitySerializer(obj.abilities.filter(revive_ability=True).all(), many=True).data
+        return AbilityDisplaySerializer(obj.abilities.filter(type=models.Ability.REVIVING_TYPE).all(), many=True).data
+
+    def get_denying_abilities(self, obj):
+        return AbilityDisplaySerializer(obj.abilities.filter(type=models.Ability.DENYING_TYPE).all(), many=True).data
 
     def get_deniable_abilities(self, obj):
-        return AbilitySerializer(obj.abilities.filter(deniable=True).all(), many=True).data
+        return AbilityDisplaySerializer(obj.abilities.filter(deniable=True).all(), many=True).data
+
+    def get_npcs(self, obj):
+        return NPCHerolessSerializer(obj.npc_set.all(), many=True).data
 
 
 class AbilitySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Ability
         fields = '__all__'
+
+
+class AbilityDisplaySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Ability
+        fields = ('id', 'name', 'type', 'headshot_capable', 'ultimate', 'deniable')
 
 
 class StatusSerializer(serializers.ModelSerializer):
@@ -79,6 +95,12 @@ class NPCSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.NPC
         fields = '__all__'
+
+
+class NPCHerolessSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.NPC
+        fields = ('id', 'name')
 
 
 class PlayerSerializer(serializers.ModelSerializer):
@@ -382,18 +404,18 @@ class RoundStatusSerializer(serializers.ModelSerializer):
         return obj.end - obj.begin
 
 
-class SwitchSerializer(serializers.ModelSerializer):
+class HeroPickSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.Switch
+        model = models.HeroPick
         fields = '__all__'
 
 
-class SwitchDisplaySerializer(serializers.ModelSerializer):
+class HeroPickDisplaySerializer(serializers.ModelSerializer):
     player = PlayerSerializer()
     new_hero = HeroSerializer()
 
     class Meta:
-        model = models.Switch
+        model = models.HeroPick
         fields = '__all__'
 
 
@@ -481,13 +503,13 @@ class ZoomSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class KillSerializer(serializers.ModelSerializer):
+class KillFeedEventSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.Kill
-        fields = ('id', 'time_point', 'killing_player', 'killed_player', 'ability',)
+        model = models.KillFeedEvent
+        fields = ('id', 'time_point', 'killing_player','ability', 'dying_player', )
 
 
-class KillKillFeedSerializer(serializers.ModelSerializer):
+class KillFeedSerializer(serializers.ModelSerializer):
     dying_entity = serializers.SerializerMethodField()
     dying_color = serializers.SerializerMethodField()
     killing_color = serializers.SerializerMethodField()
@@ -496,7 +518,7 @@ class KillKillFeedSerializer(serializers.ModelSerializer):
     assists = serializers.SerializerMethodField()
 
     class Meta:
-        model = models.Kill
+        model = models.KillFeedEvent
         fields = (
             'time_point', 'killing_hero', 'killing_color', 'assists', 'ability', 'headshot', 'dying_entity',
             'dying_color')
@@ -523,29 +545,37 @@ class KillKillFeedSerializer(serializers.ModelSerializer):
         return [x.get_hero_at_timepoint(obj.round, obj.time_point).name for x in obj.assisting_players.all()]
 
 
-class KillDisplaySerializer(serializers.ModelSerializer):
+class KillFeedEventDisplaySerializer(serializers.ModelSerializer):
     killing_player = serializers.StringRelatedField()
     killed_player = serializers.StringRelatedField()
     ability = serializers.StringRelatedField()
 
     class Meta:
-        model = models.Kill
+        model = models.KillFeedEvent
         fields = '__all__'
 
 
-class KillEditSerializer(serializers.ModelSerializer):
-    killing_player = serializers.StringRelatedField()
-    killed_player = serializers.StringRelatedField()
-    ability = AbilitySerializer()
-    possible_abilities = AbilitySerializer(many=True)
-    possible_assists = PlayerSerializer(many=True)
-
+class KillFeedEventEditSerializer(serializers.ModelSerializer):
+    #killing_player = PlayerSerializer()
+    dying_player = PlayerSerializer()
+    #dying_player = serializers.StringRelatedField()
+    denied_ult = serializers.StringRelatedField()
+    ability = AbilityDisplaySerializer()
+    #possible_abilities = AbilitySerializer(many=True)
+    #possible_assists = PlayerSerializer(many=True)
+    #possible_killing_players = PlayerSerializer(many=True)
+    #possible_dying_npcs = NPCSerializer(many=True)
     # assisting_players = PlayerSerializer(many=True)
 
     class Meta:
-        model = models.Kill
-        fields = ('id', 'time_point', 'killing_player', 'killed_player', 'ability', 'headshot', 'possible_abilities',
-                  'possible_assists', 'assisting_players')
+        model = models.KillFeedEvent
+        fields = ('id', 'time_point', 'killing_player', 'dying_player', 'ability', 'headshot',
+                  #'possible_abilities',
+                  #'possible_assists',
+                  'assisting_players', 'dying_npc', 'denied_ult',
+                  #'possible_killing_players',
+                  #'possible_dying_npcs'
+                  )
 
 
 class ReviveSerializer(serializers.ModelSerializer):
@@ -644,6 +674,20 @@ class UltDenialSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class UltimateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Ultimate
+        fields = '__all__'
+
+
+class UltimateDisplaySerializer(serializers.ModelSerializer):
+    player = PlayerSerializer()
+
+    class Meta:
+        model = models.Ultimate
+        fields = '__all__'
+
+
 class UltGainSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.UltGain
@@ -712,7 +756,7 @@ class KillNPCEditSerializer(serializers.ModelSerializer):
     possible_assists = PlayerSerializer(many=True)
 
     class Meta:
-        model = models.Kill
+        model = models.KillNPC
         fields = (
             'id', 'time_point', 'killing_player', 'killed_npc', 'ability', 'possible_abilities', 'possible_assists',
             'assisting_players')
@@ -738,7 +782,7 @@ class KillNPCKillFeedSerializer(serializers.ModelSerializer):
     headshot = serializers.SerializerMethodField()
 
     class Meta:
-        model = models.Kill
+        model = models.KillNPC
         fields = (
             'time_point', 'killing_hero', 'killing_color', 'assists', 'ability', 'headshot', 'dying_entity',
             'dying_color')
