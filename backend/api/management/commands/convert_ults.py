@@ -10,7 +10,7 @@ def get_old_ult_states(self, round_object):
 
     ultuses = self.ultuse_set.filter(round=round_object).all()
     ultends = self.ultend_set.filter(round=round_object).all()
-    switches = self.switch_set.filter(round=round_object).all()
+    switches = self.heropick_set.filter(round=round_object).all()
     starts = sorted([round(x.time_point, 1) for x in ultgains])
     switch_time_points = [round(x.time_point, 1) for x in switches]
     ult_end_time_points = [round(x.time_point, 1) for x in ultends]
