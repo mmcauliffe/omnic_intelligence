@@ -1846,7 +1846,7 @@ class ReviveViewSet(viewsets.ModelViewSet):
 
 class UltimateViewSet(viewsets.ModelViewSet):
     model = models.Ultimate
-    queryset = models.Ultimate.objects.all()
+    queryset = models.Ultimate.objects.prefetch_related('round').all()
     serializer_class = serializers.UltimateSerializer
 
     def create(self, request, *args, **kwargs):
@@ -1863,6 +1863,8 @@ class UltimateViewSet(viewsets.ModelViewSet):
             if use_default:
                 hero = instance.player.get_hero_at_timepoint(instance.round, instance.used)
                 instance.ended = hero.ult_duration + instance.used
+                if instance.ended > instance.round.end:
+                    instance.ended = instance.round.end
         else:
             instance.used = request.data.get('used', None)
 
