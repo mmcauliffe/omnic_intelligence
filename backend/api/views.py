@@ -110,15 +110,16 @@ class TrainInfoViewSet(viewsets.ViewSet):
             labels.append(h.name.lower() + '_assist')
             for a in h.abilities.all():
                 name = a.name.lower()
-                if a.damaging_ability or a.revive_ability or name == 'defense matrix':
-                    if name not in labels:
-                        labels.append(name)
-                    headshot_name = name + ' headshot'
-                    if a.headshot_capable and headshot_name not in labels:
-                        labels.append(headshot_name)
+                if name not in labels:
+                    labels.append(name)
+                headshot_name = name + ' headshot'
+                if a.headshot_capable and headshot_name not in labels:
+                    labels.append(headshot_name)
             for n in h.npc_set.all():
                 npcs.append(n.name.lower())
                 labels.append(n.name.lower() + '_npc')
+            for a in h.abilities.filter(deniable=True).all():
+                labels.append(a.name.lower() + '_npc')
         heroes = [x.name.lower() for x in heroes]
         while len(heroes) < max_heroes:
             heroes.append('')
@@ -228,13 +229,13 @@ class AbilityViewSet(viewsets.ModelViewSet):
 
     @action(methods=['get'], detail=False)
     def damaging_abilities(self, request):
-        abilities = models.Ability.objects.filter(damaging_ability=True).all()
+        abilities = models.Ability.objects.filter(type=models.Ability.DAMAGING_TYPE).all()
         serializer = serializers.AbilitySerializer(abilities, many=True)
         return Response(serializer.data)
 
     @action(methods=['get'], detail=False)
     def reviving_abilities(self, request):
-        abilities = models.Ability.objects.filter(revive_ability=True).all()
+        abilities = models.Ability.objects.filter(type=models.Ability.REVIVING_TYPE).all()
         serializer = serializers.AbilitySerializer(abilities, many=True)
         return Response(serializer.data)
 
