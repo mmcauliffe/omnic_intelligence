@@ -52,13 +52,13 @@
                 <td>
 
                     <v-select v-if="props.item.ability && props.item.ability.type==='D'
-                    && props.item.killing_player && playerOnLeftTeam(props.item.dying_player)"
+                    && props.item.killing_player && playerOnLeftTeam(props.item.dying_player.id)"
                               v-model="props.item.assisting_players" multiple chips deletable-chips
                               item-text="name" item-value="id" :items="rightPlayers.filter(x=>{return x.id !== props.item.killing_player})"
                      v-on:change="updateEvent(props.item)">
                     </v-select>
                     <v-select v-else-if="props.item.ability && props.item.ability.type==='D'
-                    && props.item.killing_player && !playerOnLeftTeam(props.item.dying_player)"
+                    && props.item.killing_player && !playerOnLeftTeam(props.item.dying_player.id)"
                               v-model="props.item.assisting_players" multiple chips deletable-chips
                               item-text="name" item-value="id" :items="leftPlayers.filter(x=>{return x.id !== props.item.killing_player})"
                      v-on:change="updateEvent(props.item)">
