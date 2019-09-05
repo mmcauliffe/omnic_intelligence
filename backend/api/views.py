@@ -1728,7 +1728,9 @@ class KillFeedEventViewSet(viewsets.ModelViewSet):
         m = models.KillFeedEvent(round_id=request.data['round'], time_point=request.data['time_point'],
                                  dying_player_id=request.data['dying_player'])
         if event_type in ['kill', 'death'] and request.data.get('dying_npc', None):
-            m.dying_npc_id = request.data['dying_npc']
+            npc = models.NPC.objects.get(pk=request.data['dying_npc'])
+            if m.dying_player.get_hero_at_timepoint(m.round, m.time_point) == npc.spawning_hero:
+                m.dying_npc = npc
         if event_type in ['kill', 'revive', 'deny']:
             m.killing_player_id = request.data['killing_player']
             m.ability_id = request.data['ability']

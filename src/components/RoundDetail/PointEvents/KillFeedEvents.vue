@@ -193,10 +193,7 @@
                 this.newEvent.event_type = this.eventType;
                 this.newEvent.round = this.$store.state.rounds.one.item.id;
                 console.log(this.newEvent)
-                this.addRoundEvent({type: this.event_type, event: this.newEvent}).then(
-                    function (res) {
-                        this.resetEvent();
-                    });
+                this.addRoundEvent({type: this.event_type, event: this.newEvent}).then(this.resetEvent);
             },
             possible_killers(dying_player, ability){
                 if (ability && ability.type === 'R'){
