@@ -525,7 +525,7 @@ class Round(models.Model):
     def get_heroes_used(self):
         from .utils import transform_oi_heroes
         used_heroes = {}
-        q = self.switch_set.order_by('player_id', 'time_point').all()
+        q = self.heropick_set.order_by('player_id', 'time_point').all()
         cur_player = None
         cur_time = 0
         cur_hero = None

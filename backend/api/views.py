@@ -133,7 +133,8 @@ class TrainInfoViewSet(viewsets.ViewSet):
         while len(spectator_modes) < max_spectator_modes:
             spectator_modes.append('')
         extra_statuses = models.Status.objects.filter(independent=True).order_by('id').all()
-        status_values = [x.name.lower() for x in models.Status.objects.filter(independent=False).order_by('id').all()]
+        status_values = ['normal'] + [x.name.lower() for x in
+                                      models.Status.objects.filter(independent=False).order_by('id').all()]
 
         extra_statuses = [x.name.lower() for x in extra_statuses]
         while len(status_values) < max_statuses:
@@ -1119,11 +1120,28 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
         right = [x.player for x in instance.game.right_team.playerparticipation_set.all()]
         print(right)
         if not request.data.get('ignore_switches', False):
-            instance.switch_set.all().delete()
+            instance.heropick_set.all().delete()
 
         instance.pointgain_set.all().delete()
         instance.pointflip_set.all().delete()
         instance.overtime_set.all().delete()
+        instance.replay_set.all().delete()
+        instance.pause_set.all().delete()
+        instance.smallerwindow_set.all().delete()
+        replays = []
+        pauses = []
+        smaller_windows = []
+        for r in request.data['replays']:
+            replays.append(models.Replay(round=instance, start_time=r['begin'], end_time=r['end']))
+        for r in request.data['pauses']:
+            pauses.append(models.Pause(round=instance, start_time=r['begin'], end_time=r['end']))
+        for r in request.data['smaller_windows']:
+            smaller_windows.append(models.SmallerWindow(round=instance, start_time=r['begin'], end_time=r['end']))
+        models.Replay.objects.bulk_create(replays)
+        models.Pause.objects.bulk_create(pauses)
+        models.SmallerWindow.objects.bulk_create(smaller_windows)
+        sequences = instance.sequences
+
         point_gains = []
         point_flips = []
         overtimes = []
@@ -1145,20 +1163,12 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
         instance.ultgain_set.all().delete()
         instance.ultuse_set.all().delete()
         instance.ultend_set.all().delete()
-        instance.replay_set.all().delete()
         instance.statuseffect_set.all().delete()
-        switches = []
-        ult_gains = []
-        ult_uses = []
-        ult_ends = []
+        hero_picks = []
+        ultimates = []
         status_effects = []
 
         status_models = {x.name.lower(): x for x in models.Status.objects.all()}
-        replays = []
-        for r in request.data['replays']:
-            replays.append(models.Replay(round=instance, start_time=r['begin'], end_time=r['end']))
-        models.Replay.objects.bulk_create(replays)
-        sequences = instance.sequences
         for k, v in request.data['player'].items():
             side, num = k.split('_')
             num = int(num)
@@ -1174,50 +1184,31 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                     else:
                         continue
                     hero = models.Hero.objects.get(name__iexact=s[1])
-                    switches.append(models.Switch(round=instance, player=p, new_hero=hero, time_point=s[0]))
+                    hero_picks.append(models.HeroPick(round=instance, player=p, new_hero=hero, time_point=s[0]))
             for s, m in status_models.items():
                 for st in v[s]:
                     status_effects.append(models.StatusEffect(player=p,round=instance, start_time=st['begin'],
                                                               end_time=st['end'], status=m))
-            for ug in v['ult_gains']:
+            for ult in v['ultimates']:
                 for seq in sequences:
-                    if seq[0] <= ug <= seq[1]:
+                    if seq[0] <= ult['gained'] <= seq[1]:
                         break
                 else:
                     continue
-                ult_gains.append(models.UltGain(player=p, round=instance, time_point=ug))
-            for uu in v['ult_uses']:
-                for seq in sequences:
-                    if seq[0] <= uu <= seq[1]:
-                        break
-                else:
-                    continue
-                ult_uses.append(models.UltUse(player=p, round=instance, time_point=uu))
-            for ue in v['ult_ends']:
-                for seq in sequences:
-                    if seq[0] <= ue <= seq[1]:
-                        break
-                else:
-                    continue
-                ult_ends.append(models.UltUse(player=p, round=instance, time_point=ue))
+                m = models.Ultimate(player=p, round=instance, gained=ult['gained'])
+                if 'used' in ult:
+                    m.used = ult['used']
+                    m.ended = ult['ended']
+                ultimates.append(m)
+
         if not request.data.get('ignore_switches', False):
-            models.Switch.objects.bulk_create(switches)
-        models.UltGain.objects.bulk_create(ult_gains)
-        models.UltUse.objects.bulk_create(ult_uses)
-        models.UltEnd.objects.bulk_create(ult_ends)
+            models.HeroPick.objects.bulk_create(hero_picks)
+        models.Ultimate.objects.bulk_create(ultimates)
         models.StatusEffect.objects.bulk_create(status_effects)
 
-        instance.kill_set.all().delete()
-        instance.killnpc_set.all().delete()
-        instance.death_set.all().delete()
-        instance.npcdeath_set.all().delete()
-        instance.revive_set.all().delete()
+        instance.killfeedevent_set.all().delete()
 
-        revives = []
-        deaths = []
-        npcdeaths = []
-        kills = []
-        killnpcs = []
+        kill_feed_events = []
         for event in request.data['kill_feed']:
             print(event)
             time_point = round(event['time_point'], 1)
@@ -1226,7 +1217,6 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                     break
             else:
                 continue
-
             event = event['event']
             if event['ability'] == 'resurrect':
                 if event['first_color'] == left_color:
@@ -1244,8 +1234,8 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                     errors.append((instance.id, time_point, 'revive', event['second_hero'], side))
                     continue
                 ability = models.Ability.objects.get(name='Resurrect')
-                revives.append(
-                    models.Revive(reviving_player=reviving_player, revived_player=revived_player, round=instance,
+                kill_feed_events.append(
+                    models.KillFeedEvent(killing_player=reviving_player, dying_player=revived_player, round=instance,
                                   time_point=time_point, ability=ability))
             elif event['first_hero'] == 'n/a':
                 # death
@@ -1255,8 +1245,9 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                     side = 'right'
                 try:
                     npc = models.NPC.objects.get(name__iexact=event['second_hero'])
-                    npcdeaths.append(
-                        models.NPCDeath(round=instance, time_point=time_point, npc=npc, side=side[0].upper()))
+                    dying_player = instance.get_player_of_hero(npc.spawning_hero.name, time_point, side)
+                    kill_feed_events.append(
+                        models.KillFeedEvent(round=instance, time_point=time_point, dying_player=dying_player, dying_npc=npc))
                 except models.NPC.DoesNotExist:
                     # Hero death
                     dying_player = instance.get_player_of_hero(event['second_hero'], time_point, side)
@@ -1264,7 +1255,7 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                     if dying_player is None:
                         errors.append((instance.id, time_point, 'death', event['second_hero'], side))
                         continue
-                    deaths.append(models.Death(round=instance, time_point=time_point, player=dying_player))
+                    kill_feed_events.append(models.KillFeedEvent(round=instance, time_point=time_point, dying_player=dying_player))
             else:
                 # kills
                 if event['second_color'] == left_color:
@@ -1288,51 +1279,64 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                     assists.append(hero.name)
                 print(assists)
                 try:
+                    # NPC kill
                     npc = models.NPC.objects.get(name__iexact=event['second_hero'])
+                    if event['second_color'] == left_color:
+                        side = 'left'
+                    else:
+                        side = 'right'
+                    dying_player = instance.get_player_of_hero(npc.spawning_hero.name, time_point, side)
                     if ability is not None:
                         if not assists:
-                            killnpcs.append(
-                                models.KillNPC(round=instance, time_point=time_point, killing_player=killing_player,
-                                               killed_npc=npc, ability=ability))
-                            npcdeaths.append(models.NPCDeath(round=instance, time_point=time_point, npc=npc,
-                                                             side=killed_side[0].upper()))
+                            kill_feed_events.append(
+                                models.KillFeedEvent(round=instance, time_point=time_point, killing_player=killing_player,
+                                               dying_npc=npc, dying_player=dying_player, ability=ability))
                         else:
-                            m = models.KillNPC.objects.create(round=instance, time_point=time_point, killing_player=killing_player,
-                                           killed_npc=npc, ability=ability)
+                            m = models.KillFeedEvent.objects.create(round=instance, time_point=time_point, killing_player=killing_player,
+                                           dying_npc=npc, dying_player=dying_player, ability=ability)
                             for a in assists:
                                 assisting_player = instance.get_player_of_hero(a, time_point, killing_side)
                                 if assisting_player is None:
                                     continue
                                 m.assisting_players.add(assisting_player)
                 except models.NPC.DoesNotExist:
-                    killed_player = instance.get_player_of_hero(event['second_hero'], time_point, killed_side)
-                    print('killed_player', killed_player)
-                    if killed_player is None:
-                        errors.append((instance.id, time_point, 'kill', event['second_hero'], killed_side))
-                        continue
-                    if ability is not None:
-                        if not assists:
-                            kills.append(models.Kill(round=instance, time_point=time_point, killing_player=killing_player,
-                                                     killed_player=killed_player, ability=ability, headshot=headshot))
-                            deaths.append(models.Death(round=instance, time_point=time_point, player=killed_player))
+                    try:
+                        # Ult denial
+                        denied_ult = models.Ability.objects.get(name__iexact=event['second_hero'], deniable=True)
+                        if event['second_color'] == left_color:
+                            side = 'left'
                         else:
-                            try:
-                                m = models.Kill.objects.create(round=instance, time_point=time_point, killing_player=killing_player,
-                                            killed_player=killed_player, ability=ability, headshot=headshot)
-                                print(m)
-                                for a in assists:
-                                    assisting_player = instance.get_player_of_hero(a, time_point, killing_side)
-                                    print('assisting_player', assisting_player)
-                                    if assisting_player is None:
-                                        continue
-                                    m.assisting_players.add(assisting_player)
-                            except django.db.utils.IntegrityError:
-                                pass
-        models.Revive.objects.bulk_create(revives)
-        models.Death.objects.bulk_create(deaths)
-        models.NPCDeath.objects.bulk_create(npcdeaths)
-        models.KillNPC.objects.bulk_create(killnpcs)
-        models.Kill.objects.bulk_create(kills)
+                            side = 'right'
+                        dying_player = instance.get_player_of_hero(denied_ult.heroes.first(), time_point, side)
+                        if ability is not None:
+                            kill_feed_events.append(
+                                models.KillFeedEvent(round=instance, time_point=time_point, killing_player=killing_player,
+                                               denied_ult=denied_ult, dying_player=dying_player, ability=ability))
+                    except models.Ability.DoesNotExist:
+                        # Kill
+                        dying_player = instance.get_player_of_hero(event['second_hero'], time_point, killed_side)
+                        print('killed_player', dying_player)
+                        if dying_player is None:
+                            errors.append((instance.id, time_point, 'kill', event['second_hero'], killed_side))
+                            continue
+                        if ability is not None:
+                            if not assists:
+                                kill_feed_events.append(models.KillFeedEvent(round=instance, time_point=time_point, killing_player=killing_player,
+                                                         dying_player=dying_player, ability=ability, headshot=headshot))
+                            else:
+                                try:
+                                    m = models.KillFeedEvent.objects.create(round=instance, time_point=time_point, killing_player=killing_player,
+                                                                   dying_player=dying_player, ability=ability, headshot=headshot)
+                                    print(m)
+                                    for a in assists:
+                                        assisting_player = instance.get_player_of_hero(a, time_point, killing_side)
+                                        print('assisting_player', assisting_player)
+                                        if assisting_player is None:
+                                            continue
+                                        m.assisting_players.add(assisting_player)
+                                except django.db.utils.IntegrityError:
+                                    pass
+        models.KillFeedEvent.objects.bulk_create(kill_feed_events)
         with open(error_log_path, 'a') as f:
             for e in errors:
                 f.write('{}\n'.format('\t'.join(map(str, e))))
