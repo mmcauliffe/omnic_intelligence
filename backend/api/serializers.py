@@ -419,60 +419,6 @@ class HeroPickDisplaySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class DeathSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Death
-        fields = '__all__'
-
-
-class DeathDisplaySerializer(serializers.ModelSerializer):
-    player = serializers.StringRelatedField()
-
-    class Meta:
-        model = models.Death
-        fields = '__all__'
-
-
-class DeathKillFeedSerializer(serializers.ModelSerializer):
-    dying_entity = serializers.SerializerMethodField()
-    killing_hero = serializers.SerializerMethodField()
-    killing_color = serializers.SerializerMethodField()
-    assists = serializers.SerializerMethodField()
-    ability = serializers.SerializerMethodField()
-    headshot = serializers.SerializerMethodField()
-    dying_color = serializers.SerializerMethodField()
-
-    class Meta:
-        model = models.Death
-        fields = (
-            'time_point', 'killing_hero', 'killing_color', 'assists', 'ability', 'headshot', 'dying_entity',
-            'dying_color')
-
-    def get_dying_entity(self, obj):
-        return obj.player.get_hero_at_timepoint(obj.round, obj.time_point).name
-
-    def get_dying_color(self, obj):
-        if obj.round.game.left_team.players.filter(pk=obj.player.pk).count():
-            return obj.round.game.left_team.get_color_display()
-        else:
-            return obj.round.game.right_team.get_color_display()
-
-    def get_killing_hero(self, obj):
-        return 'N/A'
-
-    def get_killing_color(self, obj):
-        return 'N/A'
-
-    def get_assists(self, obj):
-        return 'N/A'
-
-    def get_ability(self, obj):
-        return 'N/A'
-
-    def get_headshot(self, obj):
-        return 'N/A'
-
-
 class PauseSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Pause
@@ -578,62 +524,6 @@ class KillFeedEventEditSerializer(serializers.ModelSerializer):
                   )
 
 
-class ReviveSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Revive
-        fields = '__all__'
-
-
-class ReviveDisplaySerializer(serializers.ModelSerializer):
-    reviving_player = serializers.StringRelatedField()
-    revived_player = serializers.StringRelatedField()
-    ability = serializers.StringRelatedField()
-
-    class Meta:
-        model = models.Revive
-        fields = '__all__'
-
-
-class ReviveKillFeedSerializer(serializers.ModelSerializer):
-    dying_entity = serializers.SerializerMethodField()
-    dying_color = serializers.SerializerMethodField()
-    killing_color = serializers.SerializerMethodField()
-    killing_hero = serializers.SerializerMethodField()
-    ability = serializers.StringRelatedField()
-    headshot = serializers.SerializerMethodField()
-    assists = serializers.SerializerMethodField()
-
-    class Meta:
-        model = models.Revive
-        fields = (
-            'time_point', 'killing_hero', 'killing_color', 'assists', 'ability', 'headshot', 'dying_entity',
-            'dying_color')
-
-    def get_dying_entity(self, obj):
-        return obj.revived_player.get_hero_at_timepoint(obj.round, obj.time_point).name
-
-    def get_dying_color(self, obj):
-        if obj.round.game.left_team.players.filter(pk=obj.revived_player.pk).count():
-            return obj.round.game.left_team.get_color_display()
-        else:
-            return obj.round.game.right_team.get_color_display()
-
-    def get_killing_hero(self, obj):
-        return obj.reviving_player.get_hero_at_timepoint(obj.round, obj.time_point).name
-
-    def get_killing_color(self, obj):
-        if obj.round.game.left_team.players.filter(pk=obj.reviving_player.pk).count():
-            return obj.round.game.left_team.get_color_display()
-        else:
-            return obj.round.game.right_team.get_color_display()
-
-    def get_assists(self, obj):
-        return 'N/A'
-
-    def get_headshot(self, obj):
-        return 'N/A'
-
-
 class StatusEffectSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.StatusEffect
@@ -657,23 +547,6 @@ class StatusEffectEditSerializer(serializers.ModelSerializer):
         model = models.StatusEffect
         fields = ('id', 'start_time', 'end_time', 'round', 'status', 'player')
 
-
-class UltDenialEditSerializer(serializers.ModelSerializer):
-    denying_player = serializers.StringRelatedField()
-    denied_player = serializers.StringRelatedField()
-    ability = serializers.StringRelatedField()
-
-    class Meta:
-        model = models.UltDenial
-        fields = '__all__'
-
-
-class UltDenialSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.UltDenial
-        fields = '__all__'
-
-
 class UltimateSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Ultimate
@@ -688,47 +561,6 @@ class UltimateDisplaySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class UltGainSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.UltGain
-        fields = '__all__'
-
-
-class UltEndSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.UltEnd
-        fields = '__all__'
-
-
-class UltEndDisplaySerializer(serializers.ModelSerializer):
-    player = PlayerSerializer()
-
-    class Meta:
-        model = models.UltEnd
-        fields = '__all__'
-
-
-class UltGainDisplaySerializer(serializers.ModelSerializer):
-    player = PlayerSerializer()
-
-    class Meta:
-        model = models.UltGain
-        fields = '__all__'
-
-
-class UltUseSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.UltUse
-        fields = '__all__'
-
-
-class UltUseDisplaySerializer(serializers.ModelSerializer):
-    player = PlayerSerializer()
-
-    class Meta:
-        model = models.UltUse
-        fields = '__all__'
-
 
 class PointGainSerializer(serializers.ModelSerializer):
     class Meta:
@@ -740,130 +572,6 @@ class PointFlipSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.PointFlip
         fields = '__all__'
-
-
-class KillNPCSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.KillNPC
-        fields = ('id', 'time_point', 'killing_player', 'killed_npc', 'ability',)
-
-
-class KillNPCEditSerializer(serializers.ModelSerializer):
-    killing_player = serializers.StringRelatedField()
-    killed_npc = serializers.StringRelatedField()
-    ability = AbilitySerializer()
-    possible_abilities = AbilitySerializer(many=True)
-    possible_assists = PlayerSerializer(many=True)
-
-    class Meta:
-        model = models.KillNPC
-        fields = (
-            'id', 'time_point', 'killing_player', 'killed_npc', 'ability', 'possible_abilities', 'possible_assists',
-            'assisting_players')
-
-
-class KillNPCDisplaySerializer(serializers.ModelSerializer):
-    killing_player = serializers.StringRelatedField()
-    killed_npc = serializers.StringRelatedField()
-    ability = serializers.StringRelatedField()
-
-    class Meta:
-        model = models.KillNPC
-        fields = '__all__'
-
-
-class KillNPCKillFeedSerializer(serializers.ModelSerializer):
-    dying_entity = serializers.SerializerMethodField()
-    dying_color = serializers.SerializerMethodField()
-    killing_color = serializers.SerializerMethodField()
-    killing_hero = serializers.SerializerMethodField()
-    ability = serializers.StringRelatedField()
-    assists = serializers.SerializerMethodField()
-    headshot = serializers.SerializerMethodField()
-
-    class Meta:
-        model = models.KillNPC
-        fields = (
-            'time_point', 'killing_hero', 'killing_color', 'assists', 'ability', 'headshot', 'dying_entity',
-            'dying_color')
-
-    def get_dying_entity(self, obj):
-        return obj.killed_npc.name
-
-    def get_dying_color(self, obj):
-        if obj.round.game.left_team.players.filter(pk=obj.killing_player.pk).count():
-            return obj.round.game.right_team.get_color_display()
-        else:
-            return obj.round.game.left_team.get_color_display()
-
-    def get_killing_hero(self, obj):
-        return obj.killing_player.get_hero_at_timepoint(obj.round, obj.time_point).name
-
-    def get_killing_color(self, obj):
-        if obj.round.game.left_team.players.filter(pk=obj.killing_player.pk).count():
-            return obj.round.game.left_team.get_color_display()
-        else:
-            return obj.round.game.right_team.get_color_display()
-
-    def get_assists(self, obj):
-        return [x.get_hero_at_timepoint(obj.round, obj.time_point).name for x in obj.assisting_players.all()]
-
-    def get_headshot(self, obj):
-        return 'N/A'
-
-
-class NPCDeathSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.NPCDeath
-        fields = '__all__'
-
-
-class NPCDeathDisplaySerializer(serializers.ModelSerializer):
-    npc = serializers.StringRelatedField()
-
-    class Meta:
-        model = models.NPCDeath
-        fields = '__all__'
-
-
-class NPCDeathKillFeedSerializer(serializers.ModelSerializer):
-    dying_entity = serializers.SerializerMethodField()
-    killing_hero = serializers.SerializerMethodField()
-    killing_color = serializers.SerializerMethodField()
-    assists = serializers.SerializerMethodField()
-    ability = serializers.SerializerMethodField()
-    headshot = serializers.SerializerMethodField()
-    dying_color = serializers.SerializerMethodField()
-
-    class Meta:
-        model = models.NPCDeath
-        fields = (
-            'time_point', 'killing_hero', 'killing_color', 'assists', 'ability', 'headshot', 'dying_entity',
-            'dying_color')
-
-    def get_dying_entity(self, obj):
-        return obj.npc.name
-
-    def get_dying_color(self, obj):
-        if obj.side == 'L':
-            return obj.round.game.left_team.get_color_display()
-        else:
-            return obj.round.game.right_team.get_color_display()
-
-    def get_killing_hero(self, obj):
-        return 'N/A'
-
-    def get_killing_color(self, obj):
-        return 'N/A'
-
-    def get_assists(self, obj):
-        return 'N/A'
-
-    def get_ability(self, obj):
-        return 'N/A'
-
-    def get_headshot(self, obj):
-        return 'N/A'
 
 
 # AUTH

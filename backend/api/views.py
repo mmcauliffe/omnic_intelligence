@@ -1432,20 +1432,18 @@ class RoundViewSet(viewsets.ModelViewSet):
         min_shift = Decimal('0.1')
         begin_shift = Decimal(request.data['begin']).quantize(min_shift) - instance.begin
         if abs(begin_shift) >= min_shift:
-            instance.switch_set.filter(time_point__gt=0).update(time_point=F('time_point') - begin_shift, end_time_point=F('end_time_point') - begin_shift)
-            instance.switch_set.filter(time_point__lt=0).update(time_point=0)
-            instance.kill_set.update(time_point=F('time_point') - begin_shift)
-            instance.killnpc_set.update(time_point=F('time_point') - begin_shift)
-            instance.death_set.update(time_point=F('time_point') - begin_shift)
-            instance.npcdeath_set.update(time_point=F('time_point') - begin_shift)
-            instance.revive_set.update(time_point=F('time_point') - begin_shift)
-            instance.ultuse_set.update(time_point=F('time_point') - begin_shift)
-            instance.ultgain_set.update(time_point=F('time_point') - begin_shift)
+            instance.heropick_set.filter(time_point__gt=0).update(time_point=F('time_point') - begin_shift, end_time_point=F('end_time_point') - begin_shift)
+            instance.heropick_set.filter(time_point__lt=0).update(time_point=0)
+            instance.killfeedevent_set.update(time_point=F('time_point') - begin_shift)
+            instance.ultimate_set.update(gained=F('gained') - begin_shift)
+            instance.ultimate_set.exclude(used__isnull=True).update(gained=F('used') - begin_shift)
+            instance.ultimate_set.exclude(ended__isnull=True).update(gained=F('ended') - begin_shift)
             instance.pointgain_set.update(time_point=F('time_point') - begin_shift)
             instance.pointflip_set.update(time_point=F('time_point') - begin_shift)
             instance.pause_set.update(start_time=F('start_time') - begin_shift, end_time=F('end_time') - begin_shift)
             instance.replay_set.update(start_time=F('start_time') - begin_shift, end_time=F('end_time') - begin_shift)
             instance.smallerwindow_set.update(start_time=F('start_time') - begin_shift, end_time=F('end_time') - begin_shift)
+            instance.zoom_set.update(start_time=F('start_time') - begin_shift, end_time=F('end_time') - begin_shift)
             instance.overtime_set.update(start_time=F('start_time') - begin_shift, end_time=F('end_time') - begin_shift)
         instance.begin = request.data['begin']
         instance.end = request.data['end']
@@ -1519,38 +1517,6 @@ class RoundViewSet(viewsets.ModelViewSet):
         player = models.Player.objects.get(pk=player_id)
         time_point = round(float(request.query_params.get('time_point', 0)), 1)
         return Response(serializers.HeroSerializer(player.get_hero_at_timepoint(round_object, time_point)).data)
-
-    @action(methods=['get'], detail=True)
-    def killfeed_at_time(self, request, pk=None):
-        window = 7.3
-        time_point = round(float(request.query_params.get('time_point', 0)), 1)
-        round_object = self.get_object()
-        events = []
-
-        kills = round_object.kill_set.filter(time_point__gte=time_point - window, time_point__lte=time_point).all()
-        expected_deaths = [(x.time_point, x.killed_player) for x in kills]
-        events.extend(serializers.KillKillFeedSerializer(kills, many=True).data)
-
-        npckills = round_object.killnpc_set.filter(time_point__gte=time_point - window,
-                                                   time_point__lte=time_point).all()
-        expected_npcdeaths = [(x.time_point, x.killed_npc) for x in npckills]
-        events.extend(serializers.KillNPCKillFeedSerializer(npckills, many=True).data)
-
-        deaths = round_object.death_set.filter(time_point__gte=time_point - window, time_point__lte=time_point).all()
-        deaths = [x for x in deaths if (x.time_point, x.player) not in expected_deaths]
-        events.extend(serializers.DeathKillFeedSerializer(deaths, many=True).data)
-
-        npcdeaths = round_object.npcdeath_set.filter(time_point__gte=time_point - window,
-                                                     time_point__lte=time_point).all()
-        npcdeaths = [x for x in npcdeaths if (x.time_point, x.npc) not in expected_npcdeaths]
-        events.extend(serializers.NPCDeathKillFeedSerializer(npcdeaths, many=True).data)
-
-        revives = round_object.revive_set.filter(time_point__gte=time_point - window, time_point__lte=time_point).all()
-        events.extend(serializers.ReviveKillFeedSerializer(revives, many=True).data)
-
-        events = sorted(events, key=lambda x: -1 * x['time_point'])[:6]
-
-        return Response(events)
 
     @action(methods=['get'], detail=True)
     def hero_picks(self, request, pk=None):
@@ -1647,38 +1613,6 @@ class HeroPickViewSet(viewsets.ModelViewSet):
         instance.round.fix_switch_end_points()
         return Response(self.serializer_class(instance).data)
 
-
-class DeathViewSet(viewsets.ModelViewSet):
-    model = models.Death
-    queryset = models.Death.objects.all()
-    serializer_class = serializers.DeathSerializer
-
-    def create(self, request, *args, **kwargs):
-        request.data['time_point'] = round(request.data['time_point'], 1)
-        return super(DeathViewSet, self).create(request, *args, **kwargs)
-
-    def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.time_point = request.data['time_point']
-        instance.save()
-        return Response()
-
-
-class NPCDeathViewSet(viewsets.ModelViewSet):
-    model = models.NPCDeath
-    queryset = models.NPCDeath.objects.all()
-    serializer_class = serializers.NPCDeathSerializer
-
-    def create(self, request, *args, **kwargs):
-        request.data['time_point'] = round(request.data['time_point'], 1)
-        return super(NPCDeathViewSet, self).create(request, *args, **kwargs)
-
-    def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.time_point = request.data['time_point']
-        instance.side = request.data['side']
-        instance.save()
-        return Response()
 
 
 class PauseViewSet(viewsets.ModelViewSet):
@@ -1836,20 +1770,6 @@ class KillFeedEventViewSet(viewsets.ModelViewSet):
         return Response()
 
 
-class ReviveViewSet(viewsets.ModelViewSet):
-    model = models.Revive
-    queryset = models.Revive.objects.all()
-    serializer_class = serializers.ReviveSerializer
-
-    def create(self, request, *args, **kwargs):
-        request.data['time_point'] = round(request.data['time_point'], 1)
-        return super(ReviveViewSet, self).create(request, *args, **kwargs)
-
-    def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.time_point = request.data['time_point']
-        instance.save()
-        return Response()
 
 
 class UltimateViewSet(viewsets.ModelViewSet):
@@ -1899,55 +1819,6 @@ class UltimateViewSet(viewsets.ModelViewSet):
         return Response(self.serializer_class(instance).data)
 
 
-class UltGainViewSet(viewsets.ModelViewSet):
-    model = models.UltGain
-    queryset = models.UltGain.objects.all()
-    serializer_class = serializers.UltGainSerializer
-
-    def create(self, request, *args, **kwargs):
-        request.data['time_point'] = round(request.data['time_point'], 1)
-        return super(UltGainViewSet, self).create(request, *args, **kwargs)
-
-    def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.time_point = request.data['time_point']
-        instance.save()
-        return Response()
-
-
-class UltEndViewSet(viewsets.ModelViewSet):
-    model = models.UltEnd
-    queryset = models.UltEnd.objects.all()
-    serializer_class = serializers.UltEndSerializer
-
-    def create(self, request, *args, **kwargs):
-        request.data['time_point'] = round(request.data['time_point'], 1)
-        return super(UltEndViewSet, self).create(request, *args, **kwargs)
-
-    def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.time_point = request.data['time_point']
-        instance.save()
-        return Response()
-
-
-class UltDenialViewSet(viewsets.ModelViewSet):
-    model = models.UltDenial
-    queryset = models.UltDenial.objects.all()
-    serializer_class = serializers.UltDenialSerializer
-
-    def create(self, request, *args, **kwargs):
-        print(request.data)
-        request.data['time_point'] = round(request.data['time_point'], 1)
-        return super(UltDenialViewSet, self).create(request, *args, **kwargs)
-
-    def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.time_point = request.data['time_point']
-        instance.save()
-        return Response()
-
-
 class StatusEffectViewSet(viewsets.ModelViewSet):
     model = models.StatusEffect
     queryset = models.StatusEffect.objects.all()
@@ -1963,22 +1834,6 @@ class StatusEffectViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         instance.start_time = round(request.data['start_time'], 1)
         instance.end_time = round(request.data['end_time'], 1)
-        instance.save()
-        return Response()
-
-
-class UltUseViewSet(viewsets.ModelViewSet):
-    model = models.UltUse
-    queryset = models.UltUse.objects.all()
-    serializer_class = serializers.UltUseSerializer
-
-    def create(self, request, *args, **kwargs):
-        request.data['time_point'] = round(request.data['time_point'], 1)
-        return super(UltUseViewSet, self).create(request, *args, **kwargs)
-
-    def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.time_point = request.data['time_point']
         instance.save()
         return Response()
 
@@ -2018,41 +1873,6 @@ class PointFlipViewSet(viewsets.ModelViewSet):
         instance.save()
         return Response()
 
-
-class KillNPCViewSet(viewsets.ModelViewSet):
-    model = models.KillNPC
-    queryset = models.KillNPC.objects.all()
-    serializer_class = serializers.KillNPCSerializer
-
-    def create(self, request, *args, **kwargs):
-        request.data['time_point'] = round(request.data['time_point'], 1)
-        m = models.KillNPC(round_id=request.data['round'], time_point=request.data['time_point'],
-                           killing_player_id=request.data['killing_player'], killed_npc_id=request.data['killed_npc'],
-                           ability_id=request.data['ability'])
-        m.save()
-        return Response(self.serializer_class(m).data)
-
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        death = instance.get_corresponding_death()
-        death.delete()
-        instance.delete()
-        return Response()
-
-    def update(self, request, *args, **kwargs):
-        print(request)
-        instance = self.get_object()
-        instance.assisting_players.clear()
-        for p in request.data['assisting_players']:
-            instance.assisting_players.add(models.Player.objects.get(pk=p))
-        corresponding_death = instance.get_corresponding_death()
-
-        corresponding_death.time_point = request.data['time_point']
-        corresponding_death.save()
-        instance.time_point = request.data['time_point']
-        instance.ability_id = request.data['ability']['id']
-        instance.save()
-        return Response()
 
 
 
