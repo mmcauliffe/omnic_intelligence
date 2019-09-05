@@ -1789,7 +1789,7 @@ class UltimateViewSet(viewsets.ModelViewSet):
         instance.ended = request.data.get('ended', None)
         if request.data.get('used', None):
             use_default = instance.used is None
-            instance.used = request.data['used']
+            instance.used = Decimal(round(request.data['used'], 1)).quantize(Decimal('0.1'))
             if use_default:
                 hero = instance.player.get_hero_at_timepoint(instance.round, instance.used)
                 instance.ended = hero.ult_duration + instance.used
@@ -1805,7 +1805,7 @@ class UltimateViewSet(viewsets.ModelViewSet):
     def add_use(self, request, *args, **kwargs):
         instance = self.get_object()
         use_default = instance.used is None
-        instance.used = request.data['used']
+        instance.used = Decimal(round(request.data['used'], 1)).quantize(Decimal('0.1'))
         if use_default:
             hero = instance.player.get_hero_at_timepoint(instance.round, instance.used)
             instance.ended = hero.ult_duration + instance.used
