@@ -1488,10 +1488,10 @@ class RoundViewSet(viewsets.ModelViewSet):
     def round_states(self, request, pk=None):
         r = self.get_object()
         data = {}
-        data['overtimes'] = r.get_overtime_states()
-        data['pauses'] = r.get_pause_states()
-        data['replays'] = r.get_replay_states()
+        for k in ['overtime', 'pause', 'replay', 'smaller_window']:
+            data[k] = r.get_round_states(k)
         data['point_status'] = r.get_point_status_states()
+        data['zoomed_bars'] = r.get_zoomed_bars_states()
         return Response(data)
 
     @action(methods=['get'], detail=True)

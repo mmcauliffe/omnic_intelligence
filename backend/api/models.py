@@ -580,53 +580,59 @@ class Round(models.Model):
         ind = self.game.right_team.playerparticipation_set.filter(player=player).get().player_index
         return 'R', ind
 
-    def get_overtime_states(self):
-        overtimes = self.overtime_set.all()
+    def get_round_states(self, identifier):
+        if identifier == 'smaller_window':
+            events = self.smallerwindow_set.all()
+        elif identifier == 'replay':
+            events = self.replay_set.all()
+        elif identifier == 'pause':
+            events = self.pause_set.all()
+        elif identifier == 'overtime':
+            events = self.overtime_set.all()
+        else:
+            raise Exception('{} not a round state.'.format(identifier))
         round_end = self.end - self.begin
-        if len(overtimes) == 0:
-            return [{'begin': 0, 'end': round_end, 'status': 'not_overtime'}]
-
+        if len(events) == 0:
+            return [{'begin': 0, 'end': round_end, 'status': 'not_' + identifier}]
         states = []
-        for o in overtimes:
-            if not states:
-                states.append({'begin': 0, 'end': o.start_time, 'status': 'not_overtime'})
-            states.append({'begin': o.start_time, 'end': o.end_time, 'status': 'overtime'})
+        prev = 0
+        for o in events:
+            states.append({'begin': prev, 'end': o.start_time, 'status': 'not_'+ identifier})
+            states.append({'begin': o.start_time, 'end': o.end_time, 'status': identifier})
+            prev = o.end_time
         if states[-1]['end'] is None:
             states[-1]['end'] = round_end
         elif states[-1]['end'] != round_end:
-            states.append({'begin': states[-1]['end'], 'end': round_end, 'status': 'not_overtime'})
+            states.append({'begin': states[-1]['end'], 'end': round_end, 'status': 'not_'+ identifier})
         return states
 
-    def get_pause_states(self):
-        pauses = self.pause_set.all()
+    def get_zoomed_bars_states(self):
+        replays = self.zoom_set.all()
         round_end = self.end - self.begin
-        if len(pauses) == 0:
-            return [{'begin': 0, 'end': round_end, 'status': 'not_paused'}]
-        states = []
-        for o in pauses:
-            if not states:
-                states.append({'begin': 0, 'end': o.start_time, 'status': 'not_paused'})
-            states.append({'begin': o.start_time, 'end': o.end_time, 'status': 'paused'})
-        if states[-1]['end'] is None:
-            states[-1]['end'] = round_end
-        elif states[-1]['end'] != round_end:
-            states.append({'begin': states[-1]['end'], 'end': round_end, 'status': 'not_paused'})
-        return states
-
-    def get_replay_states(self):
-        replays = self.replay_set.all()
-        round_end = self.end - self.begin
+        identifier = 'zoomed'
+        default = [{'begin': 0, 'end': round_end, 'status': 'not_' + identifier}]
         if len(replays) == 0:
-            return [{'begin': 0, 'end': round_end, 'status': 'not_replay'}]
-        states = []
+            return {'left':default,
+                    'right':default}
+        states = {'left':[],
+                 'right':[]}
+        prev = {'left': 0, 'right': 0}
         for o in replays:
-            if not states:
-                states.append({'begin': 0, 'end': o.start_time, 'status': 'not_replay'})
-            states.append({'begin': o.start_time, 'end': o.end_time, 'status': 'replay'})
-        if states[-1]['end'] is None:
-            states[-1]['end'] = round_end
-        elif states[-1]['end'] != round_end:
-            states.append({'begin': states[-1]['end'], 'end': round_end, 'status': 'not_replay'})
+            if o.side == 'L':
+                s = 'left'
+            else:
+                s = 'right'
+            states[s].append({'begin': prev[s], 'end': o.start_time, 'status': 'not_'+ identifier})
+            states[s].append({'begin': o.start_time, 'end': o.end_time, 'status': identifier})
+            prev[s] = o.end_time
+        for s in ['left', 'right']:
+            if not states[s]:
+                states[s] = default
+            else:
+                if states[s][-1]['end'] is None:
+                    states[s][-1]['end'] = round_end
+                elif states[s][-1]['end'] != round_end:
+                    states[s].append({'begin': states[s][-1]['end'], 'end': round_end, 'status': 'not_'+ identifier})
         return states
 
     def get_point_status_states(self):
