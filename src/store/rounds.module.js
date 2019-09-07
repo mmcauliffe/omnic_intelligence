@@ -310,11 +310,31 @@ const getters = {
         if (state.round_states.loading) {
             return false
         }
+        if (state.round_states.item === undefined){
+            return false
+        }
         let i;
-        for (i = 0; i < state.round_states.item.pauses.length; i++) {
+        for (i = 0; i < state.round_states.item.pause.length; i++) {
 
-            if (state.round_states.item.pauses[i].begin <= time_point && time_point < state.round_states.item.pauses[i].end) {
-                return state.round_states.item.pauses[i].status === 'paused'
+            if (state.round_states.item.pause[i].begin <= time_point && time_point < state.round_states.item.pause[i].end) {
+                return state.round_states.item.pause[i].status === 'pause'
+            }
+        }
+
+    },
+    replayAtTime: (state) => (time_point) => {
+
+        if (state.round_states.loading) {
+            return false
+        }
+        if (state.round_states.item === undefined){
+            return false
+        }
+        let i;
+        for (i = 0; i < state.round_states.item.replay.length; i++) {
+
+            if (state.round_states.item.replay[i].begin <= time_point && time_point < state.round_states.item.replay[i].end) {
+                return state.round_states.item.replay[i].status === 'replay'
             }
         }
 
@@ -324,11 +344,14 @@ const getters = {
         if (state.round_states.loading) {
             return false
         }
+        if (state.round_states.item === undefined){
+            return false
+        }
         let i;
-        for (i = 0; i < state.round_states.item.overtimes.length; i++) {
+        for (i = 0; i < state.round_states.item.overtime.length; i++) {
 
-            if (state.round_states.item.overtimes[i].begin <= time_point && time_point < state.round_states.item.overtimes[i].end) {
-                return state.round_states.item.overtimes[i].status === 'overtime'
+            if (state.round_states.item.overtime[i].begin <= time_point && time_point < state.round_states.item.overtime[i].end) {
+                return state.round_states.item.overtime[i].status === 'overtime'
             }
         }
 
@@ -336,6 +359,9 @@ const getters = {
     roundStateAtTime: (state) => (time_point) => {
 
         if (state.round_states.loading) {
+            return false
+        }
+        if (state.round_states.item === undefined){
             return false
         }
         let i;

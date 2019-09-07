@@ -14,6 +14,7 @@
                 <span>{{round_state}}</span>
                 <span v-if="isOvertime">Overtime</span>
                 <span v-if="isPaused">Paused</span>
+                <span v-if="isReplay">Replay</span>
 
             </v-layout>
         </div>
@@ -60,6 +61,9 @@
             isPaused(){
                 return this.pausedAtTime(this.currentTime)
             },
+            isReplay(){
+                return this.replayAtTime(this.currentTime)
+            },
             ...mapGetters('rounds', [
                 'leftPlayers',
                 'rightPlayers',
@@ -68,6 +72,7 @@
                 'hasUltAtTime',
                 'ultStateAtTime',
                 'pausedAtTime',
+                'replayAtTime',
                 'overtimeAtTime',
                 'roundStateAtTime',
                 'aliveAtTime',

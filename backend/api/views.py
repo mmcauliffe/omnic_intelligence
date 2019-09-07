@@ -1122,9 +1122,6 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
         if not request.data.get('ignore_switches', False):
             instance.heropick_set.all().delete()
 
-        instance.pointgain_set.all().delete()
-        instance.pointflip_set.all().delete()
-        instance.overtime_set.all().delete()
         instance.replay_set.all().delete()
         instance.pause_set.all().delete()
         instance.smallerwindow_set.all().delete()
@@ -1137,11 +1134,17 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
             pauses.append(models.Pause(round=instance, start_time=r['begin'], end_time=r['end']))
         for r in request.data['smaller_windows']:
             smaller_windows.append(models.SmallerWindow(round=instance, start_time=r['begin'], end_time=r['end']))
-        models.Replay.objects.bulk_create(replays)
-        models.Pause.objects.bulk_create(pauses)
-        models.SmallerWindow.objects.bulk_create(smaller_windows)
+        if replays:
+            models.Replay.objects.bulk_create(replays)
+        if pauses:
+            models.Pause.objects.bulk_create(pauses)
+        if smaller_windows:
+            models.SmallerWindow.objects.bulk_create(smaller_windows)
         sequences = instance.sequences
 
+        instance.pointgain_set.all().delete()
+        instance.pointflip_set.all().delete()
+        instance.overtime_set.all().delete()
         point_gains = []
         point_flips = []
         overtimes = []
@@ -1160,9 +1163,7 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
         if overtimes:
             models.Overtime.objects.bulk_create(overtimes)
 
-        instance.ultgain_set.all().delete()
-        instance.ultuse_set.all().delete()
-        instance.ultend_set.all().delete()
+        instance.ultimate_set.all().delete()
         instance.statuseffect_set.all().delete()
         hero_picks = []
         ultimates = []
