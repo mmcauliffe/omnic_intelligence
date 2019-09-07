@@ -1794,8 +1794,8 @@ class UltimateViewSet(viewsets.ModelViewSet):
             if use_default:
                 hero = instance.player.get_hero_at_timepoint(instance.round, instance.used)
                 instance.ended = hero.ult_duration + instance.used
-                if instance.ended > instance.round.end:
-                    instance.ended = instance.round.end
+                if instance.ended > instance.round.duration:
+                    instance.ended = instance.round.duration
         else:
             instance.used = request.data.get('used', None)
 
@@ -1810,6 +1810,8 @@ class UltimateViewSet(viewsets.ModelViewSet):
         if use_default:
             hero = instance.player.get_hero_at_timepoint(instance.round, instance.used)
             instance.ended = hero.ult_duration + instance.used
+            if instance.ended > instance.round.duration:
+                instance.ended = instance.round.duration
         instance.save()
         return Response(self.serializer_class(instance).data)
 

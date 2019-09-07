@@ -460,6 +460,10 @@ class Round(models.Model):
                                                                self.game.left_team.team, self.game.right_team.team,
                                                                self.game.match.event)
 
+    @property
+    def duration(self):
+        return self.end - self.begin
+
     def fix_switch_end_points(self):
         switches = self.heropick_set.order_by('-time_point').prefetch_related('player').all()
         last_switches = {}
