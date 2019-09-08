@@ -304,7 +304,7 @@ class RoundSerializer(serializers.ModelSerializer):
 
 class StreamVodSerializer(serializers.ModelSerializer):
     rounds = RoundSerializer(many=True)
-    games = GameSerializer(many=True)
+    games = GameEditSerializer(many=True)
     matches = MatchSerializer(many=True)
     class Meta:
         model = models.StreamVod
