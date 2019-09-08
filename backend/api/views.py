@@ -1368,8 +1368,10 @@ class VodViewSet(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
+        print(request.data)
         instance.type = request.data['type']
         instance.status = request.data['status']
+        instance.save()
         return Response(self.serializer_class(instance).data)
 
     @action(methods=['get'], detail=True)
