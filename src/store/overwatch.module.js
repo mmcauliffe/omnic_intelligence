@@ -109,6 +109,9 @@ const getters = {
         return state.status_effect_choices.items;
     },
     hero: (state) => (hero_id) => {
+        if (state.heroes.items === undefined){
+            return {}
+        }
         console.log(state.heroes)
         let i, hero;
         for (i = 0; i < state.heroes.items.length; i++) {
