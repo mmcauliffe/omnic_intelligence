@@ -167,6 +167,22 @@ class MatchSerializer(serializers.ModelSerializer):
         return '{} vs {}'.format(teams[0].name, teams[1].name)
 
 
+class MatchDisplaySerializer(serializers.ModelSerializer):
+    event = serializers.StringRelatedField()
+    teams = serializers.StringRelatedField(many=True)
+    name = serializers.SerializerMethodField()
+
+    start_time = serializers.DecimalField(10, 1)
+
+    class Meta:
+        model = models.Match
+        fields = ('id', 'event', 'teams', 'start_time', 'name')
+
+    def get_name(self, obj):
+        teams = obj.teams.all()
+        return '{} vs {}'.format(teams[0].name, teams[1].name)
+
+
 class MatchEditSerializer(serializers.ModelSerializer):
     event = EventSerializer()
     name = serializers.SerializerMethodField()
@@ -188,7 +204,7 @@ class MatchEditSerializer(serializers.ModelSerializer):
 
 
 class GameDisplaySerializer(serializers.ModelSerializer):
-    match = MatchSerializer()
+    match = MatchDisplaySerializer()
     map = MapSerializer()
     left_team = TeamParticipationSerializer()
     right_team = TeamParticipationSerializer()
