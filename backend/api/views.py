@@ -1433,7 +1433,11 @@ class RoundViewSet(viewsets.ModelViewSet):
         from django.db.models import F
         instance = self.get_object()
         if request.data['stream_vod']:
-            vod = models.StreamVod.objects.get(id=request.data['stream_vod']['id'])
+            if isinstance(request.data['stream_id'], dict):
+                id = request.data['stream_vod']['id']
+            else:
+                id = request.data['stream_vod']
+            vod = models.StreamVod.objects.get(id=id)
             instance.stream_vod = vod
         else:
             instance.vod = None
