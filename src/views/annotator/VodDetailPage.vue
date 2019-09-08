@@ -332,10 +332,17 @@
                 this.newRound.vod = this.$route.params.id;
                 this.newRound.begin = this.currentTime;
                 this.newRound.end = this.currentTime;
+                this.newRound.attacking_side = 'N';
                 console.log(this.newRound)
                 console.log(this.currentTime)
                 if (this.vod.item.type === 'G'){
                     this.newRound.game = this.vod.item.games[0].id;
+                    if (this.vod.item.rounds.length > 0){
+                        this.newRound.round_number = this.vod.item.rounds[this.vod.item.rounds.length - 1].round_number + 1;
+                    }
+                    else {
+                        this.newRound.round_number = 1;
+                    }
                 }
                 this.createRound(this.newRound).then(x =>{this.getOne(this.$route.params.id)});
             },
