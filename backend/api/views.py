@@ -1366,6 +1366,12 @@ class VodViewSet(viewsets.ModelViewSet):
                                               broadcast_date=b, last_modified=t)
         return Response(self.serializer_class(vod).data)
 
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.type = request.data['type']
+        instance.status = request.data['status']
+        return Response(self.serializer_class(instance).data)
+
     @action(methods=['get'], detail=True)
     def possible_matches(self, request, pk=None):
         vod = self.get_object()
