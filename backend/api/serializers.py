@@ -293,11 +293,23 @@ class StreamChannelSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+
+class RoundSerializer(serializers.ModelSerializer):
+    # game = GameSerializer()
+    class Meta:
+        model = models.Round
+        fields = (
+            'id', 'round_number', 'game', 'attacking_side', 'begin', 'end', 'stream_vod', 'annotation_status',
+            'sequences')
+
 class StreamVodSerializer(serializers.ModelSerializer):
+    rounds = RoundSerializer(many=True)
+    games = GameSerializer(many=True)
+    matches = MatchSerializer(many=True)
     class Meta:
         model = models.StreamVod
         fields = ('id', 'title', 'url', 'broadcast_date', 'vod_link', 'film_format', 'sequences',
-                  'channel', 'status', 'type')
+                  'channel', 'status', 'type', 'rounds', 'games', 'matches')
 
 
 class VodDisplaySerializer(serializers.ModelSerializer):
@@ -366,15 +378,6 @@ class VodEditSerializer(serializers.ModelSerializer):
 
     def get_rounds(self, obj):
         return RoundSerializer(obj.round_set.all(), many=True).data
-
-
-class RoundSerializer(serializers.ModelSerializer):
-    # game = GameSerializer()
-    class Meta:
-        model = models.Round
-        fields = (
-            'id', 'round_number', 'game', 'attacking_side', 'begin', 'end', 'stream_vod', 'annotation_status',
-            'sequences')
 
 
 class RoundStatusSerializer(serializers.ModelSerializer):

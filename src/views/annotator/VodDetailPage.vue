@@ -8,7 +8,6 @@
         <v-flex style="height:100%" xs4 v-if="vod.item">
             <v-layout column>
                 <v-flex>
-                    {{vod.item}}
                     <v-select :items="vod_status_choices.items" v-on:change="update_vod()"
                               label="Vod Status" v-model="vod.item.status" item-text="name" item-value="id">
 

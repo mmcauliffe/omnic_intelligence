@@ -74,6 +74,12 @@
                                     <td>
                                         {{props.item.last_modified}}
                                     </td>
+                                    <td>
+                                        {{ props.item.type }}
+                                    </td>
+                                    <td>
+                                        {{ props.item.status }}
+                                    </td>
                                 </template>
                             </v-data-table>
                         </v-tab-item>
@@ -148,6 +154,8 @@
                     {text: 'Title', sortable: false},
                     {text: 'Broadcast date', sortable: true},
                     {text: 'Last modified', sortable: true},
+                    {text: 'Type', sortable: true},
+                    {text: 'Status', sortable: true},
                 ],
                 available_vod_headers: [
                     {text: 'Title', sortable: true},

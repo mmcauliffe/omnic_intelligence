@@ -61,6 +61,29 @@ class StreamVod(models.Model):
         return self.title
 
     @property
+    def rounds(self):
+        rounds = self.round_set.prefetch_related('game', 'game__match').all()
+        return rounds
+
+    @property
+    def games(self):
+        rounds = self.rounds
+        games = []
+        for r in rounds:
+            if r.game not in games:
+                games.append(r.game)
+        return games
+
+    @property
+    def matches(self):
+        games = self.games
+        matches = []
+        for g in games:
+            if g.match not in matches:
+                matches.append(g.match)
+        return matches
+
+    @property
     def sequences(self):
         rounds = self.round_set.order_by('begin').all()
         sequences = []
@@ -125,6 +148,7 @@ class Status(models.Model):
     independent = models.BooleanField(default=False)
     helpful = models.BooleanField(default=False)
     causing_hero = models.ForeignKey(Hero, on_delete=models.CASCADE, null=True, blank=True)
+    default_duration = models.DecimalField(max_digits=6, decimal_places=1, default=Decimal('1.0'))
 
     class Meta:
         verbose_name_plural = "statuses"

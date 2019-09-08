@@ -140,7 +140,33 @@
                 }
             }
         },
-        created() {
+          created() {
+            window.addEventListener('keydown', (e) => {
+              if (e.key === 'w') {
+                this.seekForward(1);
+              }
+              else if (e.key === 's') {
+                this.seekBackward(1);
+              }
+              else if (e.key === 'a') {
+                this.seekBackward(0.1);
+              }
+              else if (e.key === 'd') {
+                this.seekForward(0.1);
+              }
+              else if (e.key === 'ArrowRight') {
+                this.seekForward(30);
+              }
+              else if (e.key === 'ArrowLeft') {
+                this.seekBackward(30);
+              }
+              else if (e.key === 'ArrowUp') {
+                this.seekForward(60);
+              }
+              else if (e.key === 'ArrowDown') {
+                this.seekBackward(60);
+              }
+            })
         },
         methods: {
             ...mapActions('vods', {

@@ -836,6 +836,7 @@ class GameViewSet(viewsets.ModelViewSet):
             if request.data['right_team']['color'] in c:
                 value = c[0]
                 break
+        instance.game_number = request.data['game_number']
         instance.right_team.color = value
         instance.right_team.save()
         instance.save()
@@ -1745,9 +1746,6 @@ class KillFeedEventViewSet(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
-        instance.assisting_players.clear()
-        for p in request.data['assisting_players']:
-            instance.assisting_players.add(models.Player.objects.get(pk=p))
 
         if instance.killing_player is None and request.data.get('killing_player', None):
             instance.killing_player_id = request.data['killing_player']
@@ -1760,8 +1758,18 @@ class KillFeedEventViewSet(viewsets.ModelViewSet):
             else:
                 instance.headshot = False
         else:
+            instance.assisting_players.clear()
             instance.killing_player = None
             instance.ability = None
+        if request.data['assisting_players']:
+            current_assists = instance.assisting_players.all()
+            for c in current_assists:
+                if c.pk not in request.data['assisting_players']:
+                    instance.assisting_players.remove(c)
+            assist_ids = [x.pk for x in current_assists]
+            for p in request.data['assisting_players']:
+                if p not in assist_ids:
+                    instance.assisting_players.add(models.Player.objects.get(pk=p))
 
         if request.data.get('dying_npc', None):
             instance.dying_npc_id = request.data['dying_npc']
@@ -1771,8 +1779,6 @@ class KillFeedEventViewSet(viewsets.ModelViewSet):
         instance.time_point = round(request.data['time_point'], 1)
         instance.save()
         return Response()
-
-
 
 
 class UltimateViewSet(viewsets.ModelViewSet):
@@ -1830,10 +1836,21 @@ class StatusEffectViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.StatusEffectSerializer
 
     def create(self, request, *args, **kwargs):
+        status_m = models.Status.objects.get(pk=request.data['status'])
+        r = models.Round.objects.get(pk=request.data['round'])
         request.data['start_time'] = round(request.data['start_time'], 1)
-        request.data['end_time'] = round(request.data['end_time'], 1)
+        request.data['end_time'] = round(request.data['end_time'] + float(status_m.default_duration), 1)
+        if request.data['end_time'] > r.duration:
+            request.data['end_time'] = r.duration
         print(request.data)
-        return super(StatusEffectViewSet, self).create(request, *args, **kwargs)
+        status_effect = models.StatusEffect.objects.create(start_time=request.data['start_time'],
+                                                          end_time=request.data['end_time'],
+                                                          round=r,
+                                                          player_id=request.data['player'],
+                                                          status=status_m
+                                                          )
+
+        return Response(self.serializer_class(status_effect).data, status=status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
