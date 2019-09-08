@@ -151,6 +151,13 @@ class EventSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class EventDisplaySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.Event
+        fields = ('id', 'name', 'spectator_mode', 'film_format')
+
+
 class MatchSerializer(serializers.ModelSerializer):
     event = EventSerializer()
     teams = serializers.StringRelatedField(many=True)
@@ -168,7 +175,7 @@ class MatchSerializer(serializers.ModelSerializer):
 
 
 class MatchDisplaySerializer(serializers.ModelSerializer):
-    event = serializers.StringRelatedField()
+    event = EventDisplaySerializer()
     teams = serializers.StringRelatedField(many=True)
     name = serializers.SerializerMethodField()
 
