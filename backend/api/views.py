@@ -970,7 +970,7 @@ class TrainRoundPlusViewSet(viewsets.ModelViewSet):
 
 class TrainVodViewSet(viewsets.ModelViewSet):
     model = models.StreamVod
-    queryset = models.StreamVod.objects.filter(round__annotation_status='M').order_by('pk').all()
+    queryset = models.StreamVod.objects.filter(round__annotation_status__in=['T', 'A', 'M']).order_by('pk').all()
     serializer_class = serializers.VodDisplaySerializer
 
 
