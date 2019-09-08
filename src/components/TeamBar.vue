@@ -10,13 +10,12 @@
             <v-flex sm3>
 
             <v-select v-model="game.left_team.color" :items="team_colors.items"  v-on:change="saveTeams()"
-                      item-text="name" item-value="id"></v-select>
+                      item-text="name" item-value="name"></v-select>
             </v-flex>
         <v-btn v-on:click="swapTeams()">Swap</v-btn>
                 <v-flex sm3>
-
             <v-select v-model="game.right_team.color" :items="team_colors.items"  v-on:change="saveTeams()"
-                      item-text="name" item-value="id"></v-select>
+                      item-text="name" item-value="name"></v-select>
                 </v-flex>
                 <v-flex>
                     {{right_team_name}}
@@ -29,7 +28,7 @@
     <v-layout row align-content-space-between class="status" v-if="game.left_team">
         <v-flex></v-flex>
         <div class="team" v-if="game.left_team" >
-            <div v-for="player in game.left_team.players"class="left player">
+            <div v-for="player in game.left_team.players" class="left player">
                 <v-layout row>
 
                     <v-select v-model="player.player" :items="left_players"
@@ -95,17 +94,12 @@
             const right_p = [... new Set(this.game.right_team.players.map(x => x.player))];
             let left_player_ids = this.game.left_team.players.map(x => x.player);
             let i;
-            console.log('LEFT PLAYERS')
             for (i = 0; i < left_player_ids.length; i++) {
                 console.log(this.left_players.filter(x => x.id === left_player_ids[i])[0].name)
             }
-            console.log(this.game.left_team.players.map(x => x.player))
-            console.log(left_p.length, this.game.left_team.players.map(x => x.player),
-                right_p.length, this.game.right_team.players.map(x => x.player))
             if (left_p.length < 6 || right_p < 6) {
                 return
             }
-            console.log('SAVING TEAMS')
             this.updateTeams(this.game);
         });
             },
@@ -119,7 +113,6 @@
                 this.left_team_name = this.match.event.teams.filter(x=>{return x.id === newGame.left_team.team})[0].name;
                 this.right_team_name = this.match.event.teams.filter(x=>{return x.id === newGame.right_team.team})[0].name;
 
-                console.log(this.left_players)
                 },
                 deep: true
             },

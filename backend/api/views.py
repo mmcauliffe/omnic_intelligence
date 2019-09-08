@@ -1840,6 +1840,7 @@ class StatusEffectViewSet(viewsets.ModelViewSet):
         r = models.Round.objects.get(pk=request.data['round'])
         request.data['start_time'] = round(request.data['start_time'], 1)
         request.data['end_time'] = round(request.data['end_time'] + float(status_m.default_duration), 1)
+        request.data['end_time'] = round(request.data['end_time'] + float(status_m.default_duration), 1)
         if request.data['end_time'] > r.duration:
             request.data['end_time'] = r.duration
         print(request.data)

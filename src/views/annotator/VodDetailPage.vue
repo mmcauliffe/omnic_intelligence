@@ -18,7 +18,7 @@
                     </v-select>
                 </v-flex>
                 <v-tabs md-border-bottom md-dynamic-height>
-                    <v-tab>
+                    <v-tab v-if="vod.item.type === 'M'">
                         Matches
                     </v-tab>
                     <v-tab>
@@ -29,7 +29,7 @@
                     </v-tab>
 
                     <v-tabs-items>
-                        <v-tab-item>
+                        <v-tab-item v-if="vod.item.type === 'M'">
                             <v-card>
                 <v-flex>
 
@@ -78,7 +78,7 @@
                 <v-flex>
 
                 <v-data-table
-                        :items="games.items" v-if="games.items"
+                        :items="vod.item.games" v-if="vod.item.games"
                         :headers="gameHeaders" :rows-per-page-items="rowsPerPage">
 
                     <template slot="items" slot-scope="props">
@@ -117,23 +117,17 @@
                             <v-card>
 
                             <v-flex>
-                    <v-select label="Match" :items="event_matches.items" v-model="match"
-                              item-text="name" item-value="id" v-on:change="updateGames()"></v-select>
-                    <v-select label="Game" v-model="newRound.game" :items="match_games.items" item-text="name" item-value="id"></v-select>
-                    <v-text-field label="Round number" v-model="newRound.round_number"></v-text-field>
-                    <v-select :items='sides.items' label="Attacking side" v-model="newRound.attacking_side"
-                              item-text="name" item-value="id"></v-select>
                     <v-btn v-on:click="addRound()">Add round</v-btn>
                 </v-flex>
                 <v-flex>
 
                 <v-data-table
-                        :items="rounds.items" v-if="rounds.items"
+                        :items="vod.item.rounds" v-if="vod.item.rounds"
                         :headers="headers" :rows-per-page-items="rowsPerPage">
 
                     <template slot="items" slot-scope="props">
                         <td>
-                    <v-select v-model="props.item.game" :items="games.items" item-text="game_number" item-value="id" v-on:change="changeRound(props.item)"></v-select>
+                    <v-select v-model="props.item.game" :items="vod.item.games" item-text="game_number" item-value="id" v-on:change="changeRound(props.item)"></v-select>
 
                         </td>
                         <td>
@@ -277,9 +271,6 @@
             this.can_edit = true;
             this.getOne(this.$route.params.id);
             this.getOnePossibleMatches(this.$route.params.id);
-            this.getOneRounds(this.$route.params.id);
-            this.getOneGames(this.$route.params.id);
-            this.getOneMatches(this.$route.params.id);
             this.getVodStatusChoices();
             this.getAnnotationSources();
             this.getVodTypeChoices();
@@ -290,9 +281,6 @@
             ...mapActions('vods', {
                 getOne: 'getOne',
                 getOnePossibleMatches: 'getOnePossibleMatches',
-                getOneRounds: 'getOneRounds',
-                getOneGames: 'getOneGames',
-                getOneMatches: 'getOneMatches',
                 updateVod: 'updateVod',
                 deleteVod: 'deleteVod',
                 updateTimestamp: 'updateTimestamp',
@@ -318,7 +306,6 @@
                 createMatch: 'createMatch',
                 updateMatch: 'updateMatch',
                 deleteMatch: 'deleteMatch',
-                getOneMatchGames: 'getOneGames',
             }),
             update_vod() {
                 this.updateVod(this.vod.item);
@@ -330,22 +317,16 @@
             seekTo(time) {
                 this.updateTimestamp(time);
             },
-            updateGames(){
-        this.$nextTick(() => {
-            console.log(this.match)
-            this.getOneMatchGames(this.match);
-        });
-            },
             selectGame(game){
-                this.selectedMatch = this.matches.items.filter(x => {return x.id === game.match})[0];
+                this.selectedMatch = this.vod.item.matches.filter(x => {return x.id === game.match})[0];
                 this.selectedGame = game;
             },
             addMatch(){
-                this.createMatch(this.newMatch).then(x=>this.getOneMatches(this.$route.params.id));
+                this.createMatch(this.newMatch).then(x=>this.getOne(this.$route.params.id));
             },
             addGame(){
                 console.log(this.newGame)
-                this.createGame(this.newGame).then(x=>this.getOneGames(this.$route.params.id));
+                this.createGame(this.newGame).then(x=>this.getOne(this.$route.params.id));
             },
             addRound(){
                 this.newRound.vod = this.$route.params.id;
@@ -353,7 +334,10 @@
                 this.newRound.end = this.currentTime;
                 console.log(this.newRound)
                 console.log(this.currentTime)
-                this.createRound(this.newRound).then(x =>{this.getOneRounds(this.$route.params.id)});
+                if (this.vod.item.type === 'G'){
+                    this.newRound.game = this.vod.item.games[0].id;
+                }
+                this.createRound(this.newRound).then(x =>{this.getOne(this.$route.params.id)});
             },
             updateRoundBegin(round) {
                 round.begin = this.currentTime;
@@ -385,7 +369,7 @@
                 this.deleteGame(id).then(x=>this.getOneGames(this.$route.params.id));
             },
             removeRound(id){
-                this.deleteRound(id).then(x=>this.getOneRounds(this.$route.params.id));
+                this.deleteRound(id).then(x=>this.getOne(this.$route.params.id));
             }
         },
     }
