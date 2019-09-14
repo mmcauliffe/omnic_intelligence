@@ -791,6 +791,7 @@ class Round(models.Model):
         potential_killfeed = sorted(potential_killfeed, key=lambda x: x['time_point'])
         return potential_killfeed
 
+
 class Pause(models.Model):
     start_time = models.DecimalField(max_digits=6, decimal_places=1, default=Decimal('0.0'))
     end_time = models.DecimalField(max_digits=6, decimal_places=1, blank=True, null=True)
