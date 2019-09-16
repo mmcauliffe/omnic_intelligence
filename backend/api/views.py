@@ -1309,7 +1309,7 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                             side = 'left'
                         else:
                             side = 'right'
-                        dying_player = instance.get_player_of_hero(denied_ult.heroes.first(), time_point, side)
+                        dying_player = instance.get_player_of_hero(denied_ult.heroes.first().name, time_point, side)
                         if ability is not None:
                             kill_feed_events.append(
                                 models.KillFeedEvent(round=instance, time_point=time_point, killing_player=killing_player,
