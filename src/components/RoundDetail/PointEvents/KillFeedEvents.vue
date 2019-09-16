@@ -92,7 +92,7 @@
                 </td>
                 <td>
                     {{ props.item.dying_player.name }}
-                    <div v-if="props.item.ability && ['K', 'D'].indexOf(props.item.ability.type) !== -1
+                    <div v-if="!(props.item.ability && ['R', 'E'].indexOf(props.item.ability.type) !== -1)
                         && heroNPCs(heroAtTime(props.item.dying_player.id, props.item.time_point).id).length > 0">
 
                     <v-select v-model="props.item.dying_npc" clearable

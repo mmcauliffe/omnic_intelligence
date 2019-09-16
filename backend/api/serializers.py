@@ -92,6 +92,7 @@ class MapSerializer(serializers.ModelSerializer):
 
 
 class NPCSerializer(serializers.ModelSerializer):
+    spawning_hero = HeroSerializer()
     class Meta:
         model = models.NPC
         fields = '__all__'

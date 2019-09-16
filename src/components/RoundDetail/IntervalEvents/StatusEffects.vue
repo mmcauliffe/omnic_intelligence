@@ -105,10 +105,7 @@
                 this.newEvent.end_time = this.currentTime;
                 this.newEvent.round = this.$store.state.rounds.one.item.id;
                 console.log(this.newEvent)
-                this.addRoundEvent({type: this.event_type, event: this.newEvent}).then(
-                    function (res) {
-                        this.newEvent = {};
-                    });
+                this.addRoundEvent({type: this.event_type, event: this.newEvent});
             },
             eventChangeHandler(newNewEvent) {
                 console.log(newNewEvent)

@@ -243,6 +243,18 @@ class AbilityViewSet(viewsets.ModelViewSet):
         serializer = serializers.AbilitySerializer(abilities, many=True)
         return Response(serializer.data)
 
+    @action(methods=['get'], detail=False)
+    def denying_abilities(self, request):
+        abilities = models.Ability.objects.filter(type=models.Ability.DENYING_TYPE).all()
+        serializer = serializers.AbilitySerializer(abilities, many=True)
+        return Response(serializer.data)
+
+    @action(methods=['get'], detail=False)
+    def deniable_abilities(self, request):
+        abilities = models.Ability.objects.filter(deniable=True).all()
+        serializer = serializers.AbilitySerializer(abilities, many=True)
+        return Response(serializer.data)
+
 
 class MapViewSet(viewsets.ModelViewSet):
     model = models.Map

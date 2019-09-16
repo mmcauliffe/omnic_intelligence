@@ -141,8 +141,7 @@ const getters = {
         let hero, i, npcs=[], j;
         console.log('NPCS', state.npcs.items)
         for (i=0; i<state.npcs.items.length; i++){
-            console.log('NPC', state.npcs.items[i].spawning_hero, hero_id_list.indexOf(state.npcs.items[i].spawning_hero), hero_id_list)
-            if (hero_id_list.indexOf(state.npcs.items[i].spawning_hero) >= 0){
+            if (hero_id_list.indexOf(state.npcs.items[i].spawning_hero.id) >= 0){
                 npcs.push(state.npcs.items[i])
             }
 

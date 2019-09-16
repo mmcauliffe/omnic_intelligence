@@ -33,10 +33,11 @@
         </v-layout>
         <span>{{ status.name}}</span><br>
         <v-layout row>
+
             <v-icon v-if="!status.alive">person_outline</v-icon>
             <v-icon v-else-if="status.status === 'frozen'">ac_unit</v-icon>
             <v-icon v-else-if="status.status === 'asleep'">notifications_paused</v-icon>
-            <v-icon v-else-if="status.status === 'stunned'">star_rate</v-icon>
+            <v-icon v-else-if="status.status === 'stunned'">stars</v-icon>
             <v-icon v-else-if="status.status === 'hacked'">wifi_lock</v-icon>
             <v-icon v-else>person</v-icon>
             <v-icon v-if="status.antiheal">block</v-icon>
