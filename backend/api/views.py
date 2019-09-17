@@ -1135,24 +1135,6 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
         if not request.data.get('ignore_switches', False):
             instance.heropick_set.all().delete()
 
-        instance.replay_set.all().delete()
-        instance.pause_set.all().delete()
-        instance.smallerwindow_set.all().delete()
-        replays = []
-        pauses = []
-        smaller_windows = []
-        for r in request.data['replays']:
-            replays.append(models.Replay(round=instance, start_time=r['begin'], end_time=r['end']))
-        for r in request.data['pauses']:
-            pauses.append(models.Pause(round=instance, start_time=r['begin'], end_time=r['end']))
-        for r in request.data['smaller_windows']:
-            smaller_windows.append(models.SmallerWindow(round=instance, start_time=r['begin'], end_time=r['end']))
-        if replays:
-            models.Replay.objects.bulk_create(replays)
-        if pauses:
-            models.Pause.objects.bulk_create(pauses)
-        if smaller_windows:
-            models.SmallerWindow.objects.bulk_create(smaller_windows)
         sequences = instance.sequences
 
         instance.pointgain_set.all().delete()
@@ -1300,7 +1282,7 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                     else:
                         side = 'right'
                     dying_player = instance.get_player_of_hero(npc.spawning_hero.name, time_point, side)
-                    if ability is not None:
+                    if ability is not None and dying_player is not None:
                         if not assists:
                             kill_feed_events.append(
                                 models.KillFeedEvent(round=instance, time_point=time_point, killing_player=killing_player,
@@ -1442,7 +1424,6 @@ class VodViewSet(viewsets.ModelViewSet):
                     return_dict['right'].append({'begin': return_dict['right'][-1]['end'], 'end': r.end, 'status': 'not_zoom'})
 
         return Response(return_dict)
-
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()

@@ -317,7 +317,6 @@ class StreamChannelSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-
 class RoundSerializer(serializers.ModelSerializer):
     # game = GameSerializer()
     class Meta:
@@ -325,6 +324,7 @@ class RoundSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'round_number', 'game', 'attacking_side', 'begin', 'end', 'stream_vod', 'annotation_status',
             'sequences')
+
 
 class StreamVodSerializer(serializers.ModelSerializer):
     rounds = RoundSerializer(many=True)
