@@ -94,12 +94,14 @@ class TrainInfoViewSet(viewsets.ViewSet):
         max_labels = 250
         max_maps = 40
         max_spectator_modes = 20
+        max_film_formats = 20
         max_statuses = 15
         heroes = models.Hero.objects.order_by('id').prefetch_related('npc_set').prefetch_related('abilities').all()
         maps = models.Map.objects.order_by('id').all()
         map_modes = [x[1].lower() for x in models.Map.MODE_CHOICES]
         colors = [x[1].lower() for x in models.TeamParticipation.COLOR_CHOICES]
         spectator_modes = [x[1].lower() for x in models.Event.SPECTATOR_MODE_CHOICES]
+        film_formats = [x[1].lower() for x in models.Event.FILM_FORMAT_CHOICES]
         npcs = []
         labels = []
         for c in colors:
@@ -132,6 +134,8 @@ class TrainInfoViewSet(viewsets.ViewSet):
 
         while len(spectator_modes) < max_spectator_modes:
             spectator_modes.append('')
+        while len(film_formats) < max_film_formats:
+            film_formats.append('')
         extra_statuses = models.Status.objects.filter(independent=True).order_by('id').all()
         status_values = ['normal'] + [x.name.lower() for x in
                                       models.Status.objects.filter(independent=False).order_by('id').all()]
@@ -148,6 +152,7 @@ class TrainInfoViewSet(viewsets.ViewSet):
             'extra_statuses': extra_statuses,
             'colors': colors,
             'spectator_modes': spectator_modes,
+            'film_formats': film_formats,
             'kill_feed_labels': labels
         }
         for k, v in data.items():
@@ -1444,6 +1449,10 @@ class VodViewSet(viewsets.ModelViewSet):
             rights = []
             b = 0
             spectator_mode = r.game.match.event.get_spectator_mode_display().lower()
+            film_format = r.game.match.event.get_film_format_display().lower()
+            map = r.game.map.name.lower()
+            left_color = r.game.left_team.get_color_display().lower()
+            right_color = r.game.right_team.get_color_display().lower()
             if return_dict['game']:
                 b = return_dict['game'][-1]['end']
             return_dict['game'].append({'begin': b, 'end': r.begin, 'status': 'not_game'})
@@ -1458,6 +1467,10 @@ class VodViewSet(viewsets.ModelViewSet):
                 statuses.append({'begin': r.begin + p.start_time, 'end': r.begin + p.end_time, 'status': 'smaller_window'})
 
             return_dict['spectator_mode'].append({'begin': r.begin, 'end': r.end, 'status': spectator_mode})
+            return_dict['film_format'].append({'begin': r.begin, 'end': r.end, 'status': film_format})
+            return_dict['map'].append({'begin': r.begin, 'end': r.end, 'status': map})
+            return_dict['left_color'].append({'begin': r.begin, 'end': r.end, 'status': left_color})
+            return_dict['right_color'].append({'begin': r.begin, 'end': r.end, 'status': right_color})
             if not statuses:
                 return_dict['game'].append({'begin': r.begin, 'end': r.end, 'status': 'game'})
             else:
