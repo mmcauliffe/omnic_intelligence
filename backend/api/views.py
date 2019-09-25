@@ -1041,8 +1041,8 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
             return Response('Team "{}" is not participating in {}'.format(request.data['team_two'], event.name),
                             status=status.HTTP_400_BAD_REQUEST)
         player_names = request.data['rounds'][0]['players']
-        left_names = [x for x in player_names['left']]
-        right_names = [x for x in player_names['right']]
+        left_names = [x for x in player_names['left'].values()]
+        right_names = [x for x in player_names['right'].values()]
         is_team_one_left = True
         left_players = []
         right_players = []
