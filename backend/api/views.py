@@ -1040,6 +1040,46 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
         except models.Team.DoesNotExist:
             return Response('Team "{}" is not participating in {}'.format(request.data['team_two'], event.name),
                             status=status.HTTP_400_BAD_REQUEST)
+        player_names = request.data['rounds'][0]['players']
+        left_names = [x for x in player_names['left']]
+        right_names = [x for x in player_names['right']]
+        is_team_one_left = True
+        left_players = []
+        right_players = []
+        for n in left_names:
+            try:
+                player = team_one.players.get(name__iexact=n)
+                left_players.append(player)
+            except models.Player.DoesNotExist:
+                is_team_one_left = False
+                break
+        if is_team_one_left:
+            for n in right_names:
+                try:
+                    player = team_two.players.get(name__iexact=n)
+                    right_players.append(player)
+                except models.Player.DoesNotExist:
+                    return Response('Team "{}" does not have player "{}" ()'.format(team_two.name, n,
+                                                                                    [x.name for x in team_two.players.all()]),
+                                status=status.HTTP_400_BAD_REQUEST)
+        else:
+            for n in left_names:
+                try:
+                    player = team_two.players.get(name__iexact=n)
+                    left_players.append(player)
+                except models.Player.DoesNotExist:
+                    return Response('Team "{}" does not have player "{}" ()'.format(team_two.name, n,
+                                                                                    [x.name for x in team_two.players.all()]),
+                                status=status.HTTP_400_BAD_REQUEST)
+            for n in right_names:
+                try:
+                    player = team_one.players.get(name__iexact=n)
+                    right_players.append(player)
+                except models.Player.DoesNotExist:
+                    return Response('Team "{}" does not have player "{}" ()'.format(team_one.name, n,
+                                                                                    [x.name for x in team_one.players.all()]),
+                                status=status.HTTP_400_BAD_REQUEST)
+
         print(vod, event, team_one, team_two)
         matches = models.Match.objects.filter(teams__id__in=[team_one.id, team_two.id], event=event)
         match = None
@@ -1059,20 +1099,22 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
         try:
             game = models.Game.objects.get(game_number=game_number, match=match)
         except models.Game.DoesNotExist:
-            left_participation = models.TeamParticipation.objects.create(team=team_one)
-            for i, p in enumerate(team_one.players.all()):
+            if is_team_one_left:
+                left_participation = models.TeamParticipation.objects.create(team=team_one)
+                right_participation = models.TeamParticipation.objects.create(team=team_two)
+            else:
+                left_participation = models.TeamParticipation.objects.create(team=team_two)
+                right_participation = models.TeamParticipation.objects.create(team=team_one)
+
+            for i, p in enumerate(left_players):
                 pp = models.PlayerParticipation.objects.create(player=p,
                                                                team_participation=left_participation, player_index=i)
-                if i == 5:
-                    break
-            right_participation = models.TeamParticipation.objects.create(team=team_two)
-            for i, p in enumerate(team_two.players.all()):
+            for i, p in enumerate(right_players):
                 pp = models.PlayerParticipation.objects.create(player=p,
                                                                team_participation=right_participation, player_index=i)
-                if i == 5:
-                    break
+            map = models.Map.objects.get(name__iexact=request.data['map'])
             game = models.Game.objects.create(game_number=game_number, match=match, left_team=left_participation,
-                                              right_team=right_participation, map = models.Map.objects.first())
+                                              right_team=right_participation, map = map)
         for i, r_data in enumerate(request.data['rounds']):
             print(r_data)
             try:
