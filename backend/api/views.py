@@ -1123,7 +1123,27 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
                 r = models.Round.objects.get(game=game, stream_vod=vod, begin=r_data['begin'], end=r_data['end'])
                 print('found it!')
             except models.Round.DoesNotExist:
-                r = models.Round.objects.create(stream_vod=vod, round_number=i+1, game=game, begin=r_data['begin'], end=r_data['end'])
+                r = models.Round.objects.create(stream_vod=vod, round_number=i+1, game=game, begin=r_data['begin'], end=r_data['end'],
+                                                attacking_side=r_data['attacking_side'])
+                pauses = []
+                smaller_windows = []
+                replays = []
+                zooms = []
+                for p in r_data['pauses']:
+                    pauses.append(models.Pause(start_time=p['begin'], end_time=p['end'], round=r))
+                for p in r_data['replays']:
+                    replays.append(models.Replay(start_time=p['begin'], end_time=p['end'], round=r))
+                for p in r_data['smaller_windows']:
+                    smaller_windows.append(models.SmallerWindow(start_time=p['begin'], end_time=p['end'], round=r))
+                for z in r_data['left_zooms']:
+                    zooms.append(models.Zoom(start_time=z['begin'], end_time=z['end'], round=r, side='L'))
+                for z in r_data['right_zooms']:
+                    zooms.append(models.Zoom(start_time=z['begin'], end_time=z['end'], round=r, side='R'))
+                models.Pause.objects.bulk_create(pauses)
+                models.Replay.objects.bulk_create(replays)
+                models.SmallerWindow.objects.bulk_create(smaller_windows)
+                models.Zoom.objects.bulk_create(zooms)
+
         vod.status = 'G'
         vod.save()
         return Response({'success':True})
