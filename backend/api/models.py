@@ -585,9 +585,11 @@ class Round(models.Model):
     def sequences(self):
         replays = self.replay_set.all()
         pauses = self.pause_set.all()
-        if len(replays) == 0 and len(pauses) == 0:
+        smaller_windows = self.smallerwindow_set.all()
+        if len(replays) == 0 and len(pauses) == 0 and len(smaller_windows) == 0:
             return [[0, self.end - self.begin]]
-        interruptions = sorted([x for x in replays] + [x for x in pauses], key=lambda x: x.start_time)
+        interruptions = sorted([x for x in replays] + [x for x in pauses] + [x for x in smaller_windows],
+                               key=lambda x: x.start_time)
 
         round_end = Decimal(self.end - self.begin)
         cur_beg = Decimal('0.00')
