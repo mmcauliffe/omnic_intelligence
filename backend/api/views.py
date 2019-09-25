@@ -1440,6 +1440,10 @@ class VodViewSet(viewsets.ModelViewSet):
                  'pause_set', 'replay_set', 'smallerwindow_set', 'zoom_set').all()
         return_dict = {'game':[],
                        'spectator_mode': [],
+                       'film_format': [],
+                       'left_color': [],
+                       'right_color': [],
+                       'map': [],
                        'left': [],
                        'right': []
                        }
@@ -1456,6 +1460,10 @@ class VodViewSet(viewsets.ModelViewSet):
             if return_dict['game']:
                 b = return_dict['game'][-1]['end']
             return_dict['game'].append({'begin': b, 'end': r.begin, 'status': 'not_game'})
+            return_dict['film_format'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
+            return_dict['map'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
+            return_dict['left_color'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
+            return_dict['right_color'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
             return_dict['spectator_mode'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
             return_dict['left'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
             return_dict['right'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
