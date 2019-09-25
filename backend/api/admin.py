@@ -85,7 +85,7 @@ class StreamChannelAdmin(admin.ModelAdmin):
 
 @admin.register(StreamVod)
 class StreamVodAdmin(admin.ModelAdmin):
-    list_display = ('id', 'channel', 'title', 'broadcast_date')
+    list_display = ('id', 'channel', 'title', 'broadcast_date', 'film_format', 'status', 'type', 'last_modified')
 
 
 @admin.register(Game)

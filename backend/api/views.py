@@ -1355,8 +1355,14 @@ class VodViewSet(viewsets.ModelViewSet):
         except ValueError:
             b = datetime.strptime(request.data['broadcast_date'], '%Y-%m-%dT%H:%M:%S.%fZ')
         t = datetime.today()
+        if 'game' in request.data['title'].lower():
+            vod_type = models.StreamVod.GAME_TYPE
+        else:
+            vod_type = models.StreamVod.MATCH_TYPE
         vod = models.StreamVod.objects.create(channel_id=request.data['channel'], url=request.data['url'],
                                               title=request.data['title'], status='N',
+                                              type=vod_type,
+                                              film_format=request.data.get('film_format', models.StreamVod.ORIGINAL),
                                               broadcast_date=b, last_modified=t)
         return Response(self.serializer_class(vod).data)
 

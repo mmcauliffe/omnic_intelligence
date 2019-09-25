@@ -5,7 +5,7 @@
             <em v-if="event.loading">Loading event...</em>
             <span v-if="event.error" class="text-danger">ERROR: {{event.error}}</span>
             <div v-if="event.item">
-
+                {{event.item}}
                 <h1>{{ event.item.name }}</h1>
 
 
@@ -197,6 +197,7 @@
                     channel: vod_info.channel,
                     url: vod_info.url,
                     title: vod_info.title,
+                    film_format: this.event.item.film_format,
                     broadcast_date: vod_info.published_at
                 };
                 console.log(newVod)

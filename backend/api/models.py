@@ -35,7 +35,7 @@ class StreamVod(models.Model):
                            ('W', 'World Cup 2017'),
                            ('A', 'APEX'),
                            ('K', 'Korean Contenders'),
-                           ('2', 'Overwatch league stage 2'))
+                           ('2', 'Overwatch league season 2'))
     STATUS_CHOICES = (
         ('N', 'Not analyzed'),
         ('G', 'Automatically annotated for in-game/out-of-game'),
@@ -43,9 +43,11 @@ class StreamVod(models.Model):
         ('A', 'Rounds automatically annotated'),
         ('M', 'Round events manually corrected')
                       )
+    MATCH_TYPE = 'M'
+    GAME_TYPE = 'G'
     TYPE_CHOICES = (
-        ('M', 'Match'),
-        ('G', 'Game'),
+        (MATCH_TYPE, 'Match'),
+        (GAME_TYPE, 'Game'),
         ('R', 'Round')
     )
     channel = models.ForeignKey(StreamChannel, on_delete=models.CASCADE)
