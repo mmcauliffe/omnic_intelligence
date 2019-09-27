@@ -59,7 +59,7 @@
                 availableHeroes: [],
                 can_edit: true,
                 event_type: 'hero_picks',
-                rowsPerPage: [10]
+                rowsPerPage: [15]
             }
         },
         computed: {
