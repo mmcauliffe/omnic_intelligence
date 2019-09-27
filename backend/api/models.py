@@ -450,6 +450,13 @@ class TeamParticipation(models.Model):
     subpoints = models.CharField(max_length=128, null=True, blank=True)
     players = models.ManyToManyField(Player, through='PlayerParticipation')
 
+    @classmethod
+    def get_color_code(cls, display_color):
+        for code, color in cls.COLOR_CHOICES:
+            if display_color.lower() == color.lower():
+                return code
+        return cls.BLUE
+
     class Meta:
         ordering = ['points', 'subpoints']
 

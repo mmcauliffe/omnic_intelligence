@@ -1046,6 +1046,10 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
             return Response('Team "{}" is not participating in {}'.format(request.data['team_two'], event.name),
                             status=status.HTTP_400_BAD_REQUEST)
         player_names = request.data['rounds'][0]['players']
+        left_color = request.data['rounds'][0]['left_color']
+        right_color = request.data['rounds'][0]['right_color']
+        left_color_code = models.TeamParticipation.get_color_code(request.data['rounds'][0]['left_color'])
+        right_color_code = models.TeamParticipation.get_color_code(request.data['rounds'][0]['right_color'])
         left_names = [x for x in player_names['left'].values()]
         right_names = [x for x in player_names['right'].values()]
         is_team_one_left = True
@@ -1105,11 +1109,11 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
             game = models.Game.objects.get(game_number=game_number, match=match)
         except models.Game.DoesNotExist:
             if is_team_one_left:
-                left_participation = models.TeamParticipation.objects.create(team=team_one)
-                right_participation = models.TeamParticipation.objects.create(team=team_two)
+                left_participation = models.TeamParticipation.objects.create(team=team_one, color=left_color_code)
+                right_participation = models.TeamParticipation.objects.create(team=team_two, color=right_color_code)
             else:
-                left_participation = models.TeamParticipation.objects.create(team=team_two)
-                right_participation = models.TeamParticipation.objects.create(team=team_one)
+                left_participation = models.TeamParticipation.objects.create(team=team_two, color=left_color_code)
+                right_participation = models.TeamParticipation.objects.create(team=team_one, color=right_color_code)
 
             for i, p in enumerate(left_players):
                 pp = models.PlayerParticipation.objects.create(player=p,
