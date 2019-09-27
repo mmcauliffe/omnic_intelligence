@@ -987,7 +987,7 @@ class TrainRoundPlusViewSet(viewsets.ModelViewSet):
 
 class TrainVodViewSet(viewsets.ModelViewSet):
     model = models.StreamVod
-    queryset = models.StreamVod.objects.filter(round__annotation_status__in=['T', 'A', 'M']).order_by('pk').distinct().all()
+    queryset = models.StreamVod.objects.filter(round__annotation_status__in=['O', 'M']).order_by('pk').distinct().all()
     serializer_class = serializers.VodDisplaySerializer
 
 
@@ -1921,6 +1921,7 @@ class KillFeedEventViewSet(viewsets.ModelViewSet):
             instance.killing_player_id = request.data['killing_player']
             instance.ability = models.Ability.objects.get(name='Primary')
         elif request.data.get('killing_player', None):
+            instance.assisting_players.clear()
             instance.killing_player_id = request.data['killing_player']
             instance.ability_id = request.data['ability']['id']
             if instance.ability.headshot_capable:
@@ -1940,6 +1941,8 @@ class KillFeedEventViewSet(viewsets.ModelViewSet):
             for p in request.data['assisting_players']:
                 if p not in assist_ids:
                     instance.assisting_players.add(models.Player.objects.get(pk=p))
+        else:
+            instance.assisting_players.clear()
 
         if request.data.get('dying_npc', None):
             instance.dying_npc_id = request.data['dying_npc']

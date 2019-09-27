@@ -5,7 +5,6 @@
             <em v-if="event.loading">Loading event...</em>
             <span v-if="event.error" class="text-danger">ERROR: {{event.error}}</span>
             <div v-if="event.item">
-                {{event.item}}
                 <h1>{{ event.item.name }}</h1>
 
 
@@ -151,17 +150,17 @@
         data() {
             return {
                 vod_headers: [
-                    {text: 'Title', sortable: false},
-                    {text: 'Broadcast date', sortable: true},
-                    {text: 'Last modified', sortable: true},
-                    {text: 'Type', sortable: true},
-                    {text: 'Status', sortable: true},
+                    {text: 'Title', sortable: true, value: 'title'},
+                    {text: 'Broadcast date', sortable: true, value: 'broadcast_date'},
+                    {text: 'Last modified', sortable: true, value: 'last_modified'},
+                    {text: 'Type', sortable: true, value: 'type'},
+                    {text: 'Status', sortable: true, value: 'status'},
                 ],
                 available_vod_headers: [
-                    {text: 'Title', sortable: true},
-                    {text: 'Channel', sortable: true},
-                    {text: 'Date', sortable: true},
-                    {text: 'Duration', sortable: true},
+                    {text: 'Title', sortable: true, value: 'title'},
+                    {text: 'Channel', sortable: true, value: 'channel_title'},
+                    {text: 'Date', sortable: true, value: 'published_at'},
+                    {text: 'Duration', sortable: true, value: 'duration'},
                     {text: 'Actions', sortable: false},
                 ],
                 rowsPerPage: [10]
