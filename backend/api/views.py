@@ -1045,51 +1045,7 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
         except models.Team.DoesNotExist:
             return Response('Team "{}" is not participating in {}'.format(request.data['team_two'], event.name),
                             status=status.HTTP_400_BAD_REQUEST)
-        player_names = request.data['rounds'][0]['players']
-        left_color = request.data['left_color']
-        right_color = request.data['right_color']
-        left_color_code = models.TeamParticipation.get_color_code(left_color)
-        right_color_code = models.TeamParticipation.get_color_code(right_color)
-        print(left_color, right_color)
-        print(left_color_code, right_color_code)
-        left_names = [x for x in player_names['left'].values()]
-        right_names = [x for x in player_names['right'].values()]
-        is_team_one_left = True
-        left_players = []
-        right_players = []
-        for n in left_names:
-            try:
-                player = team_one.players.get(name__iexact=n)
-                left_players.append(player)
-            except models.Player.DoesNotExist:
-                is_team_one_left = False
-                break
-        if is_team_one_left:
-            for n in right_names:
-                try:
-                    player = team_two.players.get(name__iexact=n)
-                    right_players.append(player)
-                except models.Player.DoesNotExist:
-                    return Response('Team "{}" does not have player "{}" ()'.format(team_two.name, n,
-                                                                                    [x.name for x in team_two.players.all()]),
-                                status=status.HTTP_400_BAD_REQUEST)
-        else:
-            for n in left_names:
-                try:
-                    player = team_two.players.get(name__iexact=n)
-                    left_players.append(player)
-                except models.Player.DoesNotExist:
-                    return Response('Team "{}" does not have player "{}" ()'.format(team_two.name, n,
-                                                                                    [x.name for x in team_two.players.all()]),
-                                status=status.HTTP_400_BAD_REQUEST)
-            for n in right_names:
-                try:
-                    player = team_one.players.get(name__iexact=n)
-                    right_players.append(player)
-                except models.Player.DoesNotExist:
-                    return Response('Team "{}" does not have player "{}" ()'.format(team_one.name, n,
-                                                                                    [x.name for x in team_one.players.all()]),
-                                status=status.HTTP_400_BAD_REQUEST)
+
 
         print(vod, event, team_one, team_two)
         matches = models.Match.objects.filter(teams__id__in=[team_one.id, team_two.id], event=event)
@@ -1108,10 +1064,59 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
             game_number = 1
             if 'game_number' in request.data:
                 game_number = int(request.data['game_number'])
-            games = [{'game_number': game_number, 'rounds': request.data['rounds']}]
+            games = [{'game_number': game_number, 'rounds': request.data['rounds'],
+                      'left_color': request.data['left_color'], 'right_color': request.data['right_color']}]
         elif vod.type == 'M':
             games = request.data['games']
         for g in games:
+            player_names = g['rounds'][0]['players']
+            left_color = g['left_color']
+            right_color = g['right_color']
+            left_color_code = models.TeamParticipation.get_color_code(left_color)
+            right_color_code = models.TeamParticipation.get_color_code(right_color)
+            print(left_color, right_color)
+            print(left_color_code, right_color_code)
+            left_names = [x for x in player_names['left'].values()]
+            right_names = [x for x in player_names['right'].values()]
+            is_team_one_left = True
+            left_players = []
+            right_players = []
+            for n in left_names:
+                try:
+                    player = team_one.players.get(name__iexact=n)
+                    left_players.append(player)
+                except models.Player.DoesNotExist:
+                    is_team_one_left = False
+                    break
+            if is_team_one_left:
+                for n in right_names:
+                    try:
+                        player = team_two.players.get(name__iexact=n)
+                        right_players.append(player)
+                    except models.Player.DoesNotExist:
+                        return Response('Team "{}" does not have player "{}" ()'.format(team_two.name, n,
+                                                                                        [x.name for x in
+                                                                                         team_two.players.all()]),
+                                        status=status.HTTP_400_BAD_REQUEST)
+            else:
+                for n in left_names:
+                    try:
+                        player = team_two.players.get(name__iexact=n)
+                        left_players.append(player)
+                    except models.Player.DoesNotExist:
+                        return Response('Team "{}" does not have player "{}" ()'.format(team_two.name, n,
+                                                                                        [x.name for x in
+                                                                                         team_two.players.all()]),
+                                        status=status.HTTP_400_BAD_REQUEST)
+                for n in right_names:
+                    try:
+                        player = team_one.players.get(name__iexact=n)
+                        right_players.append(player)
+                    except models.Player.DoesNotExist:
+                        return Response('Team "{}" does not have player "{}" ()'.format(team_one.name, n,
+                                                                                        [x.name for x in
+                                                                                         team_one.players.all()]),
+                                        status=status.HTTP_400_BAD_REQUEST)
             try:
                 game = models.Game.objects.get(game_number=g['game_number'], match=match)
             except models.Game.DoesNotExist:
