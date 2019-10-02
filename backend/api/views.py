@@ -376,7 +376,7 @@ class EventViewSet(viewsets.ModelViewSet):
                     except KeyError:
                         break
             elif c.site == 'Y':
-                key = 'AIzaSyDaCfkl0xzGF4OJaPraa0E2Phnp5qcMjLM'
+                key = 'AIzaSyA8MnOLcdiQct1tr4kKLkvt2m6Sl2L_0hw'
                 while True:
                     vod_urls = [x.url for x in c.streamvod_set.all()]
                     if not cursor:
