@@ -1136,7 +1136,7 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
                 map = models.Map.objects.get(name__iexact=request.data['map'])
                 game = models.Game.objects.create(game_number=g['game_number'], match=match, left_team=left_participation,
                                                   right_team=right_participation, map = map)
-            for i, r_data in enumerate(request.data['rounds']):
+            for i, r_data in enumerate(g['rounds']):
                 print(r_data)
                 try:
                     print(Decimal(r_data['begin']), Decimal(str(r_data['begin'])))
