@@ -1104,56 +1104,61 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
             match.teams.add(team_one)
             match.teams.add(team_two)
         print(match)
-        game_number = 1
-        if 'game_number' in request.data:
-            game_number = int(request.data['game_number'])
-        try:
-            game = models.Game.objects.get(game_number=game_number, match=match)
-        except models.Game.DoesNotExist:
-            if is_team_one_left:
-                left_participation = models.TeamParticipation.objects.create(team=team_one, color=left_color_code)
-                right_participation = models.TeamParticipation.objects.create(team=team_two, color=right_color_code)
-            else:
-                left_participation = models.TeamParticipation.objects.create(team=team_two, color=left_color_code)
-                right_participation = models.TeamParticipation.objects.create(team=team_one, color=right_color_code)
-
-            for i, p in enumerate(left_players):
-                pp = models.PlayerParticipation.objects.create(player=p,
-                                                               team_participation=left_participation, player_index=i)
-            for i, p in enumerate(right_players):
-                pp = models.PlayerParticipation.objects.create(player=p,
-                                                               team_participation=right_participation, player_index=i)
-            map = models.Map.objects.get(name__iexact=request.data['map'])
-            game = models.Game.objects.create(game_number=game_number, match=match, left_team=left_participation,
-                                              right_team=right_participation, map = map)
-        for i, r_data in enumerate(request.data['rounds']):
-            print(r_data)
+        if vod.type == 'G':
+            game_number = 1
+            if 'game_number' in request.data:
+                game_number = int(request.data['game_number'])
+            games = [{'game_number': game_number, 'rounds': request.data['rounds']}]
+        elif vod.type == 'M':
+            games = request.data['games']
+        for g in games:
             try:
-                print(Decimal(r_data['begin']), Decimal(str(r_data['begin'])))
-                print([(x.begin, x.end) for x in models.Round.objects.filter(game=game, stream_vod=vod)])
-                r = models.Round.objects.get(game=game, stream_vod=vod, begin=r_data['begin'], end=r_data['end'])
-                print('found it!')
-            except models.Round.DoesNotExist:
-                r = models.Round.objects.create(stream_vod=vod, round_number=i+1, game=game, begin=r_data['begin'], end=r_data['end'],
-                                                attacking_side=r_data['attacking_side'])
-                pauses = []
-                smaller_windows = []
-                replays = []
-                zooms = []
-                for p in r_data['pauses']:
-                    pauses.append(models.Pause(start_time=p['begin'], end_time=p['end'], round=r))
-                for p in r_data['replays']:
-                    replays.append(models.Replay(start_time=p['begin'], end_time=p['end'], round=r))
-                for p in r_data['smaller_windows']:
-                    smaller_windows.append(models.SmallerWindow(start_time=p['begin'], end_time=p['end'], round=r))
-                for z in r_data['left_zooms']:
-                    zooms.append(models.Zoom(start_time=z['begin'], end_time=z['end'], round=r, side='L'))
-                for z in r_data['right_zooms']:
-                    zooms.append(models.Zoom(start_time=z['begin'], end_time=z['end'], round=r, side='R'))
-                models.Pause.objects.bulk_create(pauses)
-                models.Replay.objects.bulk_create(replays)
-                models.SmallerWindow.objects.bulk_create(smaller_windows)
-                models.Zoom.objects.bulk_create(zooms)
+                game = models.Game.objects.get(game_number=g['game_number'], match=match)
+            except models.Game.DoesNotExist:
+                if is_team_one_left:
+                    left_participation = models.TeamParticipation.objects.create(team=team_one, color=left_color_code)
+                    right_participation = models.TeamParticipation.objects.create(team=team_two, color=right_color_code)
+                else:
+                    left_participation = models.TeamParticipation.objects.create(team=team_two, color=left_color_code)
+                    right_participation = models.TeamParticipation.objects.create(team=team_one, color=right_color_code)
+
+                for i, p in enumerate(left_players):
+                    pp = models.PlayerParticipation.objects.create(player=p,
+                                                                   team_participation=left_participation, player_index=i)
+                for i, p in enumerate(right_players):
+                    pp = models.PlayerParticipation.objects.create(player=p,
+                                                                   team_participation=right_participation, player_index=i)
+                map = models.Map.objects.get(name__iexact=request.data['map'])
+                game = models.Game.objects.create(game_number=g['game_number'], match=match, left_team=left_participation,
+                                                  right_team=right_participation, map = map)
+            for i, r_data in enumerate(request.data['rounds']):
+                print(r_data)
+                try:
+                    print(Decimal(r_data['begin']), Decimal(str(r_data['begin'])))
+                    print([(x.begin, x.end) for x in models.Round.objects.filter(game=game, stream_vod=vod)])
+                    r = models.Round.objects.get(game=game, stream_vod=vod, begin=r_data['begin'], end=r_data['end'])
+                    print('found it!')
+                except models.Round.DoesNotExist:
+                    r = models.Round.objects.create(stream_vod=vod, round_number=i+1, game=game, begin=r_data['begin'], end=r_data['end'],
+                                                    attacking_side=r_data['attacking_side'])
+                    pauses = []
+                    smaller_windows = []
+                    replays = []
+                    zooms = []
+                    for p in r_data['pauses']:
+                        pauses.append(models.Pause(start_time=p['begin'], end_time=p['end'], round=r))
+                    for p in r_data['replays']:
+                        replays.append(models.Replay(start_time=p['begin'], end_time=p['end'], round=r))
+                    for p in r_data['smaller_windows']:
+                        smaller_windows.append(models.SmallerWindow(start_time=p['begin'], end_time=p['end'], round=r))
+                    for z in r_data['left_zooms']:
+                        zooms.append(models.Zoom(start_time=z['begin'], end_time=z['end'], round=r, side='L'))
+                    for z in r_data['right_zooms']:
+                        zooms.append(models.Zoom(start_time=z['begin'], end_time=z['end'], round=r, side='R'))
+                    models.Pause.objects.bulk_create(pauses)
+                    models.Replay.objects.bulk_create(replays)
+                    models.SmallerWindow.objects.bulk_create(smaller_windows)
+                    models.Zoom.objects.bulk_create(zooms)
 
         vod.status = 'G'
         vod.save()
