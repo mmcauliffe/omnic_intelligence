@@ -1186,7 +1186,7 @@ class TrainPlayerViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.PlayerSerializer
 
     def get_queryset(self):
-        rounds = models.Round.objects.filter(annotation_status='M').order_by('pk').prefetch_related(
+        rounds = models.Round.objects.filter(annotation_status__in=['M', 'O']).order_by('pk').prefetch_related(
             'game__left_team__playerparticipation_set', 'game__right_team__playerparticipation_set').all()
         players = []
         for r in rounds:
