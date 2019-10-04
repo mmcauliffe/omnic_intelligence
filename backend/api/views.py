@@ -102,6 +102,9 @@ class TrainInfoViewSet(viewsets.ViewSet):
         colors = [x[1].lower() for x in models.TeamParticipation.COLOR_CHOICES]
         spectator_modes = [x[1].lower() for x in models.Event.SPECTATOR_MODE_CHOICES]
         film_formats = [x[1].lower() for x in models.Event.FILM_FORMAT_CHOICES]
+        characters = set()
+        for p in models.Player.objects.all():
+            characters.update(p.name.lower())
         npcs = []
         labels = []
         for c in colors:
@@ -153,6 +156,7 @@ class TrainInfoViewSet(viewsets.ViewSet):
             'colors': colors,
             'spectator_modes': spectator_modes,
             'film_formats': film_formats,
+            'player_name_characters': sorted(characters),
             'kill_feed_labels': labels
         }
         for k, v in data.items():
