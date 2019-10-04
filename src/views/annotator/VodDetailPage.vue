@@ -344,6 +344,16 @@
                         this.newRound.round_number = 1;
                     }
                 }
+                else if (this.vod.item.type === 'M'){
+                    this.newRound.game = this.vod.item.games[this.vod.item.games.length - 1].id;
+                    if (this.vod.item.rounds.length > 0){
+                        this.newRound.round_number = this.vod.item.rounds[this.vod.item.rounds.length - 1].round_number + 1;
+                    }
+                    else {
+                        this.newRound.round_number = 1;
+                    }
+
+                }
                 this.createRound(this.newRound).then(x =>{this.getOne(this.$route.params.id)});
             },
             updateRoundBegin(round) {

@@ -498,6 +498,11 @@ class GameViewSet(viewsets.ModelViewSet):
                                           left_team=left_team_participation, right_team=right_team_participation)
         return Response(self.serializer_class(game).data)
 
+    @action(methods=['get'], detail=True)
+    def stats(self, request, pk=None):
+        instance = self.get_object()
+        return Response(instance.generate_stats())
+
     @action(methods=['post'], detail=False)
     def create_upload(self, request, *args, **kwargs):
         for k, v in request.data.items():
@@ -959,7 +964,7 @@ class RoundStatusViewSet(viewsets.ModelViewSet):
 
 class TrainRoundViewSet(viewsets.ModelViewSet):
     model = models.Round
-    queryset = models.Round.objects.filter(annotation_status='M').order_by('pk').all()
+    queryset = models.Round.objects.filter(annotation_status__in=['M', 'O']).order_by('pk').all()
     serializer_class = serializers.RoundDisplaySerializer
 
 
@@ -1631,6 +1636,8 @@ class RoundViewSet(viewsets.ModelViewSet):
         instance.end = request.data['end']
         if request.data['annotation_status']:
             instance.annotation_status = request.data['annotation_status']
+        if instance.annotation_status == 'M':
+            instance.fix_switch_end_points()
         game = request.data['game']
         if isinstance(game, dict):
             game = game['id']
