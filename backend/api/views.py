@@ -1073,7 +1073,7 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
             game_number = 1
             if 'game_number' in request.data:
                 game_number = int(request.data['game_number'])
-            games = [{'game_number': game_number, 'rounds': request.data['rounds'],
+            games = [{'game_number': game_number, 'rounds': request.data['rounds'], 'map': request.data['map']
                       'left_color': request.data['left_color'], 'right_color': request.data['right_color']}]
         elif vod.type == 'M':
             games = request.data['games']
@@ -1142,7 +1142,7 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
                 for i, p in enumerate(right_players):
                     pp = models.PlayerParticipation.objects.create(player=p,
                                                                    team_participation=right_participation, player_index=i)
-                map = models.Map.objects.get(name__iexact=request.data['map'])
+                map = models.Map.objects.get(name__iexact=g['map'])
                 game = models.Game.objects.create(game_number=g['game_number'], match=match, left_team=left_participation,
                                                   right_team=right_participation, map = map)
             for i, r_data in enumerate(g['rounds']):
