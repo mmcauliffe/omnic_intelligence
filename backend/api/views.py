@@ -1073,7 +1073,7 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
             game_number = 1
             if 'game_number' in request.data:
                 game_number = int(request.data['game_number'])
-            games = [{'game_number': game_number, 'rounds': request.data['rounds'], 'map': request.data['map']
+            games = [{'game_number': game_number, 'rounds': request.data['rounds'], 'map': request.data['map'],
                       'left_color': request.data['left_color'], 'right_color': request.data['right_color']}]
         elif vod.type == 'M':
             games = request.data['games']
