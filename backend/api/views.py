@@ -314,6 +314,8 @@ class EventViewSet(viewsets.ModelViewSet):
         vods =[]
         for c in event.stream_channels.prefetch_related('streamvod_set').all():
             for v in c.streamvod_set.all():
+                if event.channel_query_string is not None and event.channel_query_string not in v.title:
+                    continue
                 if start_date and v.broadcast_date.date() < start_date:
                     continue
                 if end_date and v.broadcast_date.date() > end_date:
@@ -331,13 +333,13 @@ class EventViewSet(viewsets.ModelViewSet):
         vods =[]
         for c in event.stream_channels.prefetch_related('streamvod_set').all():
             cursor = ''
+            break_early = False
             if c.site == 'T':
                 response = requests.get('https://api.twitch.tv/helix/users?login={}'.format(c.name),
                                         headers={'Client-ID': 'fgjp7t0f365uazgs84n7t9xhf19xt2'})
                 data = response.json()['data'][0]
                 id = data['id']
                 key = 'fgjp7t0f365uazgs84n7t9xhf19xt2'
-                break_early = False
                 while True:
                     vod_urls = [x.url for x in c.streamvod_set.all()]
                     if not cursor:
@@ -397,6 +399,18 @@ class EventViewSet(viewsets.ModelViewSet):
                             url = 'https://www.youtube.com/watch?v=' + item['id']['videoId']
                         except KeyError:
                             continue
+                        if item['snippet']['publishedAt'] is None:
+                            continue
+                        published_at = datetime.datetime.strptime(item['snippet']['publishedAt'], '%Y-%m-%dT%H:%M:%S.%fZ').date()
+                        if event.channel_query_string is not None and event.channel_query_string not in item['snippet']['title']:
+                            continue
+                        if end_date is not None:
+                            if published_at > end_date:
+                                continue
+                        if start_date is not None:
+                            if published_at < start_date:
+                                break_early = True
+                                break
                         if url in vod_urls:
                             continue
                         v = {'url': url,
@@ -408,6 +422,8 @@ class EventViewSet(viewsets.ModelViewSet):
                              }
                         vods.append(v)
                         vod_urls.append(url)
+                    if break_early:
+                        break
                     try:
                         cursor= data['nextPageToken']
                     except KeyError:
@@ -1056,29 +1072,28 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
                             status=status.HTTP_400_BAD_REQUEST)
 
         print(vod, event, team_one, team_two)
+        matches = models.Match.objects.filter(teams__id__in=[team_one.id, team_two.id], event=event, date=vod.broadcast_date.date())
+        match = None
+        for m in matches:
+            if len(m.teams.filter(id__in=[team_one.id, team_two.id])) == 2:
+                match = m
+                break
+        print(match)
+        if match is None:
+            match = models.Match.objects.create(event=event, date=vod.broadcast_date.date())
+            match.teams.add(team_one)
+            match.teams.add(team_two)
+        print(match)
         if vod.type == 'G':
-            matches = models.Match.objects.filter(teams__id__in=[team_one.id, team_two.id], event=event)
-            match = None
-            for m in matches:
-                if len(m.teams.filter(id__in=[team_one.id, team_two.id])) == 2:
-                    match = m
-                    break
-            print(match)
-            if match is None:
-                match = models.Match.objects.create(event=event, date=vod.broadcast_date.date())
-                match.teams.add(team_one)
-                match.teams.add(team_two)
-            print(match)
             game_number = 1
+            num_previous_games = 0
             if 'game_number' in request.data:
                 game_number = int(request.data['game_number'])
             games = [{'game_number': game_number, 'rounds': request.data['rounds'], 'map': request.data['map'],
                       'left_color': request.data['left_color'], 'right_color': request.data['right_color']}]
         elif vod.type == 'M':
-            match = models.Match.objects.create(event=event)
-            match.teams.add(team_one)
-            match.teams.add(team_two)
             games = request.data['games']
+            num_previous_games = match.game_set.count()
         for g in games:
             player_names = g['rounds'][0]['players']
             left_color = g['left_color']
@@ -1129,7 +1144,7 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
                                                                                          team_one.players.all()]),
                                         status=status.HTTP_400_BAD_REQUEST)
             try:
-                game = models.Game.objects.get(game_number=g['game_number'], match=match)
+                game = models.Game.objects.get(game_number=num_previous_games+g['game_number'], match=match)
             except models.Game.DoesNotExist:
                 if is_team_one_left:
                     left_participation = models.TeamParticipation.objects.create(team=team_one, color=left_color_code)
@@ -1145,7 +1160,7 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
                     pp = models.PlayerParticipation.objects.create(player=p,
                                                                    team_participation=right_participation, player_index=i)
                 map = models.Map.objects.get(name__iexact=g['map'])
-                game = models.Game.objects.create(game_number=g['game_number'], match=match, left_team=left_participation,
+                game = models.Game.objects.create(game_number=num_previous_games+g['game_number'], match=match, left_team=left_participation,
                                                   right_team=right_participation, map = map)
             for i, r_data in enumerate(g['rounds']):
                 print(r_data)
