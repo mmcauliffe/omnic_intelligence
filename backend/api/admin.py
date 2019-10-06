@@ -95,7 +95,7 @@ class GameAdmin(admin.ModelAdmin):
 
 @admin.register(Match)
 class MatchAdmin(admin.ModelAdmin):
-    list_display = ('id', 'get_event_name', 'get_event_spectator_mode', 'get_team_description')
+    list_display = ('id', 'get_event_name', 'get_event_spectator_mode', 'get_team_description', 'date')
 
     def get_event_name(self, obj):
         return obj.event.name

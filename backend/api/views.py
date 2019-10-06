@@ -1065,7 +1065,7 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
                     break
             print(match)
             if match is None:
-                match = models.Match.objects.create(event=event)
+                match = models.Match.objects.create(event=event, date=vod.broadcast_date.date())
                 match.teams.add(team_one)
                 match.teams.add(team_two)
             print(match)
