@@ -320,6 +320,7 @@
             selectGame(game){
                 this.selectedMatch = this.vod.item.matches.filter(x => {return x.id === game.match})[0];
                 this.selectedGame = game;
+                this.seekTo(this.vod.item.rounds.filter(x=> {return x.game === game.id})[0].begin);
             },
             addMatch(){
                 this.createMatch(this.newMatch).then(x=>this.getOne(this.$route.params.id));
