@@ -400,6 +400,7 @@ class Match(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
     teams = models.ManyToManyField(Team)
     description = models.CharField(max_length=256)
+    date = models.DateField(blank=True, null=True)
     rules = models.CharField(max_length=1, choices=RULES_CHOICES, default=COMP)
     exhibition = models.BooleanField(default=False)
     patch = models.ForeignKey(Patch, on_delete=models.SET_NULL, null=True, blank=True)
@@ -416,10 +417,6 @@ class Match(models.Model):
     @property
     def team_description(self):
         return ' and '.join(x.name for x in self.teams.all())
-
-    @property
-    def date(self):
-        return self.game_set.first().round_set.first().streamvod_set.first().published_at.date()
 
     @property
     def start_time(self):

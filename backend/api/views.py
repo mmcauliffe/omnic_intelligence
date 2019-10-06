@@ -1055,27 +1055,29 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
             return Response('Team "{}" is not participating in {}'.format(request.data['team_two'], event.name),
                             status=status.HTTP_400_BAD_REQUEST)
 
-
         print(vod, event, team_one, team_two)
-        matches = models.Match.objects.filter(teams__id__in=[team_one.id, team_two.id], event=event)
-        match = None
-        for m in matches:
-            if len(m.teams.filter(id__in=[team_one.id, team_two.id])) == 2:
-                match = m
-                break
-        print(match)
-        if match is None:
-            match = models.Match.objects.create(event=event)
-            match.teams.add(team_one)
-            match.teams.add(team_two)
-        print(match)
         if vod.type == 'G':
+            matches = models.Match.objects.filter(teams__id__in=[team_one.id, team_two.id], event=event)
+            match = None
+            for m in matches:
+                if len(m.teams.filter(id__in=[team_one.id, team_two.id])) == 2:
+                    match = m
+                    break
+            print(match)
+            if match is None:
+                match = models.Match.objects.create(event=event)
+                match.teams.add(team_one)
+                match.teams.add(team_two)
+            print(match)
             game_number = 1
             if 'game_number' in request.data:
                 game_number = int(request.data['game_number'])
             games = [{'game_number': game_number, 'rounds': request.data['rounds'], 'map': request.data['map'],
                       'left_color': request.data['left_color'], 'right_color': request.data['right_color']}]
         elif vod.type == 'M':
+            match = models.Match.objects.create(event=event)
+            match.teams.add(team_one)
+            match.teams.add(team_two)
             games = request.data['games']
         for g in games:
             player_names = g['rounds'][0]['players']
