@@ -1392,10 +1392,10 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                         if not assists:
                             kill_feed_events.append(
                                 models.KillFeedEvent(round=instance, time_point=time_point, killing_player=killing_player,
-                                               dying_npc=npc, dying_player=dying_player, ability=ability))
+                                               dying_npc=npc, dying_player=dying_player, ability=ability, headshot=headshot))
                         else:
                             m = models.KillFeedEvent.objects.create(round=instance, time_point=time_point, killing_player=killing_player,
-                                           dying_npc=npc, dying_player=dying_player, ability=ability)
+                                           dying_npc=npc, dying_player=dying_player, ability=ability, headshot=headshot)
                             for a in assists:
                                 assisting_player = instance.get_player_of_hero(a, time_point, killing_side)
                                 if assisting_player is None:
