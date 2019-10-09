@@ -1280,7 +1280,7 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
             if not request.data.get('ignore_switches', False):
                 for s in v['switches']:
                     for seq in sequences:
-                        if seq[0] <= s[0] <= seq[1]:
+                        if seq[0] - 0.5 <= s[0] <= seq[1] + 0.5:
                             break
                     else:
                         continue
