@@ -1229,6 +1229,7 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
         return Response()
 
     def update(self, request, *args, **kwargs):
+        from decimal import Decimal
         errors = []
         error_log_path = r'E:\Data\Overwatch\issues.txt'
         instance = self.get_object()
@@ -1280,7 +1281,7 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
             if not request.data.get('ignore_switches', False):
                 for s in v['switches']:
                     for seq in sequences:
-                        if seq[0] - 0.5 <= s[0] <= seq[1] + 0.5:
+                        if seq[0] - Decimal('0.5') <= s[0] <= seq[1] + Decimal('0.5'):
                             break
                     else:
                         continue
