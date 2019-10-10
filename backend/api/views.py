@@ -440,6 +440,12 @@ class MatchViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     @action(methods=['get'], detail=True)
+    def stats(self, request, pk=None):
+        all_stats = request.query_params.get('all_stats', False)
+        instance = self.get_object()
+        return Response(instance.generate_stats(all_stats=all_stats))
+
+    @action(methods=['get'], detail=True)
     def teams(self, request, pk=None):
         match = self.get_object()
         teams = match.teams.all()

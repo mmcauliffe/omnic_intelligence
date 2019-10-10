@@ -427,6 +427,25 @@ class Match(models.Model):
                 return first_round.begin
         return 0
 
+    def generate_stats(self, all_stats=False):
+        data = {'maps': []}
+        if self.date is None:
+            self.date = self.game_set.first().round_set.first().stream_vod.broadcast_date.date()
+            self.save()
+
+        data['date'] = self.date
+        for g in self.game_set.prefetch_related('left_team__team', 'right_team__team', 'map').all():
+            if 'team_one' not in data:
+                data['team_one'] = g.left_team.team.name
+                data['team_two'] = g.right_team.team.name
+            map_data = {'map': g.map.name,
+                        'game_number': g.game_number
+                        }
+            d = g.generate_stats(all_stats=all_stats)
+            map_data.update(d)
+            data['maps'].append(map_data)
+        return data
+
 
 class Game(models.Model):
     game_number = models.IntegerField()
@@ -439,31 +458,36 @@ class Game(models.Model):
         unique_together = (("match", "game_number"),)
         ordering = ['-match__id', 'game_number']
 
-    def generate_stats(self):
+    def generate_stats(self, all_stats=False):
         from collections import Counter
         stat_types = ['final_blows', 'assists', 'deaths', 'ults_gained', 'ults_used']
         #stat_types += [x + '_per10' for x in stat_types]
-        stats = {'left': {}, 'right': {}}
-        hero_specific_stats = {'left': {}, 'right': {}}
-        hero_play_time = {'left': {}, 'right':{}}
+        left_team_name = self.left_team.team.name
+        right_team_name = self.right_team.team.name
+        stats = {left_team_name: {}, right_team_name: {}}
+        hero_specific_stats = {left_team_name: {}, right_team_name: {}}
+        hero_play_time = {left_team_name: {}, right_team_name:{}}
         left_team_players = self.left_team.players.all()
         right_team_players = self.right_team.players.all()
-        for r in self.round_set.all():
-            for i,p in enumerate(list(left_team_players) + list(right_team_players)):
+        for r in self.round_set.prefetch_related('ultimate_set', 'killfeedevent_set__ability').all():
+            for i, p in enumerate(list(left_team_players) + list(right_team_players)):
                 if i < 6:
-                    side = 'left'
+                    side = left_team_name
                 else:
-                    side = 'right'
-                if side == 'left':
-                    friendly_team = left_team_players
-                    enemy_team = right_team_players
-                else:
-                    friendly_team = right_team_players
-                    enemy_team = left_team_players
+                    side = right_team_name
                 if p.name not in stats[side]:
                     stats[side][p.name] = {x: 0 for x in stat_types}
                     hero_play_time[side][p.name] = Counter()
                     hero_specific_stats[side][p.name] = {}
+            for i, p in enumerate(list(left_team_players) + list(right_team_players)):
+                if i < 6:
+                    side = left_team_name
+                    friendly_team = left_team_players
+                    enemy_team = right_team_players
+                else:
+                    side = right_team_name
+                    friendly_team = right_team_players
+                    enemy_team = left_team_players
                 ultimates = r.ultimate_set.filter(player=p)
                 stats[side][p.name]['ults_gained'] += len(ultimates)
                 stats[side][p.name]['ults_used'] += len([x for x in ultimates if x.used is not None])
@@ -473,100 +497,101 @@ class Game(models.Model):
 
                 assists = p.assisted_kills.filter(round=r)
                 stats[side][p.name]['assists'] += len(assists)
-
                 deaths = r.killfeedevent_set.filter(dying_player=p, ability__type=Ability.DAMAGING_TYPE,
                                                     dying_npc__isnull=True, denied_ult__isnull=True)
                 stats[side][p.name]['deaths'] += len(deaths)
-                hero_picks = r.heropick_set.filter(player=p)
+                hero_picks = r.heropick_set.prefetch_related('new_hero').filter(player=p)
                 for hp in hero_picks:
-                    print(p.name, hp.time_point, hp.end_time_point, hp.new_hero)
                     end = hp.end_time_point
                     if end is None:
                         end = r.end
                     hero_play_time[side][p.name][hp.new_hero.name] += end - hp.time_point
-                    if hp.new_hero.name not in hero_specific_stats[side][p.name]:
-                        hero_specific_stats[side][p.name][hp.new_hero.name] = Counter()
-                    if hp.new_hero.name.lower() in ['d.va', 'sigma']:
-                        ults_denied = r.killfeedevent_set.filter(killing_player=p, ability__type=Ability.DENYING_TYPE,
-                                                                 denied_ult__isnull=False, time_point__gte=hp.time_point,
-                                                                 time_point__lte=end)
-                        hero_specific_stats[side][p.name][hp.new_hero.name]['ults_denied'] += len(ults_denied)
-                    if hp.new_hero.name.lower() == 'd.va':
-                        mech_deaths = r.killfeedevent_set.filter(dying_player=p, ability__type=Ability.DAMAGING_TYPE,
-                                                                 dying_npc__isnull=False, denied_ult__isnull=True,
-                                                                 time_point__gte=hp.time_point,
-                                                                 time_point__lte=end)
-                        hero_specific_stats[side][p.name][hp.new_hero.name]['mech_deaths'] += len(mech_deaths)
-                    elif hp.new_hero.name.lower() == 'orisa':
-                        supercharger_deaths = r.killfeedevent_set.filter(dying_player=p,
-                                                                         ability__type=Ability.DAMAGING_TYPE,
-                                                                         dying_npc__isnull=False, denied_ult__isnull=True,
-                                                                 time_point__gte=hp.time_point,
-                                                                 time_point__lte=end)
-                        hero_specific_stats[side][p.name][hp.new_hero.name]['supercharger_deaths'] += len(supercharger_deaths)
-                        #ultimates = r.ultimate_set.filter(player=p, used__isnull=False)
-                        #average_ultimate_duration = sum(x.end_time - x.start_time for x in ultimates) / len(ultimates)
-                        #hero_specific_stats[side][p.name][hp.new_hero.name]['average_supercharger_life'] += len(supercharger_deaths)
-                    elif hp.new_hero.name.lower() == 'ana':
-                        num_antis = r.statuseffect_set.filter(status__causing_hero=hp.new_hero, player__in=enemy_team,
-                                                              status__name='Antiheal', start_time__gte=hp.time_point,
-                                                              start_time__lte=end)
-                        hero_specific_stats[side][p.name][hp.new_hero.name]['number_of_antiheals'] += len(
-                            num_antis)
-                        num_sleeps = r.statuseffect_set.filter(status__causing_hero=hp.new_hero, player__in=enemy_team,
-                                                               status__name='Asleep', start_time__gte=hp.time_point,
-                                                              start_time__lte=hp.end_time_point)
-                        hero_specific_stats[side][p.name][hp.new_hero.name]['number_of_sleeps'] += len(
-                            num_sleeps)
-                    elif hp.new_hero.name.lower() == 'mercy':
-                        revives = r.killfeedevent_set.filter(killing_player=p, ability__type=Ability.REVIVING_TYPE)
-                        hero_specific_stats[side][p.name][hp.new_hero.name]['revives'] += len(revives)
-                    elif hp.new_hero.name.lower() == 'sombra':
-                        num_hacks = r.statuseffect_set.filter(status__causing_hero=hp.new_hero, player__in=enemy_team,
-                                                              status__name='Hacked', start_time__gte=hp.time_point,
-                                                              start_time__lte=end)
-                        hero_specific_stats[side][p.name][hp.new_hero.name]['number_of_hacks'] += len(
-                            num_hacks)
-                    elif hp.new_hero.name.lower() == 'baptiste':
-                        immortality_deaths = r.killfeedevent_set.filter(dying_player=p,
-                                                                         ability__type=Ability.DAMAGING_TYPE,
-                                                                         dying_npc__isnull=False, denied_ult__isnull=True,
-                                                                 time_point__gte=hp.time_point,
-                                                                 time_point__lte=end)
-                        hero_specific_stats[side][p.name][hp.new_hero.name]['immortality_field_deaths'] += len(immortality_deaths)
-                        immortals = r.statuseffect_set.filter(status__causing_hero=hp.new_hero, player__in=friendly_team,
-                                                              status__name='Immortal', start_time__gte=hp.time_point,
-                                                              start_time__lte=end)
-                        hero_specific_stats[side][p.name][hp.new_hero.name]['immortality_time'] += sum([x.end_time - x.start_time for x in immortals])
-                    elif hp.new_hero.name.lower() == 'mei':
-                        frozen = r.statuseffect_set.filter(status__causing_hero=hp.new_hero, player__in=enemy_team,
-                                                              status__name='Frozen', start_time__gte=hp.time_point,
-                                                              start_time__lte=end)
-                        hero_specific_stats[side][p.name][hp.new_hero.name]['enemies_frozen'] += len(
-                            frozen)
-                        hero_specific_stats[side][p.name][hp.new_hero.name]['frozen_duration'] += sum([x.end_time - x.start_time for x in frozen])
-                    elif hp.new_hero.name.lower() == 'lúcio':
-                        beats_cancelled = r.ultimate_set.filter(player=p, used__isnull=False, ended__lt=r.end-Decimal('0.1'))
-                        beats_cancelled = [x for x in beats_cancelled if x.ended - x.used < 3]
-                        hero_specific_stats[side][p.name][hp.new_hero.name]['beats_cancelled'] += len(beats_cancelled)
-                    if hp.new_hero.name.lower() in ['widowmaker', 'mccree']:
-                        headshot_kills = r.killfeedevent_set.filter(killing_player=p, ability__type=Ability.DAMAGING_TYPE, headshot=True)
-                        hero_specific_stats[side][p.name][hp.new_hero.name]['headshot_kills'] += len(headshot_kills)
-                    if hp.new_hero.abilities.filter(deniable=True).count() > 0:
-                        ults_eaten = r.killfeedevent_set.filter(dying_player=p,
-                                                                         ability__type=Ability.DENYING_TYPE,
-                                                                         dying_npc__isnull=True, denied_ult__isnull=False,
-                                                                 time_point__gte=hp.time_point,
-                                                                 time_point__lte=end)
-                        hero_specific_stats[side][p.name][hp.new_hero.name]['denied_ults'] += len(ults_eaten)
-                    try:
-                        ultimate = hp.new_hero.abilities.get(ultimate=True, type=Ability.DAMAGING_TYPE)
-                        ultimate_kills = r.killfeedevent_set.filter(killing_player=p, ability=ultimate)
-                        hero_specific_stats[side][p.name][hp.new_hero.name]['ultimate_kills'] = len(ultimate_kills)
-                    except Ability.DoesNotExist:
-                        pass
-
-        return {'stats': stats, 'hero_play_time': hero_play_time, 'hero_specific_stats': hero_specific_stats}
+                    if all_stats:
+                        if hp.new_hero.name not in hero_specific_stats[side][p.name]:
+                            hero_specific_stats[side][p.name][hp.new_hero.name] = Counter()
+                        if hp.new_hero.name.lower() in ['d.va', 'sigma']:
+                            ults_denied = r.killfeedevent_set.filter(killing_player=p, ability__type=Ability.DENYING_TYPE,
+                                                                     denied_ult__isnull=False, time_point__gte=hp.time_point,
+                                                                     time_point__lte=end)
+                            hero_specific_stats[side][p.name][hp.new_hero.name]['ults_denied'] += len(ults_denied)
+                        if hp.new_hero.name.lower() == 'd.va':
+                            mech_deaths = r.killfeedevent_set.filter(dying_player=p, ability__type=Ability.DAMAGING_TYPE,
+                                                                     dying_npc__isnull=False, denied_ult__isnull=True,
+                                                                     time_point__gte=hp.time_point,
+                                                                     time_point__lte=end)
+                            hero_specific_stats[side][p.name][hp.new_hero.name]['mech_deaths'] += len(mech_deaths)
+                        elif hp.new_hero.name.lower() == 'orisa':
+                            supercharger_deaths = r.killfeedevent_set.filter(dying_player=p,
+                                                                             ability__type=Ability.DAMAGING_TYPE,
+                                                                             dying_npc__isnull=False, denied_ult__isnull=True,
+                                                                     time_point__gte=hp.time_point,
+                                                                     time_point__lte=end)
+                            hero_specific_stats[side][p.name][hp.new_hero.name]['supercharger_deaths'] += len(supercharger_deaths)
+                            #ultimates = r.ultimate_set.filter(player=p, used__isnull=False)
+                            #average_ultimate_duration = sum(x.end_time - x.start_time for x in ultimates) / len(ultimates)
+                            #hero_specific_stats[side][p.name][hp.new_hero.name]['average_supercharger_life'] += len(supercharger_deaths)
+                        elif hp.new_hero.name.lower() == 'ana':
+                            num_antis = r.statuseffect_set.filter(status__causing_hero=hp.new_hero, player__in=enemy_team,
+                                                                  status__name='Antiheal', start_time__gte=hp.time_point,
+                                                                  start_time__lte=end)
+                            hero_specific_stats[side][p.name][hp.new_hero.name]['number_of_antiheals'] += len(
+                                num_antis)
+                            num_sleeps = r.statuseffect_set.filter(status__causing_hero=hp.new_hero, player__in=enemy_team,
+                                                                   status__name='Asleep', start_time__gte=hp.time_point,
+                                                                  start_time__lte=hp.end_time_point)
+                            hero_specific_stats[side][p.name][hp.new_hero.name]['number_of_sleeps'] += len(
+                                num_sleeps)
+                        elif hp.new_hero.name.lower() == 'mercy':
+                            revives = r.killfeedevent_set.filter(killing_player=p, ability__type=Ability.REVIVING_TYPE)
+                            hero_specific_stats[side][p.name][hp.new_hero.name]['revives'] += len(revives)
+                        elif hp.new_hero.name.lower() == 'sombra':
+                            num_hacks = r.statuseffect_set.filter(status__causing_hero=hp.new_hero, player__in=enemy_team,
+                                                                  status__name='Hacked', start_time__gte=hp.time_point,
+                                                                  start_time__lte=end)
+                            hero_specific_stats[side][p.name][hp.new_hero.name]['number_of_hacks'] += len(
+                                num_hacks)
+                        elif hp.new_hero.name.lower() == 'baptiste':
+                            immortality_deaths = r.killfeedevent_set.filter(dying_player=p,
+                                                                             ability__type=Ability.DAMAGING_TYPE,
+                                                                             dying_npc__isnull=False, denied_ult__isnull=True,
+                                                                     time_point__gte=hp.time_point,
+                                                                     time_point__lte=end)
+                            hero_specific_stats[side][p.name][hp.new_hero.name]['immortality_field_deaths'] += len(immortality_deaths)
+                            immortals = r.statuseffect_set.filter(status__causing_hero=hp.new_hero, player__in=friendly_team,
+                                                                  status__name='Immortal', start_time__gte=hp.time_point,
+                                                                  start_time__lte=end)
+                            hero_specific_stats[side][p.name][hp.new_hero.name]['immortality_time'] += sum([x.end_time - x.start_time for x in immortals])
+                        elif hp.new_hero.name.lower() == 'mei':
+                            frozen = r.statuseffect_set.filter(status__causing_hero=hp.new_hero, player__in=enemy_team,
+                                                                  status__name='Frozen', start_time__gte=hp.time_point,
+                                                                  start_time__lte=end)
+                            hero_specific_stats[side][p.name][hp.new_hero.name]['enemies_frozen'] += len(
+                                frozen)
+                            hero_specific_stats[side][p.name][hp.new_hero.name]['frozen_duration'] += sum([x.end_time - x.start_time for x in frozen])
+                        elif hp.new_hero.name.lower() == 'lúcio':
+                            beats_cancelled = r.ultimate_set.filter(player=p, used__isnull=False, ended__lt=r.end-Decimal('0.1'))
+                            beats_cancelled = [x for x in beats_cancelled if x.ended - x.used < 3]
+                            hero_specific_stats[side][p.name][hp.new_hero.name]['beats_cancelled'] += len(beats_cancelled)
+                        if hp.new_hero.name.lower() in ['widowmaker', 'mccree']:
+                            headshot_kills = r.killfeedevent_set.filter(killing_player=p, ability__type=Ability.DAMAGING_TYPE, headshot=True)
+                            hero_specific_stats[side][p.name][hp.new_hero.name]['headshot_kills'] += len(headshot_kills)
+                        if hp.new_hero.abilities.filter(deniable=True).count() > 0:
+                            ults_eaten = r.killfeedevent_set.filter(dying_player=p,
+                                                                             ability__type=Ability.DENYING_TYPE,
+                                                                             dying_npc__isnull=True, denied_ult__isnull=False,
+                                                                     time_point__gte=hp.time_point,
+                                                                     time_point__lte=end)
+                            hero_specific_stats[side][p.name][hp.new_hero.name]['denied_ults'] += len(ults_eaten)
+                        try:
+                            ultimate = hp.new_hero.abilities.get(ultimate=True, type=Ability.DAMAGING_TYPE)
+                            ultimate_kills = r.killfeedevent_set.filter(killing_player=p, ability=ultimate)
+                            hero_specific_stats[side][p.name][hp.new_hero.name]['ultimate_kills'] = len(ultimate_kills)
+                        except Ability.DoesNotExist:
+                            pass
+        d = {'stats': stats, 'hero_play_time': hero_play_time}
+        if all_stats:
+            d['hero_specific_stats'] = hero_specific_stats
+        return d
 
 class TeamParticipation(models.Model):
     BLUE = 'B'
