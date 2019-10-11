@@ -504,7 +504,7 @@ class Game(models.Model):
                 for hp in hero_picks:
                     end = hp.end_time_point
                     if end is None:
-                        end = r.end
+                        end = r.duration
                     hero_play_time[side][p.name][hp.new_hero.name] += end - hp.time_point
                     if all_stats:
                         if hp.new_hero.name not in hero_specific_stats[side][p.name]:
