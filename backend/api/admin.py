@@ -1,7 +1,7 @@
 from django.contrib import admin
 # Register your models here.
 from .models import Map, Hero, Ability, NPC, Team, Player, Event, Match, Round, StreamChannel, StreamVod, \
-    TeamParticipation, Affiliation, Game, Status, StatusEffect
+    TeamParticipation, Affiliation, Game, Status, StatusEffect, Patch
 
 
 @admin.register(Map)
@@ -92,6 +92,9 @@ class StreamVodAdmin(admin.ModelAdmin):
 class GameAdmin(admin.ModelAdmin):
     list_display = ('id', 'match', 'game_number')
 
+@admin.register(Patch)
+class PatchAdmin(admin.ModelAdmin):
+    list_display = ('version_number', 'live_date', 'end_date')
 
 @admin.register(Match)
 class MatchAdmin(admin.ModelAdmin):
