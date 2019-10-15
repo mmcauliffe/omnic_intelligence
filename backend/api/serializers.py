@@ -325,6 +325,25 @@ class RoundSerializer(serializers.ModelSerializer):
             'id', 'round_number', 'game', 'attacking_side', 'begin', 'end', 'stream_vod', 'annotation_status',
             'sequences')
 
+class RoundAnalysisSerializer(serializers.ModelSerializer):
+    film_format = serializers.SerializerMethodField()
+    spectator_mode = serializers.SerializerMethodField()
+    map = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.Round
+        fields = ('id', 'map', 'duration', 'film_format', 'spectator_mode')
+
+    def get_film_format(self, obj):
+        if obj.stream_vod is None:
+            return ''
+        return obj.stream_vod.get_film_format_display()
+
+    def get_spectator_mode(self, obj):
+        return obj.game.match.event.get_spectator_mode_display()
+
+    def get_map(self, obj):
+        return obj.game.map.name
 
 class StreamVodSerializer(serializers.ModelSerializer):
     rounds = RoundSerializer(many=True)

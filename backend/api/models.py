@@ -702,8 +702,17 @@ class Round(models.Model):
             data['right'][p.player_index].update(pp.get_status_effect_states(self))
         return data
 
-    def get_heroes_used(self):
-        from .utils import transform_oi_heroes
+    def get_status_duration(self):
+        status_durations = {}
+        q = self.statuseffect_set.prefetch_related('status').all()
+        for s in q:
+            status = s.status.name
+            if status not in status_durations:
+                status_durations[status] = 0
+            status_durations[status] += s.end - s.begin
+        return status_durations
+
+    def get_hero_play_time(self):
         used_heroes = {}
         q = self.heropick_set.order_by('player_id', 'time_point').all()
         cur_player = None
@@ -713,7 +722,7 @@ class Round(models.Model):
             if cur_player is None:
                 cur_player = r.player_id
             if cur_hero is None:
-                cur_hero = transform_oi_heroes(r.new_hero.name)
+                cur_hero = r.new_hero.name
             if cur_hero is not None:
                 if cur_hero not in used_heroes:
                     used_heroes[cur_hero] = 0
@@ -723,11 +732,42 @@ class Round(models.Model):
                 cur_player = r.player_id
                 cur_time = r.time_point
                 if r.new_hero is not None:
-                    cur_hero = transform_oi_heroes(r.new_hero.name)
-            elif cur_hero is not None and transform_oi_heroes(r.new_hero.name) != cur_hero:
+                    cur_hero = r.new_hero.name
+            elif cur_hero is not None and r.new_hero.name != cur_hero:
                 used_heroes[cur_hero] += r.time_point - cur_time
                 cur_time = r.time_point
-                cur_hero = transform_oi_heroes(r.new_hero.name)
+                cur_hero = r.new_hero.name
+        if cur_hero not in used_heroes:
+            used_heroes[cur_hero] = 0
+        used_heroes[cur_hero] += self.end - cur_time - self.begin
+
+        return used_heroes
+
+    def get_heroes_used(self):
+        used_heroes = {}
+        q = self.heropick_set.order_by('player_id', 'time_point').all()
+        cur_player = None
+        cur_time = 0
+        cur_hero = None
+        for r in q:
+            if cur_player is None:
+                cur_player = r.player_id
+            if cur_hero is None:
+                cur_hero = r.new_hero.name
+            if cur_hero is not None:
+                if cur_hero not in used_heroes:
+                    used_heroes[cur_hero] = 0
+            if r.player_id != cur_player:
+                if cur_player is not None:
+                    used_heroes[cur_hero] += self.end - cur_time - self.begin
+                cur_player = r.player_id
+                cur_time = r.time_point
+                if r.new_hero is not None:
+                    cur_hero = r.new_hero.name
+            elif cur_hero is not None and r.new_hero.name != cur_hero:
+                used_heroes[cur_hero] += r.time_point - cur_time
+                cur_time = r.time_point
+                cur_hero = r.new_hero.name
         if cur_hero not in used_heroes:
             used_heroes[cur_hero] = 0
         used_heroes[cur_hero] += self.end - cur_time - self.begin

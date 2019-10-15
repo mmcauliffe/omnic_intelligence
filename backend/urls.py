@@ -22,6 +22,7 @@ api_router.register(r'users', api.UserViewSet, base_name='users')
 # Overwatch specific
 
 api_router.register(r'heroes', api.HeroViewSet, base_name='heroes')
+api_router.register(r'train_stats', api.TrainStatsViewSet, base_name='train_stats')
 api_router.register(r'train_info', api.TrainInfoViewSet, base_name='train_info')
 api_router.register(r'status_effect_choices', api.StatusEffectChoiceViewSet, base_name='status_effect_choices')
 api_router.register(r'hero_summary', api.HeroSummaryViewSet, base_name='hero_summary')

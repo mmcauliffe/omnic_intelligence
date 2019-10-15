@@ -2,6 +2,9 @@ from django.views.generic import TemplateView
 from django.views.decorators.cache import never_cache
 
 from rest_framework import generics, permissions, viewsets
+from rest_framework.views import APIView
+from rest_framework.settings import api_settings
+from rest_framework_csv import renderers as csv_r
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import filters
@@ -9,6 +12,7 @@ from rest_framework import filters
 from rest_framework import pagination, status
 
 import django
+from django.http import HttpResponse
 from django.db.models import Q
 from django.core.exceptions import FieldDoesNotExist
 from django.db.models.fields.reverse_related import ForeignObjectRel, OneToOneRel
@@ -43,13 +47,14 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(methods=['get'], detail=False)
     def current_user(self, request):
-        #print(dir(request))
-        #print(request.auth)
-        #print(request.data)
-        #print(request.user)
+        # print(dir(request))
+        # print(request.auth)
+        # print(request.data)
+        # print(request.user)
         if isinstance(request.user, AnonymousUser):
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         return Response(self.serializer_class(request.user).data)
+
 
 class RelatedOrderingFilter(filters.OrderingFilter):
     """
@@ -88,7 +93,70 @@ class RelatedOrderingFilter(filters.OrderingFilter):
                 if self.is_valid_field(queryset.model, term.lstrip('-'))]
 
 
+class TrainStatsViewSet(viewsets.ModelViewSet):
+    queryset = models.Round.objects.filter(annotation_status='M').all()
+    renderer_classes = (csv_r.CSVRenderer, ) + tuple(api_settings.DEFAULT_RENDERER_CLASSES)
+    serializer_class = serializers.RoundAnalysisSerializer
+
+    def list(self, request, *args, **kwargs):
+        import csv
+        response = HttpResponse(content_type='text/csv')
+        response.encoding = 'utf8'
+        response['Content-Disposition'] = 'attachment; filename="train_stats.csv"'
+        queryset = self.get_queryset()
+        data = []
+        heroes = models.Hero.objects.all()
+        statuses = models.Status.objects.all()
+        header = list(self.serializer_class.Meta.fields)
+        header += [x.name for x in heroes]
+        header += [x.name for x in statuses]
+        for r in queryset:
+            base_data = self.serializer_class(r).data
+            hero_play_time = {x.name: 0 for x in heroes}
+            hero_play_time.update(r.get_hero_play_time())
+            base_data.update(hero_play_time)
+            status_durations = {x.name: 0 for x in statuses}
+            status_durations.update(r.get_status_duration())
+            base_data.update(status_durations)
+            data.append(base_data)
+        writer = csv.DictWriter(response, fieldnames=header)
+        writer.writeheader()
+        for row in data:
+            writer.writerow(row)
+        return response
+
 class TrainInfoViewSet(viewsets.ViewSet):
+    @action(methods=['get'], detail=False)
+    def stats(self, request):
+        from collections import Counter
+        data = {}
+        for r in models.Round.objects.prefetch_related('game__match__event',
+                                                       'game__map', 'stream_vod').filter(annotation_status='M').all():
+            spec_mode = r.game.match.event.get_spectator_mode_display()
+            if spec_mode not in data:
+                data[spec_mode] = {'hero_play_time': Counter(),
+                                     'ability_use': Counter(), 'map_time': Counter(),
+                'npc_deaths': Counter(), 'ult_eats': Counter(),
+                'spectator_mode_time': Counter(), 'film_format_time': Counter(), 'total_time': 0}
+            data[spec_mode]['total_time'] += r.duration
+            data[spec_mode]['hero_play_time'].update(r.get_hero_play_time())
+            kill_feed_events = r.killfeedevent_set.prefetch_related('ability').all()
+            for kfe in kill_feed_events:
+                if kfe.ability is not None:
+                    data[spec_mode]['ability_use'][kfe.ability.name] += 1
+                    if kfe.ability.type == models.Ability.DAMAGING_TYPE and kfe.dying_npc is not None:
+                        data[spec_mode]['npc_deaths'][kfe.dying_npc.name] += 1
+                    elif kfe.ability.type == models.Ability.DENYING_TYPE and kfe.denied_ult is not None:
+                        data[spec_mode]['ult_eats'][kfe.denied_ult.name] += 1
+            data[spec_mode]['map_time'][r.game.map.name] += r.duration
+            if r.stream_vod is not None:
+                data[spec_mode]['film_format_time'][r.stream_vod.get_film_format_display()] += r.duration
+        for spec_mode in data.keys():
+            for k, v in data[spec_mode].items():
+                if isinstance(v, dict):
+                    data[spec_mode][k] = dict(sorted(v.items(), key=lambda x: -1 * x[1]))
+        return Response(data)
+
     def list(self, request):
         max_heroes = 50
         max_labels = 250
@@ -166,7 +234,7 @@ class TrainInfoViewSet(viewsets.ViewSet):
 
 class TeamColorViewSet(viewsets.ViewSet):
     def list(self, request):
-        choices = [{'id': x[0], 'name':x[1]} for x in models.TeamParticipation.COLOR_CHOICES]
+        choices = [{'id': x[0], 'name': x[1]} for x in models.TeamParticipation.COLOR_CHOICES]
         return Response(choices)
 
 
@@ -311,7 +379,7 @@ class EventViewSet(viewsets.ModelViewSet):
         event = self.get_object()
         start_date = event.start_date
         end_date = event.end_date
-        vods =[]
+        vods = []
         for c in event.stream_channels.prefetch_related('streamvod_set').all():
             for v in c.streamvod_set.all():
                 if event.channel_query_string is not None and event.channel_query_string not in v.title:
@@ -330,7 +398,7 @@ class EventViewSet(viewsets.ModelViewSet):
         event = self.get_object()
         start_date = event.start_date
         end_date = event.end_date
-        vods =[]
+        vods = []
         for c in event.stream_channels.prefetch_related('streamvod_set').all():
             cursor = ''
             break_early = False
@@ -386,19 +454,21 @@ class EventViewSet(viewsets.ModelViewSet):
                 while True:
                     vod_urls = [x.url for x in c.streamvod_set.all()]
                     if not cursor:
-                        url = 'https://www.googleapis.com/youtube/v3/search?key={}&channelId={}&part=snippet,id&order=date&maxResults=50'.format(key, c.youtube_channel_id)
+                        url = 'https://www.googleapis.com/youtube/v3/search?key={}&channelId={}&part=snippet,id&order=date&maxResults=50'.format(
+                            key, c.youtube_channel_id)
                     else:
-                        url = 'https://www.googleapis.com/youtube/v3/search?key={}&channelId={}&part=snippet,id&order=date&maxResults=50&pageToken={}'.format(key, c.youtube_channel_id, cursor)
+                        url = 'https://www.googleapis.com/youtube/v3/search?key={}&channelId={}&part=snippet,id&order=date&maxResults=50&pageToken={}'.format(
+                            key, c.youtube_channel_id, cursor)
                     if event.channel_query_string is not None:
-                        query ='&q=allintitle: "{}"'.format(event.channel_query_string)
+                        query = '&q=allintitle: "{}"'.format(event.channel_query_string)
                         query = query.replace(' ', '+').replace(':', '%3A')
                         url += query
                     if end_date is not None:
-                        mod_end_date = end_date + datetime.timedelta(days=1) # Inclusive
+                        mod_end_date = end_date + datetime.timedelta(days=1)  # Inclusive
                         query = '&publishedBefore=' + mod_end_date.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
                         url += query
                     if start_date is not None:
-                        mod_start_date = start_date - datetime.timedelta(days=1) # Inclusive
+                        mod_start_date = start_date - datetime.timedelta(days=1)  # Inclusive
                         query = '&publishedAfter=' + mod_start_date.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
                         url += query
                     response = requests.get(url)
@@ -421,7 +491,7 @@ class EventViewSet(viewsets.ModelViewSet):
                         vods.append(v)
                         vod_urls.append(url)
                     try:
-                        cursor= data['nextPageToken']
+                        cursor = data['nextPageToken']
                     except KeyError:
                         break
         return Response(vods)
@@ -479,13 +549,14 @@ class GameViewSet(viewsets.ModelViewSet):
         game_num = int(request.data['game_number'])
         try:
             game = models.Game.objects.get(game_number=game_num, match=match)
-            return Response('Game already exists for this match.',status=status.HTTP_409_CONFLICT)
+            return Response('Game already exists for this match.', status=status.HTTP_409_CONFLICT)
         except models.Game.DoesNotExist:
             pass
 
         if 'left_team' in request.data:
             print(request.data)
-            left_team_participation = models.TeamParticipation.objects.create(team_id=request.data['left_team'], color='B')
+            left_team_participation = models.TeamParticipation.objects.create(team_id=request.data['left_team'],
+                                                                              color='B')
             do_subtract = min([int(i) for i in request.data['left_players'].keys()]) == 1
             for i, p in request.data['left_players'].items():
                 if do_subtract:
@@ -493,7 +564,8 @@ class GameViewSet(viewsets.ModelViewSet):
                 pp = models.PlayerParticipation.objects.create(team_participation=left_team_participation, player_id=p,
                                                                player_index=int(i))
 
-            right_team_participation = models.TeamParticipation.objects.create(team_id=request.data['right_team'], color='R')
+            right_team_participation = models.TeamParticipation.objects.create(team_id=request.data['right_team'],
+                                                                               color='R')
             for i, p in request.data['right_players'].items():
                 if do_subtract:
                     i -= 1
@@ -532,7 +604,7 @@ class GameViewSet(viewsets.ModelViewSet):
                 continue
             print(k, v)
         vod = models.StreamVod.objects.get(id=int(request.data['vod_id']))
-        #if vod.round_set.count() > 0:
+        # if vod.round_set.count() > 0:
         #    return Response()
         print(vod)
         channel = vod.channel
@@ -543,11 +615,11 @@ class GameViewSet(viewsets.ModelViewSet):
         create_match = True
         matches = event.match_set.filter(description=request.data['description']).all()
         for m in matches:
-            #has_manual = False
-            #for g in m.game_set.all():
+            # has_manual = False
+            # for g in m.game_set.all():
             #    if g.round_set.filter(annotation_status='M').exists():
             #        has_manual = True
-            #if not has_manual:
+            # if not has_manual:
             #    m.delete()
             #    continue
             teams = m.teams.all()
@@ -565,7 +637,7 @@ class GameViewSet(viewsets.ModelViewSet):
             match = models.Match.objects.create(event=event, description=request.data['description'])
         left_names = {}
         right_names = {}
-        r =request.data['rounds'][0]
+        r = request.data['rounds'][0]
         print(r['round']['map'])
         left_color = r['left_color']
         right_color = r['right_color']
@@ -614,7 +686,8 @@ class GameViewSet(viewsets.ModelViewSet):
         print('right_names', right_names)
         print(team_one_players, team_two_players)
         print(team_one.id, team_two.id)
-        team_one_players, team_two_players, one_left = match_up_players(left_names, right_names, team_one_players, team_two_players)
+        team_one_players, team_two_players, one_left = match_up_players(left_names, right_names, team_one_players,
+                                                                        team_two_players)
 
         print(team_one_players, team_two_players)
         if one_left:
@@ -628,18 +701,20 @@ class GameViewSet(viewsets.ModelViewSet):
             right_team = team_one
             right_team_players = team_one_players
         try:
-            game = models.Game.objects.get(match=match,game_number=int(request.data['game_number']))
+            game = models.Game.objects.get(match=match, game_number=int(request.data['game_number']))
         except models.Game.DoesNotExist:
             left_team_participation = models.TeamParticipation.objects.create(team=left_team, color='B')
             for i, p in left_team_players.items():
-                pp = models.PlayerParticipation.objects.create(team_participation=left_team_participation, player=p, player_index=int(i))
+                pp = models.PlayerParticipation.objects.create(team_participation=left_team_participation, player=p,
+                                                               player_index=int(i))
 
             right_team_participation = models.TeamParticipation.objects.create(team=right_team, color='R')
             for i, p in right_team_players.items():
                 pp = models.PlayerParticipation.objects.create(team_participation=right_team_participation, player=p,
                                                                player_index=int(i))
 
-            game = models.Game.objects.create(match=match,game_number=int(request.data['game_number']), map=map_object, left_team=left_team_participation, right_team=right_team_participation)
+            game = models.Game.objects.create(match=match, game_number=int(request.data['game_number']), map=map_object,
+                                              left_team=left_team_participation, right_team=right_team_participation)
         errors = []
         error_log_path = r'E:\Data\Overwatch\issues_vod.txt'
         print(len(request.data['rounds']), 'total rounds')
@@ -652,10 +727,12 @@ class GameViewSet(viewsets.ModelViewSet):
             elif r_data['attacking_color'] == 'red':
                 attacking_side = 'R'
             try:
-                instance = models.Round.objects.get(game=game, round_number=i+1)
+                instance = models.Round.objects.get(game=game, round_number=i + 1)
                 created = False
             except models.Round.DoesNotExist:
-                instance = models.Round.objects.create(stream_vod=vod, game=game, round_number=i+1, attacking_side=attacking_side, begin=r_data['begin'], end=r_data['end'])
+                instance = models.Round.objects.create(stream_vod=vod, game=game, round_number=i + 1,
+                                                       attacking_side=attacking_side, begin=r_data['begin'],
+                                                       end=r_data['end'])
                 created = True
             print(instance, created)
             if not created:
@@ -708,7 +785,8 @@ class GameViewSet(viewsets.ModelViewSet):
                         continue
                     hero = models.Hero.objects.get(name__iexact=s[1])
                     if i < len(v['switches']) - 1:
-                        switches.append(models.Switch(round=instance, player=p, new_hero=hero, time_point=s[0], end_time_point=v['switches'][i+1][0]))
+                        switches.append(models.Switch(round=instance, player=p, new_hero=hero, time_point=s[0],
+                                                      end_time_point=v['switches'][i + 1][0]))
                     else:
                         switches.append(models.Switch(round=instance, player=p, new_hero=hero, time_point=s[0]))
                 for ug in v['ult_gains']:
@@ -817,13 +895,14 @@ class GameViewSet(viewsets.ModelViewSet):
                         if ability is not None:
                             if not assists:
                                 killnpcs.append(
-                                models.KillNPC(round=instance, time_point=time_point, killing_player=killing_player,
-                                               killed_npc=npc, ability=ability))
+                                    models.KillNPC(round=instance, time_point=time_point, killing_player=killing_player,
+                                                   killed_npc=npc, ability=ability))
                                 npcdeaths.append(models.NPCDeath(round=instance, time_point=time_point, npc=npc,
                                                                  side=killed_side[0].upper()))
                             else:
-                                m = models.KillNPC.objects.create(round=instance, time_point=time_point, killing_player=killing_player,
-                                               killed_npc=npc, ability=ability)
+                                m = models.KillNPC.objects.create(round=instance, time_point=time_point,
+                                                                  killing_player=killing_player,
+                                                                  killed_npc=npc, ability=ability)
                                 for a in assists:
                                     assisting_player = instance.get_player_of_hero(a, time_point, killing_side)
                                     if assisting_player is None:
@@ -837,12 +916,14 @@ class GameViewSet(viewsets.ModelViewSet):
                         if ability is not None:
                             if not assists:
                                 kills.append(
-                                models.Kill(round=instance, time_point=time_point, killing_player=killing_player,
-                                            killed_player=killed_player, ability=ability, headshot=headshot))
+                                    models.Kill(round=instance, time_point=time_point, killing_player=killing_player,
+                                                killed_player=killed_player, ability=ability, headshot=headshot))
                                 deaths.append(models.Death(round=instance, time_point=time_point, player=killed_player))
                             else:
-                                m = models.Kill.objects.create(round=instance, time_point=time_point, killing_player=killing_player,
-                                            killed_player=killed_player, ability=ability, headshot=headshot)
+                                m = models.Kill.objects.create(round=instance, time_point=time_point,
+                                                               killing_player=killing_player,
+                                                               killed_player=killed_player, ability=ability,
+                                                               headshot=headshot)
                                 for a in assists:
                                     assisting_player = instance.get_player_of_hero(a, time_point, killing_side)
                                     print('assisting_player', assisting_player)
@@ -889,17 +970,19 @@ class GameViewSet(viewsets.ModelViewSet):
     @action(methods=['put'], detail=True)
     def update_teams(self, request, pk=None):
         game = self.get_object()
-        left_t = models.TeamParticipation.objects.prefetch_related('playerparticipation_set').get(id=request.data['left_team']['id'])
+        left_t = models.TeamParticipation.objects.prefetch_related('playerparticipation_set').get(
+            id=request.data['left_team']['id'])
         left_t.color = request.data['left_team']['color']
-        for i,p in enumerate(left_t.playerparticipation_set.all()):
+        for i, p in enumerate(left_t.playerparticipation_set.all()):
             if p.player_id != request.data['left_team']['players'][i]['player']:
                 p.player_id = request.data['left_team']['players'][i]['player']
                 p.save()
         left_t.save()
         game.left_team = left_t
-        right_t = models.TeamParticipation.objects.prefetch_related('playerparticipation_set').get(id=request.data['right_team']['id'])
+        right_t = models.TeamParticipation.objects.prefetch_related('playerparticipation_set').get(
+            id=request.data['right_team']['id'])
         right_t.color = request.data['right_team']['color']
-        for i,p in enumerate(right_t.playerparticipation_set.all()):
+        for i, p in enumerate(right_t.playerparticipation_set.all()):
             if p.player_id != request.data['right_team']['players'][i]['player']:
                 p.player_id = request.data['right_team']['players'][i]['player']
                 p.save()
@@ -921,6 +1004,7 @@ class GameViewSet(viewsets.ModelViewSet):
         left = serializers.TeamParticipationSerializer(game.left_team).data
         right = serializers.TeamParticipationSerializer(game.right_team).data
         return Response({'left': left, 'right': right})
+
 
 class StreamChannelViewSet(viewsets.ModelViewSet):
     model = models.StreamChannel
@@ -973,7 +1057,8 @@ class StreamChannelViewSet(viewsets.ModelViewSet):
 
 class RoundStatusViewSet(viewsets.ModelViewSet):
     model = models.Round
-    queryset = models.Round.objects.prefetch_related('game', 'game__match', 'game__match__event').filter(~Q(stream_vod=None)).all()
+    queryset = models.Round.objects.prefetch_related('game', 'game__match', 'game__match__event').filter(
+        ~Q(stream_vod=None)).all()
     serializer_class = serializers.RoundStatusSerializer
     filter_backends = (filters.SearchFilter, RelatedOrderingFilter,)
     pagination_class = pagination.LimitOffsetPagination
@@ -1074,7 +1159,8 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
                             status=status.HTTP_400_BAD_REQUEST)
 
         print(vod, event, team_one, team_two)
-        matches = models.Match.objects.filter(teams__id__in=[team_one.id, team_two.id], event=event, date=vod.broadcast_date.date())
+        matches = models.Match.objects.filter(teams__id__in=[team_one.id, team_two.id], event=event,
+                                              date=vod.broadcast_date.date())
         match = None
         for m in matches:
             if len(m.teams.filter(id__in=[team_one.id, team_two.id])) == 2:
@@ -1146,7 +1232,7 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
                                                                                          team_one.players.all()]),
                                         status=status.HTTP_400_BAD_REQUEST)
             try:
-                game = models.Game.objects.get(game_number=num_previous_games+g['game_number'], match=match)
+                game = models.Game.objects.get(game_number=num_previous_games + g['game_number'], match=match)
             except models.Game.DoesNotExist:
                 if is_team_one_left:
                     left_participation = models.TeamParticipation.objects.create(team=team_one, color=left_color_code)
@@ -1157,13 +1243,16 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
 
                 for i, p in enumerate(left_players):
                     pp = models.PlayerParticipation.objects.create(player=p,
-                                                                   team_participation=left_participation, player_index=i)
+                                                                   team_participation=left_participation,
+                                                                   player_index=i)
                 for i, p in enumerate(right_players):
                     pp = models.PlayerParticipation.objects.create(player=p,
-                                                                   team_participation=right_participation, player_index=i)
+                                                                   team_participation=right_participation,
+                                                                   player_index=i)
                 map = models.Map.objects.get(name__iexact=g['map'])
-                game = models.Game.objects.create(game_number=num_previous_games+g['game_number'], match=match, left_team=left_participation,
-                                                  right_team=right_participation, map = map)
+                game = models.Game.objects.create(game_number=num_previous_games + g['game_number'], match=match,
+                                                  left_team=left_participation,
+                                                  right_team=right_participation, map=map)
             for i, r_data in enumerate(g['rounds']):
                 print(r_data)
                 try:
@@ -1172,7 +1261,8 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
                     r = models.Round.objects.get(game=game, stream_vod=vod, begin=r_data['begin'], end=r_data['end'])
                     print('found it!')
                 except models.Round.DoesNotExist:
-                    r = models.Round.objects.create(stream_vod=vod, round_number=i+1, game=game, begin=r_data['begin'], end=r_data['end'],
+                    r = models.Round.objects.create(stream_vod=vod, round_number=i + 1, game=game,
+                                                    begin=r_data['begin'], end=r_data['end'],
                                                     attacking_side=r_data['attacking_side'])
                     pauses = []
                     smaller_windows = []
@@ -1195,7 +1285,7 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
 
         vod.status = 'G'
         vod.save()
-        return Response({'success':True})
+        return Response({'success': True})
 
     @action(methods=['get'], detail=False)
     def round_events(self, request):
@@ -1225,7 +1315,7 @@ class TrainPlayerViewSet(viewsets.ModelViewSet):
 
 class AnnotateRoundViewSet(viewsets.ModelViewSet):
     model = models.Round
-    #queryset = models.Round.objects.filter(annotation_status__in=['O']).filter(
+    # queryset = models.Round.objects.filter(annotation_status__in=['O']).filter(
     #    game__match__event__name='overwatch league - season 1').order_by('game__match__film_format', 'pk').all()
     queryset = models.Round.objects.filter(annotation_status__in=['N']).all()
     serializer_class = serializers.RoundDisplaySerializer
@@ -1261,7 +1351,8 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
             point_flips.append(models.PointFlip(round=instance, time_point=p['time_point'],
                                                 controlling_side=p['controlling_side']))
         for p in request.data['point_gains']:
-            point_gains.append(models.PointGain(round=instance, time_point=p['time_point'], point_total=int(p['point_total'])))
+            point_gains.append(
+                models.PointGain(round=instance, time_point=p['time_point'], point_total=int(p['point_total'])))
 
         if point_gains:
             models.PointGain.objects.bulk_create(point_gains)
@@ -1295,7 +1386,7 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                     hero_picks.append(models.HeroPick(round=instance, player=p, new_hero=hero, time_point=s[0]))
             for s, m in status_models.items():
                 for st in v[s]:
-                    status_effects.append(models.StatusEffect(player=p,round=instance, start_time=st['begin'],
+                    status_effects.append(models.StatusEffect(player=p, round=instance, start_time=st['begin'],
                                                               end_time=st['end'], status=m))
             for ult in v['ultimates']:
                 for seq in sequences:
@@ -1344,7 +1435,7 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                 ability = models.Ability.objects.get(name='Resurrect')
                 kill_feed_events.append(
                     models.KillFeedEvent(killing_player=reviving_player, dying_player=revived_player, round=instance,
-                                  time_point=time_point, ability=ability))
+                                         time_point=time_point, ability=ability))
             elif event['first_hero'] == 'n/a':
                 # death
                 if event['second_color'] == left_color:
@@ -1355,7 +1446,8 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                     npc = models.NPC.objects.get(name__iexact=event['second_hero'])
                     dying_player = instance.get_player_of_hero(npc.spawning_hero.name, time_point, side)
                     kill_feed_events.append(
-                        models.KillFeedEvent(round=instance, time_point=time_point, dying_player=dying_player, dying_npc=npc))
+                        models.KillFeedEvent(round=instance, time_point=time_point, dying_player=dying_player,
+                                             dying_npc=npc))
                 except models.NPC.DoesNotExist:
                     # Hero death
                     dying_player = instance.get_player_of_hero(event['second_hero'], time_point, side)
@@ -1363,7 +1455,8 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                     if dying_player is None:
                         errors.append((instance.id, time_point, 'death', event['second_hero'], side))
                         continue
-                    kill_feed_events.append(models.KillFeedEvent(round=instance, time_point=time_point, dying_player=dying_player))
+                    kill_feed_events.append(
+                        models.KillFeedEvent(round=instance, time_point=time_point, dying_player=dying_player))
             else:
                 # kills
                 if event['second_color'] == left_color:
@@ -1397,11 +1490,15 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                     if ability is not None and dying_player is not None:
                         if not assists:
                             kill_feed_events.append(
-                                models.KillFeedEvent(round=instance, time_point=time_point, killing_player=killing_player,
-                                               dying_npc=npc, dying_player=dying_player, ability=ability, headshot=headshot))
+                                models.KillFeedEvent(round=instance, time_point=time_point,
+                                                     killing_player=killing_player,
+                                                     dying_npc=npc, dying_player=dying_player, ability=ability,
+                                                     headshot=headshot))
                         else:
-                            m = models.KillFeedEvent.objects.create(round=instance, time_point=time_point, killing_player=killing_player,
-                                           dying_npc=npc, dying_player=dying_player, ability=ability, headshot=headshot)
+                            m = models.KillFeedEvent.objects.create(round=instance, time_point=time_point,
+                                                                    killing_player=killing_player,
+                                                                    dying_npc=npc, dying_player=dying_player,
+                                                                    ability=ability, headshot=headshot)
                             for a in assists:
                                 assisting_player = instance.get_player_of_hero(a, time_point, killing_side)
                                 if assisting_player is None:
@@ -1418,8 +1515,9 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                         dying_player = instance.get_player_of_hero(denied_ult.heroes.first().name, time_point, side)
                         if ability is not None and dying_player is not None:
                             kill_feed_events.append(
-                                models.KillFeedEvent(round=instance, time_point=time_point, killing_player=killing_player,
-                                               denied_ult=denied_ult, dying_player=dying_player, ability=ability))
+                                models.KillFeedEvent(round=instance, time_point=time_point,
+                                                     killing_player=killing_player,
+                                                     denied_ult=denied_ult, dying_player=dying_player, ability=ability))
                     except models.Ability.DoesNotExist:
                         # Kill
                         dying_player = instance.get_player_of_hero(event['second_hero'], time_point, killed_side)
@@ -1429,12 +1527,16 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                             continue
                         if ability is not None:
                             if not assists:
-                                kill_feed_events.append(models.KillFeedEvent(round=instance, time_point=time_point, killing_player=killing_player,
-                                                         dying_player=dying_player, ability=ability, headshot=headshot))
+                                kill_feed_events.append(models.KillFeedEvent(round=instance, time_point=time_point,
+                                                                             killing_player=killing_player,
+                                                                             dying_player=dying_player, ability=ability,
+                                                                             headshot=headshot))
                             else:
                                 try:
-                                    m = models.KillFeedEvent.objects.create(round=instance, time_point=time_point, killing_player=killing_player,
-                                                                   dying_player=dying_player, ability=ability, headshot=headshot)
+                                    m = models.KillFeedEvent.objects.create(round=instance, time_point=time_point,
+                                                                            killing_player=killing_player,
+                                                                            dying_player=dying_player, ability=ability,
+                                                                            headshot=headshot)
                                     print(m)
                                     for a in assists:
                                         assisting_player = instance.get_player_of_hero(a, time_point, killing_side)
@@ -1451,7 +1553,7 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
         instance.annotation_status = 'O'
         instance.attacking_side = request.data.get('attacking_side', 'N')
         instance.save()
-        return Response({'success':True})
+        return Response({'success': True})
 
 
 class VodViewSet(viewsets.ModelViewSet):
@@ -1482,8 +1584,8 @@ class VodViewSet(viewsets.ModelViewSet):
     def game_status(self, request, pk=None):
         vod = self.get_object()
         rounds = vod.round_set.prefetch_related('game', 'game__match', 'game__match__event',
-                 'pause_set', 'replay_set', 'smallerwindow_set', 'zoom_set').all()
-        return_dict = {'game':[],
+                                                'pause_set', 'replay_set', 'smallerwindow_set', 'zoom_set').all()
+        return_dict = {'game': [],
                        'spectator_mode': [],
                        'film_format': [],
                        'left_color': [],
@@ -1517,7 +1619,8 @@ class VodViewSet(viewsets.ModelViewSet):
             for p in r.replay_set.all():
                 statuses.append({'begin': r.begin + p.start_time, 'end': r.begin + p.end_time, 'status': 'replay'})
             for p in r.smallerwindow_set.all():
-                statuses.append({'begin': r.begin + p.start_time, 'end': r.begin + p.end_time, 'status': 'smaller_window'})
+                statuses.append(
+                    {'begin': r.begin + p.start_time, 'end': r.begin + p.end_time, 'status': 'smaller_window'})
 
             return_dict['spectator_mode'].append({'begin': r.begin, 'end': r.end, 'status': spectator_mode})
             return_dict['film_format'].append({'begin': r.begin, 'end': r.end, 'status': film_format})
@@ -1533,7 +1636,8 @@ class VodViewSet(viewsets.ModelViewSet):
                         return_dict['game'].append({'begin': b, 'end': s['begin'], 'status': 'game'})
                     return_dict['game'].append(s)
                 if return_dict['game'][-1]['end'] != r.end:
-                    return_dict['game'].append({'begin': return_dict['game'][-1]['end'], 'end': r.end, 'status': 'game'})
+                    return_dict['game'].append(
+                        {'begin': return_dict['game'][-1]['end'], 'end': r.end, 'status': 'game'})
             for p in r.zoom_set.all():
                 if p.side == 'L':
                     lefts.append({'begin': r.begin + p.start_time, 'end': r.begin + p.end_time, 'status': 'zoom'})
@@ -1541,7 +1645,7 @@ class VodViewSet(viewsets.ModelViewSet):
                     rights.append({'begin': r.begin + p.start_time, 'end': r.begin + p.end_time, 'status': 'zoom'})
 
             if not lefts:
-                return_dict['left'].append({'begin':r.begin, 'end': r.end, 'status': 'not_zoom'})
+                return_dict['left'].append({'begin': r.begin, 'end': r.end, 'status': 'not_zoom'})
             else:
                 for s in lefts:
                     b = return_dict['left'][-1]['end']
@@ -1549,10 +1653,11 @@ class VodViewSet(viewsets.ModelViewSet):
                         return_dict['left'].append({'begin': b, 'end': s['begin'], 'status': 'not_zoom'})
                     return_dict['left'].append(s)
                 if return_dict['left'][-1]['end'] != r.end:
-                    return_dict['left'].append({'begin': return_dict['left'][-1]['end'], 'end': r.end, 'status': 'not_zoom'})
+                    return_dict['left'].append(
+                        {'begin': return_dict['left'][-1]['end'], 'end': r.end, 'status': 'not_zoom'})
 
             if not rights:
-                return_dict['right'].append({'begin':r.begin, 'end': r.end, 'status': 'not_zoom'})
+                return_dict['right'].append({'begin': r.begin, 'end': r.end, 'status': 'not_zoom'})
             else:
                 for s in rights:
                     b = return_dict['right'][-1]['end']
@@ -1560,7 +1665,8 @@ class VodViewSet(viewsets.ModelViewSet):
                         return_dict['right'].append({'begin': b, 'end': s['begin'], 'status': 'not_zoom'})
                     return_dict['right'].append(s)
                 if return_dict['right'][-1]['end'] != r.end:
-                    return_dict['right'].append({'begin': return_dict['right'][-1]['end'], 'end': r.end, 'status': 'not_zoom'})
+                    return_dict['right'].append(
+                        {'begin': return_dict['right'][-1]['end'], 'end': r.end, 'status': 'not_zoom'})
         return Response(return_dict)
 
     def update(self, request, *args, **kwargs):
@@ -1643,7 +1749,8 @@ class RoundViewSet(viewsets.ModelViewSet):
         min_shift = Decimal('0.1')
         begin_shift = Decimal(request.data['begin']).quantize(min_shift) - instance.begin
         if abs(begin_shift) >= min_shift:
-            instance.heropick_set.filter(time_point__gt=0).update(time_point=F('time_point') - begin_shift, end_time_point=F('end_time_point') - begin_shift)
+            instance.heropick_set.filter(time_point__gt=0).update(time_point=F('time_point') - begin_shift,
+                                                                  end_time_point=F('end_time_point') - begin_shift)
             instance.heropick_set.filter(time_point__lt=0).update(time_point=0)
             instance.killfeedevent_set.update(time_point=F('time_point') - begin_shift)
             instance.ultimate_set.update(gained=F('gained') - begin_shift)
@@ -1653,7 +1760,8 @@ class RoundViewSet(viewsets.ModelViewSet):
             instance.pointflip_set.update(time_point=F('time_point') - begin_shift)
             instance.pause_set.update(start_time=F('start_time') - begin_shift, end_time=F('end_time') - begin_shift)
             instance.replay_set.update(start_time=F('start_time') - begin_shift, end_time=F('end_time') - begin_shift)
-            instance.smallerwindow_set.update(start_time=F('start_time') - begin_shift, end_time=F('end_time') - begin_shift)
+            instance.smallerwindow_set.update(start_time=F('start_time') - begin_shift,
+                                              end_time=F('end_time') - begin_shift)
             instance.zoom_set.update(start_time=F('start_time') - begin_shift, end_time=F('end_time') - begin_shift)
             instance.overtime_set.update(start_time=F('start_time') - begin_shift, end_time=F('end_time') - begin_shift)
         instance.begin = request.data['begin']
@@ -1815,7 +1923,9 @@ class HeroPickViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.HeroPickSerializer
 
     def create(self, request, *args, **kwargs):
-        instance = models.HeroPick.objects.create(time_point=round(request.data['time_point'], 1), player_id=request.data['player'], round_id=request.data['round'], new_hero_id=request.data['new_hero'])
+        instance = models.HeroPick.objects.create(time_point=round(request.data['time_point'], 1),
+                                                  player_id=request.data['player'], round_id=request.data['round'],
+                                                  new_hero_id=request.data['new_hero'])
         instance.round.fix_switch_end_points()
         return Response(self.serializer_class(instance).data)
 
@@ -1825,7 +1935,6 @@ class HeroPickViewSet(viewsets.ModelViewSet):
         instance.save()
         instance.round.fix_switch_end_points()
         return Response(self.serializer_class(instance).data)
-
 
 
 class PauseViewSet(viewsets.ModelViewSet):
@@ -2058,11 +2167,11 @@ class StatusEffectViewSet(viewsets.ModelViewSet):
             request.data['end_time'] = r.duration
         print(request.data)
         status_effect = models.StatusEffect.objects.create(start_time=request.data['start_time'],
-                                                          end_time=request.data['end_time'],
-                                                          round=r,
-                                                          player_id=request.data['player'],
-                                                          status=status_m
-                                                          )
+                                                           end_time=request.data['end_time'],
+                                                           round=r,
+                                                           player_id=request.data['player'],
+                                                           status=status_m
+                                                           )
 
         return Response(self.serializer_class(status_effect).data, status=status.HTTP_201_CREATED)
 
@@ -2108,7 +2217,3 @@ class PointFlipViewSet(viewsets.ModelViewSet):
         instance.controlling_side = request.data['controlling_side']
         instance.save()
         return Response()
-
-
-
-
