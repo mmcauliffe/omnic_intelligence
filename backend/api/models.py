@@ -709,7 +709,7 @@ class Round(models.Model):
             status = s.status.name
             if status not in status_durations:
                 status_durations[status] = 0
-            status_durations[status] += s.end - s.begin
+            status_durations[status] += s.end_time - s.start_time
         return status_durations
 
     def get_hero_play_time(self):
