@@ -111,6 +111,92 @@ class StreamVod(models.Model):
         if m is not None:
             return 'youtube', m.groups()[0]
 
+    def get_status(self):
+        rounds = self.round_set.prefetch_related('game', 'game__match', 'game__match__event',
+                                                'pause_set', 'replay_set', 'smallerwindow_set', 'zoom_set').all()
+        return_dict = {'game': [],
+                       'spectator_mode': [],
+                       'film_format': [],
+                       'left_color': [],
+                       'right_color': [],
+                       'map': [],
+                       'left': [],
+                       'right': []
+                       }
+        for r in rounds:
+            statuses = []
+            lefts = []
+            rights = []
+            b = Decimal('0.0')
+            spectator_mode = r.game.match.event.get_spectator_mode_display().lower()
+            film_format = r.game.match.event.get_film_format_display().lower()
+            map = r.game.map.name.lower()
+            left_color = r.game.left_team.get_color_display().lower()
+            right_color = r.game.right_team.get_color_display().lower()
+            if return_dict['game']:
+                b = return_dict['game'][-1]['end']
+            return_dict['game'].append({'begin': b, 'end': r.begin, 'status': 'not_game'})
+            return_dict['film_format'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
+            return_dict['map'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
+            return_dict['left_color'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
+            return_dict['right_color'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
+            return_dict['spectator_mode'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
+            return_dict['left'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
+            return_dict['right'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
+            for p in r.pause_set.all():
+                statuses.append({'begin': r.begin + p.start_time, 'end': r.begin + p.end_time, 'status': 'pause'})
+            for p in r.replay_set.all():
+                statuses.append({'begin': r.begin + p.start_time, 'end': r.begin + p.end_time, 'status': 'replay'})
+            for p in r.smallerwindow_set.all():
+                statuses.append(
+                    {'begin': r.begin + p.start_time, 'end': r.begin + p.end_time, 'status': 'smaller_window'})
+
+            return_dict['spectator_mode'].append({'begin': r.begin, 'end': r.end, 'status': spectator_mode})
+            return_dict['film_format'].append({'begin': r.begin, 'end': r.end, 'status': film_format})
+            return_dict['map'].append({'begin': r.begin, 'end': r.end, 'status': map})
+            return_dict['left_color'].append({'begin': r.begin, 'end': r.end, 'status': left_color})
+            return_dict['right_color'].append({'begin': r.begin, 'end': r.end, 'status': right_color})
+            if not statuses:
+                return_dict['game'].append({'begin': r.begin, 'end': r.end, 'status': 'game'})
+            else:
+                for s in sorted(statuses, key=lambda x: x['begin']):
+                    b = return_dict['game'][-1]['end']
+                    if b != s['begin']:
+                        return_dict['game'].append({'begin': b, 'end': s['begin'], 'status': 'game'})
+                    return_dict['game'].append(s)
+                if return_dict['game'][-1]['end'] != r.end:
+                    return_dict['game'].append(
+                        {'begin': return_dict['game'][-1]['end'], 'end': r.end, 'status': 'game'})
+            for p in r.zoom_set.all():
+                if p.side == 'L':
+                    lefts.append({'begin': r.begin + p.start_time, 'end': r.begin + p.end_time, 'status': 'zoom'})
+                else:
+                    rights.append({'begin': r.begin + p.start_time, 'end': r.begin + p.end_time, 'status': 'zoom'})
+
+            if not lefts:
+                return_dict['left'].append({'begin': r.begin, 'end': r.end, 'status': 'not_zoom'})
+            else:
+                for s in lefts:
+                    b = return_dict['left'][-1]['end']
+                    if b != s['begin']:
+                        return_dict['left'].append({'begin': b, 'end': s['begin'], 'status': 'not_zoom'})
+                    return_dict['left'].append(s)
+                if return_dict['left'][-1]['end'] != r.end:
+                    return_dict['left'].append(
+                        {'begin': return_dict['left'][-1]['end'], 'end': r.end, 'status': 'not_zoom'})
+
+            if not rights:
+                return_dict['right'].append({'begin': r.begin, 'end': r.end, 'status': 'not_zoom'})
+            else:
+                for s in rights:
+                    b = return_dict['right'][-1]['end']
+                    if b != s['begin']:
+                        return_dict['right'].append({'begin': b, 'end': s['begin'], 'status': 'not_zoom'})
+                    return_dict['right'].append(s)
+                if return_dict['right'][-1]['end'] != r.end:
+                    return_dict['right'].append(
+                        {'begin': return_dict['right'][-1]['end'], 'end': r.end, 'status': 'not_zoom'})
+        return return_dict
 
 class Map(models.Model):
     MODE_CHOICES = (

@@ -1102,6 +1102,47 @@ class TrainVodViewSet(viewsets.ModelViewSet):
     queryset = models.StreamVod.objects.filter(round__annotation_status__in=['O', 'M']).order_by('pk').distinct().all()
     serializer_class = serializers.VodDisplaySerializer
 
+    @action(methods=['get'], detail=False)
+    def stats(self, request):
+        import csv
+        q = self.get_queryset()
+        response = HttpResponse(content_type='text/csv')
+        response.encoding = 'utf8'
+        response['Content-Disposition'] = 'attachment; filename="train_vod_stats.csv"'
+        data = []
+        header = ['id', 'film_format', 'spectator_mode']
+        game_statuses = ['not_game', 'game', 'pause', 'replay', 'smaller_window']
+        zooms = ['left_zoom', 'right_zoom']
+        header += game_statuses + zooms
+        maps = [x.name.lower() for x in models.Map.objects.all()]
+        header += [x for x in maps]
+        for v in q:
+            d = {'id': v.id, 'film_format': v.get_film_format_display()}
+            first_round = v.round_set.first()
+            d['spectator_mode'] = first_round.game.match.event.get_spectator_mode_display()
+            statuses = v.get_status()
+            game_duration = {x: 0 for x in game_statuses}
+            for m in statuses['game']:
+                game_duration[m['status']] += m['end'] - m['begin']
+            zoom_duration = {x: 0 for x in zooms}
+            for side in ['left', 'right']:
+                for m in statuses[side]:
+                    if m['status'] == 'zoom':
+                        zoom_duration[side+'_zoom'] += m['end'] - m['begin']
+            map_duration = {x: 0 for x in maps}
+            for m in statuses['map']:
+                if m['status'] != 'n/a':
+                    map_duration[m['status']] += m['end'] - m['begin']
+            d.update(game_duration)
+            d.update(zoom_duration)
+            d.update(map_duration)
+            data.append(d)
+        writer = csv.DictWriter(response, fieldnames=header)
+        writer.writeheader()
+        for row in data:
+            writer.writerow(row)
+        return response
+
 
 class VodStatusViewSet(viewsets.ModelViewSet):
     model = models.StreamVod
@@ -1583,90 +1624,7 @@ class VodViewSet(viewsets.ModelViewSet):
     @action(methods=['get'], detail=True)
     def game_status(self, request, pk=None):
         vod = self.get_object()
-        rounds = vod.round_set.prefetch_related('game', 'game__match', 'game__match__event',
-                                                'pause_set', 'replay_set', 'smallerwindow_set', 'zoom_set').all()
-        return_dict = {'game': [],
-                       'spectator_mode': [],
-                       'film_format': [],
-                       'left_color': [],
-                       'right_color': [],
-                       'map': [],
-                       'left': [],
-                       'right': []
-                       }
-        for r in rounds:
-            statuses = []
-            lefts = []
-            rights = []
-            b = 0
-            spectator_mode = r.game.match.event.get_spectator_mode_display().lower()
-            film_format = r.game.match.event.get_film_format_display().lower()
-            map = r.game.map.name.lower()
-            left_color = r.game.left_team.get_color_display().lower()
-            right_color = r.game.right_team.get_color_display().lower()
-            if return_dict['game']:
-                b = return_dict['game'][-1]['end']
-            return_dict['game'].append({'begin': b, 'end': r.begin, 'status': 'not_game'})
-            return_dict['film_format'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
-            return_dict['map'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
-            return_dict['left_color'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
-            return_dict['right_color'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
-            return_dict['spectator_mode'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
-            return_dict['left'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
-            return_dict['right'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
-            for p in r.pause_set.all():
-                statuses.append({'begin': r.begin + p.start_time, 'end': r.begin + p.end_time, 'status': 'pause'})
-            for p in r.replay_set.all():
-                statuses.append({'begin': r.begin + p.start_time, 'end': r.begin + p.end_time, 'status': 'replay'})
-            for p in r.smallerwindow_set.all():
-                statuses.append(
-                    {'begin': r.begin + p.start_time, 'end': r.begin + p.end_time, 'status': 'smaller_window'})
-
-            return_dict['spectator_mode'].append({'begin': r.begin, 'end': r.end, 'status': spectator_mode})
-            return_dict['film_format'].append({'begin': r.begin, 'end': r.end, 'status': film_format})
-            return_dict['map'].append({'begin': r.begin, 'end': r.end, 'status': map})
-            return_dict['left_color'].append({'begin': r.begin, 'end': r.end, 'status': left_color})
-            return_dict['right_color'].append({'begin': r.begin, 'end': r.end, 'status': right_color})
-            if not statuses:
-                return_dict['game'].append({'begin': r.begin, 'end': r.end, 'status': 'game'})
-            else:
-                for s in sorted(statuses, key=lambda x: x['begin']):
-                    b = return_dict['game'][-1]['end']
-                    if b != s['begin']:
-                        return_dict['game'].append({'begin': b, 'end': s['begin'], 'status': 'game'})
-                    return_dict['game'].append(s)
-                if return_dict['game'][-1]['end'] != r.end:
-                    return_dict['game'].append(
-                        {'begin': return_dict['game'][-1]['end'], 'end': r.end, 'status': 'game'})
-            for p in r.zoom_set.all():
-                if p.side == 'L':
-                    lefts.append({'begin': r.begin + p.start_time, 'end': r.begin + p.end_time, 'status': 'zoom'})
-                else:
-                    rights.append({'begin': r.begin + p.start_time, 'end': r.begin + p.end_time, 'status': 'zoom'})
-
-            if not lefts:
-                return_dict['left'].append({'begin': r.begin, 'end': r.end, 'status': 'not_zoom'})
-            else:
-                for s in lefts:
-                    b = return_dict['left'][-1]['end']
-                    if b != s['begin']:
-                        return_dict['left'].append({'begin': b, 'end': s['begin'], 'status': 'not_zoom'})
-                    return_dict['left'].append(s)
-                if return_dict['left'][-1]['end'] != r.end:
-                    return_dict['left'].append(
-                        {'begin': return_dict['left'][-1]['end'], 'end': r.end, 'status': 'not_zoom'})
-
-            if not rights:
-                return_dict['right'].append({'begin': r.begin, 'end': r.end, 'status': 'not_zoom'})
-            else:
-                for s in rights:
-                    b = return_dict['right'][-1]['end']
-                    if b != s['begin']:
-                        return_dict['right'].append({'begin': b, 'end': s['begin'], 'status': 'not_zoom'})
-                    return_dict['right'].append(s)
-                if return_dict['right'][-1]['end'] != r.end:
-                    return_dict['right'].append(
-                        {'begin': return_dict['right'][-1]['end'], 'end': r.end, 'status': 'not_zoom'})
+        return_dict = vod.get_status()
         return Response(return_dict)
 
     def update(self, request, *args, **kwargs):
