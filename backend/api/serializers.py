@@ -438,7 +438,8 @@ class RoundStatusSerializer(serializers.ModelSerializer):
                   'annotation_status', 'duration')
 
     def get_heroes_used(self, obj):
-        return obj.get_heroes_used()
+        d = obj.get_hero_play_time()
+        return [{'name': x[0], 'play_time':x[1]} for x in sorted(d.items(), key=lambda x: -x[1])]
 
     def get_annotation_status(self, obj):
         return obj.get_annotation_status_display()

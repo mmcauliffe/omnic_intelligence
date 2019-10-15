@@ -1,5 +1,6 @@
 from django.views.generic import TemplateView
 from django.views.decorators.cache import never_cache
+from django.db.models import F
 
 from rest_framework import generics, permissions, viewsets
 from rest_framework.views import APIView
@@ -1062,7 +1063,32 @@ class RoundStatusViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.RoundStatusSerializer
     filter_backends = (filters.SearchFilter, RelatedOrderingFilter,)
     pagination_class = pagination.LimitOffsetPagination
-    search_fields = ('game__match__event__name', 'game__match__teams__name')
+    search_fields = ('game__match__event__name', 'game__match__teams__name', 'annotation_status')
+
+    def get_queryset(self):
+        queryset = models.Round.objects.prefetch_related('game', 'game__match', 'game__match__event').filter(
+            ~Q(stream_vod=None)).all()
+        annotation_status = self.request.query_params.get('annotation_status', None)
+        if annotation_status is not None:
+            queryset = queryset.filter(annotation_status=annotation_status)
+        m = self.request.query_params.get('map', None)
+        if m is not None:
+            queryset = queryset.filter(game__map=m)
+        spectator_mode = self.request.query_params.get('spectator_mode', None)
+        if spectator_mode is not None:
+            queryset = queryset.filter(game__match__event__spectator_mode=spectator_mode)
+        film_format = self.request.query_params.get('film_format', None)
+        if film_format is not None:
+            queryset = queryset.filter(stream_vod__film_format=film_format)
+        hero = self.request.query_params.get('hero', None)
+        if hero is not None:
+            queryset = queryset.filter(heropick__new_hero=hero).distinct()
+        ordering = self.request.query_params.get('ordering', None)
+        if ordering == 'duration':
+            queryset = queryset.order_by(F('end') - F('begin'))
+        elif ordering == '-duration':
+            queryset = queryset.order_by((F('end') - F('begin')).desc())
+        return queryset
 
     def list(self, request, *args, **kwargs):
         print(request.query_params)

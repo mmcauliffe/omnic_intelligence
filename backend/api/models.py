@@ -830,34 +830,7 @@ class Round(models.Model):
         return used_heroes
 
     def get_heroes_used(self):
-        used_heroes = {}
-        q = self.heropick_set.order_by('player_id', 'time_point').all()
-        cur_player = None
-        cur_time = 0
-        cur_hero = None
-        for r in q:
-            if cur_player is None:
-                cur_player = r.player_id
-            if cur_hero is None:
-                cur_hero = r.new_hero.name
-            if cur_hero is not None:
-                if cur_hero not in used_heroes:
-                    used_heroes[cur_hero] = 0
-            if r.player_id != cur_player:
-                if cur_player is not None:
-                    used_heroes[cur_hero] += self.end - cur_time - self.begin
-                cur_player = r.player_id
-                cur_time = r.time_point
-                if r.new_hero is not None:
-                    cur_hero = r.new_hero.name
-            elif cur_hero is not None and r.new_hero.name != cur_hero:
-                used_heroes[cur_hero] += r.time_point - cur_time
-                cur_time = r.time_point
-                cur_hero = r.new_hero.name
-        if cur_hero not in used_heroes:
-            used_heroes[cur_hero] = 0
-        used_heroes[cur_hero] += self.end - cur_time - self.begin
-
+        used_heroes = self.get_hero_play_time()
         return sorted(used_heroes.keys(), key=lambda x: -used_heroes[x])
 
     @property
