@@ -35,22 +35,6 @@
 
         <template slot="items" slot-scope="props">
             <td>
-                <router-link :to="{name: 'event-detail', params:{id: props.item.game.match.event.id}}">
-                    {{ props.item.game.match.event.name }}
-                </router-link>
-            </td>
-            <td>
-                <router-link :to="{name: 'match-detail', params:{id: props.item.game.match.id}}">
-                    {{ props.item.game.match.teams[0] }} vs {{ props.item.game.match.teams[1] }}
-                </router-link>
-            </td>
-            <td>
-                <router-link :to="{name: 'game-detail', params:{id: props.item.game.id}}">
-                    Game {{ props.item.game.game_number }}
-                </router-link>
-            </td>
-            <td> {{ props.item.game.map.name }}</td>
-            <td>
                 <router-link :to="{name: 'round-detail', params:{id: props.item.id}}">
                     Round {{ props.item.round_number }}
 
@@ -91,10 +75,6 @@
             selected: [],
             filters: {},
             headers: [
-                {text: 'Event', value: 'game__match__event__name'},
-                {text: 'Match', value: 'match', sortable: false},
-                {text: 'Game', value: 'game__game_number'},
-                {text: 'Map', value: 'game__map__name', sortable: true},
                 {text: 'Round', value: 'round_number'},
                 {text: 'Attacking side', value: 'attacking_side'},
                 {text: 'VOD', value: 'vod', sortable: false},

@@ -5,6 +5,7 @@ import csv
 from decimal import Decimal
 from django.conf import settings
 import subprocess
+from collections import Counter
 
 LEFT = 'L'
 RIGHT = 'R'
@@ -545,7 +546,6 @@ class Game(models.Model):
         ordering = ['-match__id', 'game_number']
 
     def generate_stats(self, all_stats=False):
-        from collections import Counter
         stat_types = ['final_blows', 'assists', 'deaths', 'ults_gained', 'ults_used']
         #stat_types += [x + '_per10' for x in stat_types]
         left_team_name = self.left_team.team.name
@@ -748,8 +748,8 @@ class Round(models.Model):
         last_switches = {}
         for s in switches:
             if s.player.id not in last_switches:
-                if s.end_time_point != self.end:
-                    s.end_time_point = self.end
+                if s.end_time_point != self.duration:
+                    s.end_time_point = self.duration
                     s.save()
             else:
                 if s.end_time_point != last_switches[s.player.id]:
@@ -799,34 +799,15 @@ class Round(models.Model):
         return status_durations
 
     def get_hero_play_time(self):
-        used_heroes = {}
-        q = self.heropick_set.order_by('player_id', 'time_point').all()
-        cur_player = None
-        cur_time = 0
-        cur_hero = None
-        for r in q:
-            if cur_player is None:
-                cur_player = r.player_id
-            if cur_hero is None:
-                cur_hero = r.new_hero.name
-            if cur_hero is not None:
-                if cur_hero not in used_heroes:
-                    used_heroes[cur_hero] = 0
-            if r.player_id != cur_player:
-                if cur_player is not None:
-                    used_heroes[cur_hero] += self.end - cur_time - self.begin
-                cur_player = r.player_id
-                cur_time = r.time_point
-                if r.new_hero is not None:
-                    cur_hero = r.new_hero.name
-            elif cur_hero is not None and r.new_hero.name != cur_hero:
-                used_heroes[cur_hero] += r.time_point - cur_time
-                cur_time = r.time_point
-                cur_hero = r.new_hero.name
-        if cur_hero not in used_heroes:
-            used_heroes[cur_hero] = 0
-        used_heroes[cur_hero] += self.end - cur_time - self.begin
-
+        used_heroes = Counter()
+        q = self.heropick_set.all()
+        for h in q:
+            if self.pk == 7015:
+                print(h, h.player.name, h.time_point, h.end_time_point)
+            end = h.end_time_point
+            if end is None:
+                end = self.duration
+            used_heroes[h.new_hero.name] += end - h.time_point
         return used_heroes
 
     def get_heroes_used(self):

@@ -366,7 +366,7 @@ class PlayerViewSet(viewsets.ModelViewSet):
 class EventViewSet(viewsets.ModelViewSet):
     model = models.Event
     queryset = models.Event.objects.all()
-    serializer_class = serializers.EventSerializer
+    serializer_class = serializers.EventDisplaySerializer
 
     @action(methods=['get'], detail=True)
     def matches(self, request, pk=None):
@@ -382,15 +382,16 @@ class EventViewSet(viewsets.ModelViewSet):
         end_date = event.end_date
         vods = []
         for c in event.stream_channels.prefetch_related('streamvod_set').all():
-            for v in c.streamvod_set.all():
-                if event.channel_query_string is not None and event.channel_query_string not in v.title:
-                    continue
-                if start_date and v.broadcast_date.date() < start_date:
-                    continue
-                if end_date and v.broadcast_date.date() > end_date:
-                    continue
-                vods.append(v)
-        return Response(serializers.StreamVodSerializer(vods, many=True).data)
+            query_set = c.streamvod_set
+
+            if event.channel_query_string is not None:
+                query_set = query_set.filter(title__contains=event.channel_query_string)
+            if start_date:
+                query_set = query_set.filter(broadcast_date__gte=start_date)
+            if end_date:
+                query_set = query_set.filter(broadcast_date__lte=end_date)
+            vods.extend(query_set.all())
+        return Response(serializers.EventVodDisplaySerializer(vods, many=True).data)
 
     @action(methods=['get'], detail=True)
     def available_vods(self, request, pk=None):
@@ -1066,7 +1067,8 @@ class RoundStatusViewSet(viewsets.ModelViewSet):
     search_fields = ('game__match__event__name', 'game__match__teams__name', 'annotation_status')
 
     def get_queryset(self):
-        queryset = models.Round.objects.prefetch_related('game', 'game__match', 'game__match__event').filter(
+        queryset = models.Round.objects.prefetch_related(
+                                                         'heropick_set__new_hero').filter(
             ~Q(stream_vod=None)).all()
         annotation_status = self.request.query_params.get('annotation_status', None)
         if annotation_status is not None:
@@ -1449,8 +1451,9 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                             break
                     else:
                         continue
-                    hero = models.Hero.objects.get(name__iexact=s[1])
-                    hero_picks.append(models.HeroPick(round=instance, player=p, new_hero=hero, time_point=s[0]))
+                    hero = models.Hero.objects.get(name__iexact=s['hero'])
+                    hero_picks.append(models.HeroPick(round=instance, player=p, new_hero=hero,
+                                                      time_point=s['begin'], end_time_point=s['end']))
             for s, m in status_models.items():
                 for st in v[s]:
                     status_effects.append(models.StatusEffect(player=p, round=instance, start_time=st['begin'],

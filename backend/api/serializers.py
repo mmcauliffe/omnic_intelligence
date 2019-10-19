@@ -364,6 +364,26 @@ class VodDisplaySerializer(serializers.ModelSerializer):
                   'sequences', 'channel', 'status', 'type')
 
 
+class EventVodDisplaySerializer(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+    film_format = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.StreamVod
+        fields = ('id', 'title', 'url', 'broadcast_date', 'vod_link', 'film_format',
+                  'channel', 'status', 'type')
+
+    def get_type(self, obj):
+        return obj.get_type_display()
+
+    def get_status(self, obj):
+        return obj.get_status_display()
+
+    def get_film_format(self, obj):
+        return obj.get_film_format_display()
+
+
 class VodAnnotateSerializer(serializers.ModelSerializer):
     rounds = serializers.SerializerMethodField()
 
@@ -424,8 +444,7 @@ class VodEditSerializer(serializers.ModelSerializer):
 
 
 class RoundStatusSerializer(serializers.ModelSerializer):
-    game = GameDisplaySerializer()
-    stream_vod = StreamVodSerializer()
+    stream_vod = EventVodDisplaySerializer()
     annotation_status = serializers.SerializerMethodField()
     attacking_side = serializers.SerializerMethodField()
     heroes_used = serializers.SerializerMethodField()
