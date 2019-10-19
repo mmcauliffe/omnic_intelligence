@@ -1086,7 +1086,7 @@ class RoundStatusViewSet(viewsets.ModelViewSet):
         if hero is not None:
             play_time_threshold = self.request.query_params.get('play_time_threshold', None)
             queryset = queryset.filter(heropick__new_hero=hero)
-            if play_time_threshold is not None:
+            if play_time_threshold:
                 queryset = queryset.filter(heropick__end_time_point__gte=F('heropick__time_point') + Decimal(play_time_threshold))
             queryset = queryset.distinct()
         ordering = self.request.query_params.get('ordering', None)
@@ -1451,7 +1451,7 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
             if not request.data.get('ignore_switches', False):
                 for s in v['switches']:
                     for seq in sequences:
-                        if seq[0] - Decimal('0.5') <= s[0] <= seq[1] + Decimal('0.5'):
+                        if seq[0] - Decimal('0.5') <= s['begin'] <= seq[1] + Decimal('0.5'):
                             break
                     else:
                         continue
