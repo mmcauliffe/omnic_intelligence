@@ -1084,7 +1084,11 @@ class RoundStatusViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(stream_vod__film_format=film_format)
         hero = self.request.query_params.get('hero', None)
         if hero is not None:
-            queryset = queryset.filter(heropick__new_hero=hero).distinct()
+            play_time_threshold = self.request.query_params.get('play_time_threshold', None)
+            queryset = queryset.filter(heropick__new_hero=hero)
+            if play_time_threshold is not None:
+                queryset = queryset.filter(heropick__end_time_point__gte=F('heropick__time_point') + Decimal(play_time_threshold))
+            queryset = queryset.distinct()
         ordering = self.request.query_params.get('ordering', None)
         if ordering == 'duration':
             queryset = queryset.order_by(F('end') - F('begin'))

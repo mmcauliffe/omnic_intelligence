@@ -24,8 +24,11 @@
         <v-select :items="heroes.items" clearable
                   label="Hero" v-model="filters.hero" item-text="name" item-value="id">
         </v-select>
+            <v-text-field label="Play time threshold" v-model="filters.play_time_threshold"></v-text-field>
         </v-layout>
-        {{filters}}
+
+        <v-btn class='primary raised' v-on:click="refresh()">Update filters
+        </v-btn>
     </v-flex>
     <v-data-table
             :total-items="totalItems"
@@ -161,12 +164,6 @@
             }
         },
         watch: {
-            filters: {
-                handler() {
-                    this.refresh();
-                },
-                deep: true
-            },
             pagination: {
                 handler() {
                     this.refresh();
