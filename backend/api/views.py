@@ -1085,9 +1085,10 @@ class RoundStatusViewSet(viewsets.ModelViewSet):
         hero = self.request.query_params.get('hero', None)
         if hero is not None:
             play_time_threshold = self.request.query_params.get('play_time_threshold', None)
-            queryset = queryset.filter(heropick__new_hero=hero)
             if play_time_threshold:
-                queryset = queryset.filter(heropick__end_time_point__gte=F('heropick__time_point') + Decimal(play_time_threshold))
+                queryset = queryset.filter(heropick__new_hero=hero, heropick__end_time_point__gte=F('heropick__time_point') + Decimal(play_time_threshold))
+            else:
+                queryset = queryset.filter(heropick__new_hero=hero)
             queryset = queryset.distinct()
         ordering = self.request.query_params.get('ordering', None)
         if ordering == 'duration':
