@@ -41,7 +41,8 @@ class StreamVod(models.Model):
     FILM_FORMAT_CHOICES = ((ORIGINAL, 'Original'),
                            ('W', 'World Cup 2017'),
                            ('A', 'APEX'),
-                           ('K', 'Korean Contenders'),
+                           ('1', 'Korean Contenders season 1'),
+                           ('K', 'Korean Contenders season 2'),
                            ('2', 'Overwatch league season 2'))
     STATUS_CHOICES = (
         ('N', 'Not analyzed'),
