@@ -17,47 +17,34 @@ class HeroSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class AbilityDisplaySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Ability
+        fields = ('id', 'name', 'type', 'headshot_capable', 'ultimate', 'deniable')
+
+
+class NPCHerolessSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.NPC
+        fields = ('id', 'name')
+
+
 class HeroAbilitySerializer(serializers.ModelSerializer):
-    damaging_abilities = serializers.SerializerMethodField()
-    reviving_abilities = serializers.SerializerMethodField()
-    denying_abilities = serializers.SerializerMethodField()
-    deniable_abilities = serializers.SerializerMethodField()
-    npcs = serializers.SerializerMethodField()
+    abilities = AbilityDisplaySerializer(many=True)
+    npc_set = NPCHerolessSerializer(many=True)
 
     class Meta:
         model = models.Hero
         fields = ('id', 'name', 'type', 'ability_denier',
-                  'damaging_abilities', 'reviving_abilities', 'denying_abilities', 'deniable_abilities',
-                  'npcs'
+                  'abilities',
+                  'npc_set'
                   )
-
-    def get_damaging_abilities(self, obj):
-        return AbilityDisplaySerializer(obj.abilities.filter(type=models.Ability.DAMAGING_TYPE).all(), many=True).data
-
-    def get_reviving_abilities(self, obj):
-        return AbilityDisplaySerializer(obj.abilities.filter(type=models.Ability.REVIVING_TYPE).all(), many=True).data
-
-    def get_denying_abilities(self, obj):
-        return AbilityDisplaySerializer(obj.abilities.filter(type=models.Ability.DENYING_TYPE).all(), many=True).data
-
-    def get_deniable_abilities(self, obj):
-        return AbilityDisplaySerializer(obj.abilities.filter(deniable=True).all(), many=True).data
-
-    def get_npcs(self, obj):
-        return NPCHerolessSerializer(obj.npc_set.all(), many=True).data
 
 
 class AbilitySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Ability
         fields = '__all__'
-
-
-class AbilityDisplaySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Ability
-        fields = ('id', 'name', 'type', 'headshot_capable', 'ultimate', 'deniable')
-
 
 class StatusSerializer(serializers.ModelSerializer):
     class Meta:
@@ -96,12 +83,6 @@ class NPCSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.NPC
         fields = '__all__'
-
-
-class NPCHerolessSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.NPC
-        fields = ('id', 'name')
 
 
 class PlayerSerializer(serializers.ModelSerializer):

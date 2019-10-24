@@ -123,19 +123,19 @@ const getters = {
 
     },
     heroDamagingAbilities: (state, getters) => (hero_id) => {
-        return getters.hero(hero_id).damaging_abilities
+        return getters.hero(hero_id).abilities.filter(x => {return x.type === 'D'})
     },
     heroRevivingAbilities: (state, getters) => (hero_id) => {
-        return getters.hero(hero_id).reviving_abilities
+        return getters.hero(hero_id).abilities.filter(x => {return x.type === 'R'})
     },
     heroDenyingAbilities: (state, getters) => (hero_id) => {
-        return getters.hero(hero_id).denying_abilities
+        return getters.hero(hero_id).abilities.filter(x => {return x.type === 'E'})
     },
     heroDeniableAbilities: (state, getters) => (hero_id) => {
-        return getters.hero(hero_id).deniable_abilities
+        return getters.hero(hero_id).abilities.filter(x => x.deniable)
     },
     heroNPCs: (state, getters) => (hero_id) => {
-        return getters.hero(hero_id).npcs
+        return getters.hero(hero_id).npc_set
     },
     availableNPCs: (state, getters) => (hero_id_list) => {
         let hero, i, npcs=[], j;
