@@ -176,7 +176,7 @@ class TrainInfoViewSet(viewsets.ViewSet):
             characters.update(p.name.lower())
         npcs = []
         labels = []
-        for c in colors:
+        for c in colors + ['nonwhite']:
             labels.append(c)
         for h in heroes:
             labels.append(h.name.lower())
