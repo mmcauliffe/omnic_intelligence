@@ -95,7 +95,7 @@ urlpatterns = [
     # http://localhost:8000/api/<router-viewsets>
     path('api/', include(api_router.urls)),
 
-    path('grappelli/', include('grappelli.urls')),  # grappelli URLS
+    path('api/grappelli/', include('grappelli.urls')),  # grappelli URLS
     # http://localhost:8000/api/admin/
     path('api/admin/', admin.site.urls),
 ]
