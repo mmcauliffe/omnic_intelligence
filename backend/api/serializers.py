@@ -2,6 +2,7 @@ from rest_framework import serializers
 from . import models
 from django.contrib.auth.models import User, Group
 from django.db.models import Sum, F
+from django.conf import settings
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -197,15 +198,24 @@ class GameDisplaySerializer(serializers.ModelSerializer):
     map = MapSerializer()
     left_team = TeamParticipationSerializer()
     right_team = TeamParticipationSerializer()
+    left_team_color_hex = serializers.SerializerMethodField()
+    right_team_color_hex = serializers.SerializerMethodField()
     name = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Game
-        fields = ('id', 'name', 'game_number', 'match', 'left_team', 'right_team', 'map')
+        fields = ('id', 'name', 'game_number', 'match', 'left_team', 'right_team',
+                  'left_team_color_hex', 'right_team_color_hex', 'map')
 
     def get_name(self, obj):
         teams = obj.match.teams.all()
         return 'Game {} of {} vs {} on {}'.format(obj.game_number, teams[0].name, teams[1].name, obj.map.name)
+
+    def get_left_team_color_hex(self, obj):
+        return obj.left_team.get_color_hex(obj.match.event.spectator_mode)
+
+    def get_right_team_color_hex(self, obj):
+        return obj.right_team.get_color_hex(obj.match.event.spectator_mode)
 
 
 class GameEditSerializer(serializers.ModelSerializer):

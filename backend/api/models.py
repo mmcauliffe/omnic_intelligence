@@ -6,6 +6,7 @@ from decimal import Decimal
 from django.conf import settings
 import subprocess
 from collections import Counter
+from colorful.fields import RGBColorField
 
 LEFT = 'L'
 RIGHT = 'R'
@@ -429,6 +430,8 @@ class PlayerNameUse(models.Model):
 class Team(models.Model):
     name = models.CharField(max_length=128)
     players = models.ManyToManyField(Player, through='Affiliation')
+    home_color = RGBColorField(default='#54fefd')
+    away_color = RGBColorField(default='#ff122c')
 
     def __str__(self):
         return self.name
@@ -446,15 +449,18 @@ class Affiliation(models.Model):
 
 class Event(models.Model):
     ORIGINAL = 'O'
+    WORLD_CUP = 'W'
+    OWL = 'L'
+    CONTENDERS = 'C'
     FILM_FORMAT_CHOICES = ((ORIGINAL, 'Original'),
                            ('W', 'World Cup 2017'),
                            ('A', 'APEX'),
                            ('K', 'Korean Contenders'),
                            ('2', 'Overwatch league season 2'))
-    SPECTATOR_MODE_CHOICES = (('O', 'Original'),
-                              ('W', 'World Cup'),
-                              ('L', 'Overwatch League'),
-                              ('C', 'Contenders'),)
+    SPECTATOR_MODE_CHOICES = ((ORIGINAL, 'Original'),
+                              (WORLD_CUP, 'World Cup'),
+                              (OWL, 'Overwatch League'),
+                              (CONTENDERS, 'Contenders'),)
     name = models.CharField(max_length=128)
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
@@ -678,6 +684,7 @@ class Game(models.Model):
             d['hero_specific_stats'] = hero_specific_stats
         return d
 
+
 class TeamParticipation(models.Model):
     BLUE = 'B'
     COLOR_CHOICES = (
@@ -692,10 +699,22 @@ class TeamParticipation(models.Model):
         ('K', 'Black'),
     )
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    use_home_color = models.BooleanField(default=False)
     color = models.CharField(max_length=1, choices=COLOR_CHOICES, default=BLUE)
     points = models.IntegerField(null=True, blank=True)
     subpoints = models.CharField(max_length=128, null=True, blank=True)
     players = models.ManyToManyField(Player, through='PlayerParticipation')
+
+    def get_color_hex(self, spectator_mode):
+        if spectator_mode == Event.CONTENDERS:
+            if self.color == 'W':
+                return settings.CONTENDERS_AWAY_COLOR
+            return settings.CONTENDERS_HOME_COLOR
+        elif spectator_mode in [Event.OWL, Event.WORLD_CUP]:
+            if self.color == 'W':
+                return self.team.away_color
+            return self.team.home_color
+        return settings.COLOR_MAPPING[self.get_color_display().lower()]
 
     @classmethod
     def get_color_code(cls, display_color):
@@ -1008,19 +1027,24 @@ class Round(models.Model):
         for event in items:
             killing_hero = 'N/A'
             killing_color = 'N/A'
+            killing_color_hex = 'N/A'
             killing_player = 'N/A'
             if event.killing_player is not None:
                 killing_hero = event.killing_player.get_hero_at_timepoint(self, event.time_point).name
                 killing_player = event.killing_player.name
                 if self.game.left_team.playerparticipation_set.filter(player=event.killing_player).count():
-                    killing_color = self.game.left_team.get_color_display()
+                    killing_team = self.game.left_team
                 else:
-                    killing_color = self.game.right_team.get_color_display()
+                    killing_team = self.game.right_team
 
+                killing_color = killing_team.get_color_display().lower()
+                killing_color_hex = killing_team.get_color_hex(self.game.match.event.spectator_mode)
             if self.game.left_team.playerparticipation_set.filter(player=event.dying_player).count():
-                dying_color = self.game.left_team.get_color_display()
+                dying_team = self.game.left_team
             else:
-                dying_color = self.game.right_team.get_color_display()
+                dying_team = self.game.right_team
+            dying_color = dying_team.get_color_display()
+            dying_color_hex = dying_team.get_color_hex(self.game.match.event.spectator_mode)
             assisting_players = event.assisting_players.all()
             assisting_heroes = []
             for p in assisting_players:
@@ -1036,9 +1060,11 @@ class Round(models.Model):
                 ability_name = event.ability.name
             potential_killfeed.append(
                 {'time_point': event.time_point, 'first_hero': killing_hero, 'first_player': killing_player,
-                 'first_color': killing_color, 'assisting_heroes': assisting_heroes,
+                 'first_color': killing_color, 'first_color_hex': killing_color_hex,
+                 'assisting_heroes': assisting_heroes,
                  'ability': ability_name, 'headshot': event.headshot,
-                 'second_hero': dying_hero, 'second_player': event.dying_player.name, 'second_color': dying_color})
+                 'second_hero': dying_hero, 'second_player': event.dying_player.name,
+            'second_color': dying_color, 'second_color_hex': dying_color_hex,})
 
         potential_killfeed = sorted(potential_killfeed, key=lambda x: x['time_point'])
         return potential_killfeed

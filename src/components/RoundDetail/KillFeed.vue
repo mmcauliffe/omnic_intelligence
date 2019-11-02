@@ -4,7 +4,7 @@
             <v-layout row justify-center>
         <table class="kill-feed-table">
             <tr v-for="item in kill_feed">
-                <td class="first-hero" :class="item.first_color">
+                <td class="first-hero" :style="{'background-color': item.first_color_hex}">
                 <v-tooltip bottom v-if="item.first_hero != 'N/A'">
                     <img class="hero-icon" slot="activator"
                          :src="require('../../assets/'+ make_safe(item.first_hero) +'.png')"/>
@@ -13,7 +13,7 @@
                 </v-tooltip>
 
                 </td>
-                <td class="assisting-heroes" :class="item.first_color">
+                <td class="assisting-heroes" :style="{'background-color': item.first_color_hex}">
                 <v-tooltip v-for="h in item.assisting_heroes" v-bind:key="h" bottom>
                     <img class="hero-icon" slot="activator" :src="require('../../assets/'+ make_safe(h) +'.png')"/>
 
@@ -36,7 +36,7 @@
                 </v-tooltip>
 
                 </td>
-                <td class="second-hero" :class="item.second_color">
+                <td class="second-hero" :style="{'background-color': item.second_color_hex}">
                 <v-tooltip bottom>
                     <img class="hero-icon" slot="activator"
                          :src="require('../../assets/'+ make_safe(item.second_hero) +'.png')"/>

@@ -112,7 +112,6 @@ const getters = {
         if (state.heroes.items === undefined){
             return {}
         }
-        console.log(state.heroes)
         let i, hero;
         for (i = 0; i < state.heroes.items.length; i++) {
             hero = state.heroes.items[i];
@@ -139,7 +138,6 @@ const getters = {
     },
     availableNPCs: (state, getters) => (hero_id_list) => {
         let hero, i, npcs=[], j;
-        console.log('NPCS', state.npcs.items)
         for (i=0; i<state.npcs.items.length; i++){
             if (hero_id_list.indexOf(state.npcs.items[i].spawning_hero.id) >= 0){
                 npcs.push(state.npcs.items[i])
@@ -209,7 +207,6 @@ const mutations = {
         state.npcs = {loading: true};
     },
     getNPCsSuccess(state, npcs) {
-        console.log('GET NPCS', npcs)
         state.npcs = {items: npcs};
     },
     getNPCsFailure(state, error) {

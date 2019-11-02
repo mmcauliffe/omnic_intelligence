@@ -200,7 +200,6 @@ const mutations = {
         state.vod_status = {loading: true};
     },
     getVodsSuccess(state, vods) {
-        console.log(vods);
         state.vod_status = {items: vods.results, loading: false, count: vods.count};
     },
     getVodsFailure(state, error) {
@@ -212,7 +211,6 @@ const mutations = {
         state.stream_vods = {loading: true};
     },
     getStreamVodsSuccess(state, vods) {
-        console.log(vods);
         state.stream_vods = {items: vods.data, loading: false};
     },
     getStreamVodsFailure(state, error) {
@@ -225,7 +223,6 @@ const mutations = {
     },
     getAvailableVodsSuccess(state, vods) {
         state.available_vods = {items: vods.data, loading: false};
-        console.log(vods.data)
     },
     getAvailableVodsFailure(state, error) {
         state.available_vods = {error, loading:false};

@@ -32,6 +32,7 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    'grappelli',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -49,11 +50,16 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'rest_auth.registration',
     'corsheaders',
+    #'silk'
+    'colorful',
 ]
 
 SITE_ID = 1
 
+SILKY_PYTHON_PROFILER = True
+
 MIDDLEWARE = [
+    #'silk.middleware.SilkyMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -169,3 +175,20 @@ CORS_ORIGIN_ALLOW_ALL=True
 CSRF_TRUSTED_ORIGINS = (
     'localhost:8080',
 )
+
+# OVERWATCH SETTINGS
+
+CONTENDERS_AWAY_COLOR = '#ffffff'
+CONTENDERS_HOME_COLOR = '#8cba11'
+
+COLOR_MAPPING = {
+    'blue': '#54fefd',
+    'red': '#ff122c',
+    'white': '#ffffff',
+    'green': '#8cba11',
+    'orange': '#f99d2a',
+    'yellow': '#fedb00',
+    'purple': '#381460',
+    'pink': '#fb7299',
+    'black': '#000000',
+}

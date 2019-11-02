@@ -88,7 +88,6 @@ urlpatterns = [
 
     # http://localhost:8000/
     path('', index_view, name='index'),
-
     url(r'^api/rest-auth/', include('rest_auth.urls')),
 
     url(r'^api/rest-auth/registration/', include('rest_auth.registration.urls')),
@@ -96,8 +95,11 @@ urlpatterns = [
     # http://localhost:8000/api/<router-viewsets>
     path('api/', include(api_router.urls)),
 
+    path('grappelli/', include('grappelli.urls')),  # grappelli URLS
     # http://localhost:8000/api/admin/
     path('api/admin/', admin.site.urls),
 ]
+
+#urlpatterns += [url(r'^api/silk/', include('silk.urls', namespace='silk'))]
 
 
