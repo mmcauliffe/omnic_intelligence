@@ -1029,20 +1029,25 @@ class Round(models.Model):
             killing_color = 'N/A'
             killing_color_hex = 'N/A'
             killing_player = 'N/A'
+            killing_side = 'neither'
             if event.killing_player is not None:
                 killing_hero = event.killing_player.get_hero_at_timepoint(self, event.time_point).name
                 killing_player = event.killing_player.name
                 if self.game.left_team.playerparticipation_set.filter(player=event.killing_player).count():
                     killing_team = self.game.left_team
+                    killing_side = 'left'
                 else:
                     killing_team = self.game.right_team
+                    killing_side = 'right'
 
                 killing_color = killing_team.get_color_display().lower()
                 killing_color_hex = killing_team.get_color_hex(self.game.match.event.spectator_mode)
             if self.game.left_team.playerparticipation_set.filter(player=event.dying_player).count():
                 dying_team = self.game.left_team
+                dying_side = 'left'
             else:
                 dying_team = self.game.right_team
+                dying_side = 'right'
             dying_color = dying_team.get_color_display()
             dying_color_hex = dying_team.get_color_hex(self.game.match.event.spectator_mode)
             assisting_players = event.assisting_players.all()
@@ -1061,10 +1066,11 @@ class Round(models.Model):
             potential_killfeed.append(
                 {'time_point': event.time_point, 'first_hero': killing_hero, 'first_player': killing_player,
                  'first_color': killing_color, 'first_color_hex': killing_color_hex,
+                 'first_side': killing_side,
                  'assisting_heroes': assisting_heroes,
                  'ability': ability_name, 'headshot': event.headshot,
                  'second_hero': dying_hero, 'second_player': event.dying_player.name,
-            'second_color': dying_color, 'second_color_hex': dying_color_hex,})
+            'second_color': dying_color, 'second_color_hex': dying_color_hex, 'second_side': dying_side})
 
         potential_killfeed = sorted(potential_killfeed, key=lambda x: x['time_point'])
         return potential_killfeed
