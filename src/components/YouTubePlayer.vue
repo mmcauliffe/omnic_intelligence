@@ -76,7 +76,7 @@
                 player.pauseVideo();
             },
             seek(timestamp) { // Seeks to the specified timestamp (in seconds) in the video and resumes playing if paused. Does not work for live streams.
-                player.seekTo(timestamp, false);
+                player.seekTo(timestamp);
                 if (player.getPlayerState() == 1){
                     this.pause()
                 }
