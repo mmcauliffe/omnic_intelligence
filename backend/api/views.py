@@ -1400,11 +1400,8 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         from decimal import Decimal
-        errors = []
-        error_log_path = r'E:\Data\Overwatch\issues.txt'
         instance = self.get_object()
         left = [x.player for x in instance.game.left_team.playerparticipation_set.all()]
-        left_color = instance.game.left_team.get_color_display().lower()
         print(left)
         right = [x.player for x in instance.game.right_team.playerparticipation_set.all()]
         print(right)
@@ -1493,19 +1490,14 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                 continue
             event = event['event']
             if event['ability'] == 'resurrect':
-                if event['first_color'] == left_color:
-                    side = 'left'
-                else:
-                    side = 'right'
+                side = event['first_side']
                 reviving_player = instance.get_player_of_hero(event['first_hero'], time_point, side)
                 revived_player = instance.get_player_of_hero(event['second_hero'], time_point, side)
-                print('reviving_player', reviving_player)
-                print('revived_player', revived_player)
                 if reviving_player is None:
-                    errors.append((instance.id, time_point, 'revive', event['first_hero'], side))
+                    print('ERROR', instance.id, time_point, 'revive', event['first_hero'], side)
                     continue
                 if revived_player is None:
-                    errors.append((instance.id, time_point, 'revive', event['second_hero'], side))
+                    print('ERROR', instance.id, time_point, 'revive', event['second_hero'], side)
                     continue
                 ability = models.Ability.objects.get(name='Resurrect')
                 kill_feed_events.append(
@@ -1513,10 +1505,7 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                                          time_point=time_point, ability=ability))
             elif event['first_hero'] == 'n/a':
                 # death
-                if event['second_color'] == left_color:
-                    side = 'left'
-                else:
-                    side = 'right'
+                side = event['second_side']
                 try:
                     npc = models.NPC.objects.get(name__iexact=event['second_hero'])
                     dying_player = instance.get_player_of_hero(npc.spawning_hero.name, time_point, side)
@@ -1526,24 +1515,18 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                 except models.NPC.DoesNotExist:
                     # Hero death
                     dying_player = instance.get_player_of_hero(event['second_hero'], time_point, side)
-                    print('dying player', dying_player)
                     if dying_player is None:
-                        errors.append((instance.id, time_point, 'death', event['second_hero'], side))
+                        print('ERROR', instance.id, time_point, 'death', event['second_hero'], side)
                         continue
                     kill_feed_events.append(
                         models.KillFeedEvent(round=instance, time_point=time_point, dying_player=dying_player))
             else:
                 # kills
-                if event['second_color'] == left_color:
-                    killing_side = 'right'
-                    killed_side = 'left'
-                else:
-                    killing_side = 'left'
-                    killed_side = 'right'
+                killing_side = event['first_side']
+                killed_side = event['second_side']
                 killing_player = instance.get_player_of_hero(event['first_hero'], time_point, killing_side)
-                print('killing_player', killing_player)
                 if killing_player is None:
-                    errors.append((instance.id, time_point, 'kill', event['first_hero'], killing_side))
+                    print('ERROR', instance.id, time_point, 'kill', event['first_hero'], killing_side)
                     continue
                 hero = models.Hero.objects.get(name__iexact=event['first_hero'])
                 headshot = event['headshot']
@@ -1553,14 +1536,10 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                 for a in event['assists']:
                     hero = models.Hero.objects.get(name__iexact=a.replace('_assist', ''))
                     assists.append(hero.name)
-                print(assists)
                 try:
                     # NPC kill
                     npc = models.NPC.objects.get(name__iexact=event['second_hero'])
-                    if event['second_color'] == left_color:
-                        side = 'left'
-                    else:
-                        side = 'right'
+                    side = event['second_side']
                     dying_player = instance.get_player_of_hero(npc.spawning_hero.name, time_point, side)
                     if ability is not None and dying_player is not None:
                         if not assists:
@@ -1583,10 +1562,7 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                     try:
                         # Ult denial
                         denied_ult = models.Ability.objects.get(name__iexact=event['second_hero'], deniable=True)
-                        if event['second_color'] == left_color:
-                            side = 'left'
-                        else:
-                            side = 'right'
+                        side = event['second_side']
                         dying_player = instance.get_player_of_hero(denied_ult.heroes.first().name, time_point, side)
                         if ability is not None and dying_player is not None:
                             kill_feed_events.append(
@@ -1596,9 +1572,8 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                     except models.Ability.DoesNotExist:
                         # Kill
                         dying_player = instance.get_player_of_hero(event['second_hero'], time_point, killed_side)
-                        print('killed_player', dying_player)
                         if dying_player is None:
-                            errors.append((instance.id, time_point, 'kill', event['second_hero'], killed_side))
+                            print('ERROR', instance.id, time_point, 'kill', event['second_hero'], killed_side)
                             continue
                         if ability is not None:
                             if not assists:
@@ -1622,9 +1597,6 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                                 except django.db.utils.IntegrityError:
                                     pass
         models.KillFeedEvent.objects.bulk_create(kill_feed_events)
-        with open(error_log_path, 'a') as f:
-            for e in errors:
-                f.write('{}\n'.format('\t'.join(map(str, e))))
         instance.annotation_status = 'O'
         instance.attacking_side = request.data.get('attacking_side', 'N')
         instance.save()
