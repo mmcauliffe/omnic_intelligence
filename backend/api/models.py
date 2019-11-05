@@ -1050,10 +1050,11 @@ class Round(models.Model):
                 dying_side = 'right'
             dying_color = dying_team.get_color_display()
             dying_color_hex = dying_team.get_color_hex(self.game.match.event.spectator_mode)
-            assisting_players = event.assisting_players.all()
+
+            assists = Assist.objects.filter(kill=event)
             assisting_heroes = []
-            for p in assisting_players:
-                assisting_heroes.append(p.get_hero_at_timepoint(self, event.time_point).name)
+            for a in assists:
+                assisting_heroes.append(a.player.get_hero_at_timepoint(self, event.time_point).name)
             if event.denied_ult is not None:
                 dying_hero = event.denied_ult.name
             elif event.dying_npc is not None:
@@ -1169,6 +1170,9 @@ class Assist(models.Model):
 
     class Meta:
         ordering = ['order']
+
+    def __str__(self):
+        return '{} - {}'.format(self.order, self.player.name)
 
 
 class KillFeedEvent(models.Model):

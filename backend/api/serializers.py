@@ -545,7 +545,8 @@ class KillFeedSerializer(serializers.ModelSerializer):
             return obj.round.game.right_team.get_color_display()
 
     def get_assists(self, obj):
-        return [x.get_hero_at_timepoint(obj.round, obj.time_point).name for x in obj.assisting_players.all()]
+        return [x.player.get_hero_at_timepoint(obj.round, obj.time_point).name
+                for x in models.Assist.objects.filter(kill=obj).all()]
 
 
 class KillFeedEventDisplaySerializer(serializers.ModelSerializer):
@@ -559,26 +560,19 @@ class KillFeedEventDisplaySerializer(serializers.ModelSerializer):
 
 
 class KillFeedEventEditSerializer(serializers.ModelSerializer):
-    #killing_player = PlayerSerializer()
     dying_player = PlayerSerializer()
-    #dying_player = serializers.StringRelatedField()
     denied_ult = serializers.StringRelatedField()
     ability = AbilityDisplaySerializer()
-    #possible_abilities = AbilitySerializer(many=True)
-    #possible_assists = PlayerSerializer(many=True)
-    #possible_killing_players = PlayerSerializer(many=True)
-    #possible_dying_npcs = NPCSerializer(many=True)
-    # assisting_players = PlayerSerializer(many=True)
+    assists = serializers.SerializerMethodField()
 
     class Meta:
         model = models.KillFeedEvent
         fields = ('id', 'time_point', 'killing_player', 'dying_player', 'ability', 'headshot',
-                  #'possible_abilities',
-                  #'possible_assists',
-                  'assisting_players', 'dying_npc', 'denied_ult',
-                  #'possible_killing_players',
-                  #'possible_dying_npcs'
+                  'assists', 'dying_npc', 'denied_ult',
                   )
+
+    def get_assists(self, obj):
+        return [x.player_id for x in models.Assist.objects.filter(kill=obj).all()]
 
 
 class StatusEffectSerializer(serializers.ModelSerializer):

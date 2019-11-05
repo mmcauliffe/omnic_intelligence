@@ -599,356 +599,6 @@ class GameViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         return Response(instance.generate_stats())
 
-    @action(methods=['post'], detail=False)
-    def create_upload(self, request, *args, **kwargs):
-        for k, v in request.data.items():
-            if k == 'rounds':
-                continue
-            print(k, v)
-        vod = models.StreamVod.objects.get(id=int(request.data['vod_id']))
-        # if vod.round_set.count() > 0:
-        #    return Response()
-        print(vod)
-        channel = vod.channel
-        event, _ = models.Event.objects.get_or_create(name=request.data['event'].lower())
-        if event.channel != channel:
-            event.channel = channel
-            event.save()
-        create_match = True
-        matches = event.match_set.filter(description=request.data['description']).all()
-        for m in matches:
-            # has_manual = False
-            # for g in m.game_set.all():
-            #    if g.round_set.filter(annotation_status='M').exists():
-            #        has_manual = True
-            # if not has_manual:
-            #    m.delete()
-            #    continue
-            teams = m.teams.all()
-            team_one_found = False
-            team_two_found = False
-            for t in teams:
-                if t.name.lower() == request.data['team_one'].lower():
-                    team_one_found = True
-                elif t.name.lower() == request.data['team_two'].lower():
-                    team_two_found = True
-            if team_one_found and team_two_found:
-                match = m
-                create_match = False
-        if create_match:
-            match = models.Match.objects.create(event=event, description=request.data['description'])
-        left_names = {}
-        right_names = {}
-        r = request.data['rounds'][0]
-        print(r['round']['map'])
-        left_color = r['left_color']
-        right_color = r['right_color']
-        map_object = models.Map.objects.get(name__iexact=r['round']['map'])
-        print(map_object)
-        if map_object is None:
-            error
-        for p, v in r['player'].items():
-            s, i = p.split('_')
-            if s == 'left':
-                left_names[i] = v['player_name']
-            else:
-                right_names[i] = v['player_name']
-        team_one = models.Team.objects.filter(name__iexact=request.data['team_one']).first()
-        team_two = models.Team.objects.filter(name__iexact=request.data['team_two']).first()
-        if team_one is None:
-            team_one = models.Team.objects.create(name=request.data['team_one'].lower())
-        team_one_players = team_one.players.all()
-        if not team_one_players:
-            team_one_player_names = lookup_team(request.data['team_one'])
-            print(team_one_player_names)
-            for p in team_one_player_names:
-                print(p)
-                player = models.Player.objects.filter(name=p.lower()).first()
-                if player is None:
-                    player = models.Player.objects.create(name=p.lower())
-                affiliation = models.Affiliation.objects.create(team=team_one, player=player)
-        team_one_players = team_one.players.all()
-        if team_two is None:
-            team_two = models.Team.objects.create(name=request.data['team_two'].lower())
-        team_two_players = team_two.players.all()
-        if not team_two_players:
-            team_two_player_names = lookup_team(request.data['team_two'])
-            for p in team_two_player_names:
-                player = models.Player.objects.filter(name=p.lower()).first()
-                if player is None:
-                    player = models.Player.objects.create(name=p.lower())
-                affiliation = models.Affiliation.objects.create(team=team_two, player=player)
-        print(team_two.affiliation_set.all())
-        team_two_players = team_two.players.all()
-        if create_match:
-            match.teams.add(team_one)
-            match.teams.add(team_two)
-            match.save()
-        print('left_names', left_names)
-        print('right_names', right_names)
-        print(team_one_players, team_two_players)
-        print(team_one.id, team_two.id)
-        team_one_players, team_two_players, one_left = match_up_players(left_names, right_names, team_one_players,
-                                                                        team_two_players)
-
-        print(team_one_players, team_two_players)
-        if one_left:
-            left_team = team_one
-            left_team_players = team_one_players
-            right_team = team_two
-            right_team_players = team_two_players
-        else:
-            left_team = team_two
-            left_team_players = team_two_players
-            right_team = team_one
-            right_team_players = team_one_players
-        try:
-            game = models.Game.objects.get(match=match, game_number=int(request.data['game_number']))
-        except models.Game.DoesNotExist:
-            left_team_participation = models.TeamParticipation.objects.create(team=left_team, color='B')
-            for i, p in left_team_players.items():
-                pp = models.PlayerParticipation.objects.create(team_participation=left_team_participation, player=p,
-                                                               player_index=int(i))
-
-            right_team_participation = models.TeamParticipation.objects.create(team=right_team, color='R')
-            for i, p in right_team_players.items():
-                pp = models.PlayerParticipation.objects.create(team_participation=right_team_participation, player=p,
-                                                               player_index=int(i))
-
-            game = models.Game.objects.create(match=match, game_number=int(request.data['game_number']), map=map_object,
-                                              left_team=left_team_participation, right_team=right_team_participation)
-        errors = []
-        error_log_path = r'E:\Data\Overwatch\issues_vod.txt'
-        print(len(request.data['rounds']), 'total rounds')
-        for i, r in enumerate(request.data['rounds']):
-            print('Round', i)
-            r_data = r['round']
-            attacking_side = 'N'
-            if r_data['attacking_color'] == 'blue':
-                attacking_side = 'L'
-            elif r_data['attacking_color'] == 'red':
-                attacking_side = 'R'
-            try:
-                instance = models.Round.objects.get(game=game, round_number=i + 1)
-                created = False
-            except models.Round.DoesNotExist:
-                instance = models.Round.objects.create(stream_vod=vod, game=game, round_number=i + 1,
-                                                       attacking_side=attacking_side, begin=r_data['begin'],
-                                                       end=r_data['end'])
-                created = True
-            print(instance, created)
-            if not created:
-                continue
-            instance.ultgain_set.all().delete()
-            instance.ultuse_set.all().delete()
-            instance.replaystart_set.all().delete()
-            instance.replayend_set.all().delete()
-            switches = []
-            ult_gains = []
-            ult_uses = []
-            if 'replays' in r:
-                replay_begins = []
-                replay_ends = []
-                for replay in r['replays']:
-                    replay_begins.append(models.ReplayStart(round=instance, time_point=replay['begin']))
-                    replay_ends.append(models.ReplayEnd(round=instance, time_point=replay['end']))
-                models.ReplayStart.objects.bulk_create(replay_begins)
-                models.ReplayEnd.objects.bulk_create(replay_ends)
-
-            if 'pauses' in r:
-                pauses = []
-                unpauses = []
-                for p in r['pauses']:
-                    pauses.append(models.Pause(round=instance, time_point=p['begin']))
-                    unpauses.append(models.Unpause(round=instance, time_point=p['end']))
-                models.Pause.objects.bulk_create(pauses)
-                models.Unpause.objects.bulk_create(unpauses)
-
-            if 'small_windows' in r:
-                smaller_window_starts = []
-                smaller_window_ends = []
-                for p in r['small_windows']:
-                    smaller_window_starts.append(models.SmallerWindowStart(round=instance, time_point=p['begin']))
-                    smaller_window_ends.append(models.SmallerWindowEnd(round=instance, time_point=p['end']))
-                models.SmallerWindowStart.objects.bulk_create(smaller_window_starts)
-                models.SmallerWindowEnd.objects.bulk_create(smaller_window_ends)
-            sequences = instance.sequences
-            for k, v in r['player'].items():
-                side, num = k.split('_')
-                if side == 'left':
-                    p = left_team_players[num]
-                else:
-                    p = right_team_players[num]
-                for i, s in enumerate(v['switches']):
-                    for seq in sequences:
-                        if seq[0] <= s[0] <= seq[1]:
-                            break
-                    else:
-                        continue
-                    hero = models.Hero.objects.get(name__iexact=s[1])
-                    if i < len(v['switches']) - 1:
-                        switches.append(models.Switch(round=instance, player=p, new_hero=hero, time_point=s[0],
-                                                      end_time_point=v['switches'][i + 1][0]))
-                    else:
-                        switches.append(models.Switch(round=instance, player=p, new_hero=hero, time_point=s[0]))
-                for ug in v['ult_gains']:
-                    for seq in sequences:
-                        if isinstance(ug, list):
-                            ug = ug[0]
-                        if seq[0] <= ug <= seq[1]:
-                            break
-                    else:
-                        continue
-                    ult_gains.append(models.UltGain(player=p, round=instance, time_point=ug))
-                for uu in v['ult_uses']:
-                    for seq in sequences:
-                        if isinstance(uu, list):
-                            uu = uu[0]
-                        if seq[0] <= uu <= seq[1]:
-                            break
-                    else:
-                        continue
-                    ult_uses.append(models.UltUse(player=p, round=instance, time_point=uu))
-            models.Switch.objects.bulk_create(switches)
-            models.UltGain.objects.bulk_create(ult_gains)
-            models.UltUse.objects.bulk_create(ult_uses)
-
-            instance.kill_set.all().delete()
-            instance.killnpc_set.all().delete()
-            instance.death_set.all().delete()
-            instance.npcdeath_set.all().delete()
-            instance.revive_set.all().delete()
-
-            revives = []
-            deaths = []
-            npcdeaths = []
-            kills = []
-            killnpcs = []
-            for event in r['kill_feed']:
-                time_point = round(event['time_point'], 1)
-                for seq in sequences:
-                    if seq[0] <= time_point <= seq[1]:
-                        break
-                else:
-                    continue
-
-                event = event['event']
-                if event['ability'] == 'resurrect':
-                    if event['first_color'] == left_color:
-                        side = 'left'
-                    else:
-                        side = 'right'
-                    reviving_player = instance.get_player_of_hero(event['first_hero'], time_point, side)
-                    revived_player = instance.get_player_of_hero(event['second_hero'], time_point, side)
-                    if reviving_player is None:
-                        errors.append((instance.id, time_point, 'revive', event['first_hero'], side))
-                        continue
-                    if revived_player is None:
-                        errors.append((instance.id, time_point, 'revive', event['second_hero'], side))
-                        continue
-                    ability = models.Ability.objects.get(name='Resurrect')
-                    revives.append(
-                        models.Revive(reviving_player=reviving_player, revived_player=revived_player, round=instance,
-                                      time_point=time_point, ability=ability))
-                elif event['first_hero'] == 'n/a':
-                    # death
-                    if event['second_color'] == left_color:
-                        side = 'left'
-                    else:
-                        side = 'right'
-                    try:
-                        npc = models.NPC.objects.get(name__iexact=event['second_hero'])
-                        npcdeaths.append(
-                            models.NPCDeath(round=instance, time_point=time_point, npc=npc, side=side[0].upper()))
-                    except models.NPC.DoesNotExist:
-                        # Hero death
-                        dying_player = instance.get_player_of_hero(event['second_hero'], time_point, side)
-                        if dying_player is None:
-                            errors.append((instance.id, time_point, 'death', event['second_hero'], side))
-                            continue
-                        deaths.append(models.Death(round=instance, time_point=time_point, player=dying_player))
-                else:
-                    # kills
-                    if event['second_color'] == left_color:
-                        killing_side = 'right'
-                        killed_side = 'left'
-                    else:
-                        killing_side = 'left'
-                        killed_side = 'right'
-                    killing_player = instance.get_player_of_hero(event['first_hero'], time_point, killing_side)
-                    if killing_player is None:
-                        errors.append((instance.id, time_point, 'kill', event['first_hero'], killing_side))
-                        continue
-                    hero = models.Hero.objects.get(name__iexact=event['first_hero'])
-                    if 'headshot' not in event:
-                        headshot = event['ability'].endswith('headshot')
-                    else:
-                        headshot = event['headshot']
-                    ability = event['ability'].replace(' headshot', '')
-                    ability = hero.abilities.filter(name__iexact=ability).first()
-                    assists = []
-                    for a in event['assists']:
-                        hero = models.Hero.objects.get(name__iexact=a.replace('_assist', ''))
-                        assists.append(hero.name)
-
-                    print(assists)
-                    try:
-                        npc = models.NPC.objects.get(name__iexact=event['second_hero'])
-                        if ability is not None:
-                            if not assists:
-                                killnpcs.append(
-                                    models.KillNPC(round=instance, time_point=time_point, killing_player=killing_player,
-                                                   killed_npc=npc, ability=ability))
-                                npcdeaths.append(models.NPCDeath(round=instance, time_point=time_point, npc=npc,
-                                                                 side=killed_side[0].upper()))
-                            else:
-                                m = models.KillNPC.objects.create(round=instance, time_point=time_point,
-                                                                  killing_player=killing_player,
-                                                                  killed_npc=npc, ability=ability)
-                                for a in assists:
-                                    assisting_player = instance.get_player_of_hero(a, time_point, killing_side)
-                                    if assisting_player is None:
-                                        continue
-                                    m.assisting_players.add(assisting_player)
-                    except models.NPC.DoesNotExist:
-                        killed_player = instance.get_player_of_hero(event['second_hero'], time_point, killed_side)
-                        if killed_player is None:
-                            errors.append((instance.id, time_point, 'kill', event['second_hero'], killed_side))
-                            continue
-                        if ability is not None:
-                            if not assists:
-                                kills.append(
-                                    models.Kill(round=instance, time_point=time_point, killing_player=killing_player,
-                                                killed_player=killed_player, ability=ability, headshot=headshot))
-                                deaths.append(models.Death(round=instance, time_point=time_point, player=killed_player))
-                            else:
-                                m = models.Kill.objects.create(round=instance, time_point=time_point,
-                                                               killing_player=killing_player,
-                                                               killed_player=killed_player, ability=ability,
-                                                               headshot=headshot)
-                                for a in assists:
-                                    assisting_player = instance.get_player_of_hero(a, time_point, killing_side)
-                                    print('assisting_player', assisting_player)
-                                    if assisting_player is None:
-                                        continue
-                                    m.assisting_players.add(assisting_player)
-            print(revives)
-            models.Revive.objects.bulk_create(revives)
-            print(deaths)
-            models.Death.objects.bulk_create(deaths)
-            print(npcdeaths)
-            models.NPCDeath.objects.bulk_create(npcdeaths)
-            print(killnpcs)
-            models.KillNPC.objects.bulk_create(killnpcs)
-            print(kills)
-            models.Kill.objects.bulk_create(kills)
-            with open(error_log_path, 'a') as f:
-                for e in errors:
-                    f.write('{}\n'.format('\t'.join(map(str, e))))
-            instance.annotation_status = 'O'
-            instance.save()
-        return Response()
-
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
         print(request.data)
@@ -1480,6 +1130,7 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
         instance.killfeedevent_set.all().delete()
 
         kill_feed_events = []
+        assist_objects = []
         for event in request.data['kill_feed']:
             print(event)
             time_point = round(event['time_point'], 1)
@@ -1553,11 +1204,11 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                                                                     killing_player=killing_player,
                                                                     dying_npc=npc, dying_player=dying_player,
                                                                     ability=ability, headshot=headshot)
-                            for a in assists:
+                            for i, a in enumerate(assists):
                                 assisting_player = instance.get_player_of_hero(a, time_point, killing_side)
                                 if assisting_player is None:
                                     continue
-                                m.assisting_players.add(assisting_player)
+                                assist_objects.append(models.Assist(player=assisting_player, kill=m, order=i))
                 except models.NPC.DoesNotExist:
                     try:
                         # Ult denial
@@ -1588,12 +1239,12 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                                                                             dying_player=dying_player, ability=ability,
                                                                             headshot=headshot)
                                     print(m)
-                                    for a in assists:
+                                    for i,a in enumerate(assists):
                                         assisting_player = instance.get_player_of_hero(a, time_point, killing_side)
                                         print('assisting_player', assisting_player)
                                         if assisting_player is None:
                                             continue
-                                        m.assisting_players.add(assisting_player)
+                                        assist_objects.append(models.Assist(player=assisting_player, kill=m, order=i))
                                 except django.db.utils.IntegrityError:
                                     pass
         models.KillFeedEvent.objects.bulk_create(kill_feed_events)
@@ -2035,7 +1686,6 @@ class KillFeedEventViewSet(viewsets.ModelViewSet):
             instance.killing_player_id = request.data['killing_player']
             instance.ability = models.Ability.objects.get(name='Primary')
         elif request.data.get('killing_player', None):
-            instance.assisting_players.clear()
             instance.killing_player_id = request.data['killing_player']
             instance.ability_id = request.data['ability']['id']
             if instance.ability.headshot_capable:
@@ -2043,20 +1693,28 @@ class KillFeedEventViewSet(viewsets.ModelViewSet):
             else:
                 instance.headshot = False
         else:
-            instance.assisting_players.clear()
+            instance.assists.clear()
             instance.killing_player = None
             instance.ability = None
-        if request.data['assisting_players']:
-            current_assists = instance.assisting_players.all()
+        if request.data['assists']:
+            current_assists = instance.assists.all()
             for c in current_assists:
-                if c.pk not in request.data['assisting_players']:
-                    instance.assisting_players.remove(c)
-            assist_ids = [x.pk for x in current_assists]
-            for p in request.data['assisting_players']:
+                if c.pk not in request.data['assists']:
+                    instance.assists.remove(c)
+            current_assists = models.Assist.objects.filter(kill=instance).all()
+            assist_ids = [x.player.pk for x in current_assists]
+            assist_objects = []
+            o = 0
+            if current_assists:
+                o = current_assists.last().order
+            for p in request.data['assists']:
                 if p not in assist_ids:
-                    instance.assisting_players.add(models.Player.objects.get(pk=p))
+                    o += 1
+                    assist_objects.append(models.Assist(player_id=p, kill=instance,order=o))
+            if assist_objects:
+                models.Assist.objects.bulk_create(assist_objects)
         else:
-            instance.assisting_players.clear()
+            instance.assists.clear()
 
         if request.data.get('dying_npc', None):
             instance.dying_npc_id = request.data['dying_npc']
