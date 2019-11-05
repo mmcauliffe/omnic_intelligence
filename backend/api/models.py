@@ -1162,11 +1162,21 @@ class PointFlip(models.Model):
         ordering = ['round', 'time_point']
 
 
+class Assist(models.Model):
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    kill = models.ForeignKey('KillFeedEvent', on_delete=models.CASCADE)
+    order = models.IntegerField()
+
+    class Meta:
+        ordering = ['order']
+
+
 class KillFeedEvent(models.Model):
     time_point = models.DecimalField(max_digits=6, decimal_places=1)
     round = models.ForeignKey(Round, on_delete=models.CASCADE)
     killing_player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='kills', blank=True, null=True)
     assisting_players = models.ManyToManyField(Player, related_name='assisted_kills')
+    assists = models.ManyToManyField(Player, through=Assist)
     ability = models.ForeignKey(Ability, on_delete=models.CASCADE, blank=True, null=True)
     headshot = models.BooleanField(default=False)
     dying_player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='deaths')
