@@ -44,7 +44,7 @@
                     {{ props.item.time_point | secondsToMoment | moment('mm:ss.S') }}
                 </td>
                 <td>
-                    <v-select v-model="props.item.killing_player"
+                    <v-select v-model="props.item.killing_player" dense single-line
                               item-text="name" item-value="id" :items="possible_killers(props.item.dying_player, props.item.ability)" clearable
                      v-on:change="updateEvent(props.item)">
                     </v-select>
@@ -57,13 +57,10 @@
                               item-text="name" item-value="id" :items="rightPlayers.filter(x=>{return x.id !== props.item.killing_player})"
                      v-on:change="updateEvent(props.item)">
                           <template slot="selection" slot-scope="{ item, index }">
-        <v-chip v-if="props.item.assists.length === 1 && index === 0">
-          <span>{{ item.name }}</span>
-        </v-chip>
+          <span v-if="props.item.assists.length === 1 && index === 0">{{ item.name }}</span>
         <span
-          v-if="props.item.assists.length !== 1 && index === 0"
-          class="grey--text caption"
-        >({{ props.item.assists.length}} assists)</span>
+          v-else-if="props.item.assists.length !== 1 && index === 0"
+        >{{ props.item.assists.length}} assists</span>
       </template>
                     </v-select>
                     <v-select v-else-if="props.item.ability && props.item.ability.type==='D'
@@ -72,32 +69,29 @@
                               item-text="name" item-value="id" :items="leftPlayers.filter(x=>{return x.id !== props.item.killing_player})"
                      v-on:change="updateEvent(props.item)">
                           <template slot="selection" slot-scope="{ item, index }">
-        <v-chip v-if="props.item.assists.length === 1 && index === 0">
-          <span>{{ item.name }}</span>
-        </v-chip>
+          <span v-if="props.item.assists.length === 1 && index === 0">{{ item.name }}</span>
         <span
-          v-if="props.item.assists.length !== 1 && index === 0"
-          class="grey--text caption"
-        >({{ props.item.assists.length}} assists)</span>
+          v-else-if="props.item.assists.length !== 1 && index === 0"
+        >{{ props.item.assists.length}} assists</span>
       </template>
                     </v-select>
                 </td>
                 <td>
                     <v-layout row flex-nowrap v-if="props.item.killing_player && props.item.ability && props.item.ability.type==='D'">
-                    <v-select v-model="props.item.ability.id"
+                    <v-select v-model="props.item.ability.id" dense single-line
                               item-text="name" item-value="id" :items="heroDamagingAbilities(heroAtTime(props.item.killing_player, props.item.time_point).id)"
                      v-on:change="updateEvent(props.item)">
 
                     </v-select>
                     <v-checkbox
-                            v-model="props.item.headshot" v-if="props.item.ability.headshot_capable"
+                            v-model="props.item.headshot" v-if="props.item.ability.headshot_capable" dense
                      v-on:change="updateEvent(props.item)">
 
                     </v-checkbox>
 
                     </v-layout>
                     <div v-else-if="props.item.killing_player && props.item.ability && props.item.ability.type==='E'">
-                    <v-select v-model="props.item.ability.id"
+                    <v-select v-model="props.item.ability.id" dense single-line
                               item-text="name" item-value="id" :items="heroDenyingAbilities(heroAtTime(props.item.killing_player, props.item.time_point).id)"
                      v-on:change="updateEvent(props.item)">
 
@@ -113,7 +107,7 @@
                     <div v-if="!(props.item.ability && ['R', 'E'].indexOf(props.item.ability.type) !== -1)
                         && heroNPCs(heroAtTime(props.item.dying_player.id, props.item.time_point).id).length > 0">
 
-                    <v-select v-model="props.item.dying_npc" clearable
+                    <v-select v-model="props.item.dying_npc" clearable dense single-line
                               item-text="name" item-value="id" :items="heroNPCs(heroAtTime(props.item.dying_player.id, props.item.time_point).id)"
                      v-on:change="updateEvent(props.item)">
 
@@ -195,8 +189,8 @@
             headers(){
                 return [
                 {text: 'Time', sortable: false, width: "5px"},
-                {text: 'Killing player', sortable: false, width:"90px"},
-                {text: 'Assists', sortable: false, width: "100px"},
+                {text: 'Killing player', sortable: false, width:"100px"},
+                {text: 'Assists', sortable: false, width: "200px"},
                 {text: 'Ability', sortable: false},
                 {text: 'Killed player', sortable: false, width:"100px"},
                 {text: 'Actions', sortable: false, width: "5px"}];
