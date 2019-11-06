@@ -1248,6 +1248,7 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                                 except django.db.utils.IntegrityError:
                                     pass
         models.KillFeedEvent.objects.bulk_create(kill_feed_events)
+        models.Assist.objects.bulk_create(assist_objects)
         instance.annotation_status = 'O'
         instance.attacking_side = request.data.get('attacking_side', 'N')
         instance.save()
