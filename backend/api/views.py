@@ -1135,7 +1135,7 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
             print(event)
             time_point = round(event['time_point'], 1)
             for seq in sequences:
-                if seq[0] <= time_point <= seq[1]:
+                if seq[0] - Decimal('0.5') <= time_point <= seq[1] + Decimal('0.5'):
                     break
             else:
                 continue
