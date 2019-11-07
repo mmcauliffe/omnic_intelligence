@@ -1112,7 +1112,7 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                                                               end_time=st['end'], status=m))
             for ult in v['ultimates']:
                 for seq in sequences:
-                    if seq[0] <= ult['gained'] <= seq[1]:
+                    if seq[0] - Decimal('0.5') <= ult['gained'] <= seq[1] + Decimal('0.5'):
                         break
                 else:
                     continue
