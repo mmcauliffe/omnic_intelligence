@@ -45,6 +45,7 @@ class StreamVod(models.Model):
                            ('1', 'Korean Contenders season 1'),
                            ('K', 'Korean Contenders season 2'),
                            ('U', 'Australia Contenders season 2'),
+                           ('G', 'Gauntlet 2019'),
                            ('2', 'Overwatch league season 2'))
     STATUS_CHOICES = (
         ('N', 'Not analyzed'),
