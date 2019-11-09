@@ -125,3 +125,5 @@ venv.bak/
 backup\.json
 
 *.json
+
+*.sqlite3-journal
