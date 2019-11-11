@@ -338,7 +338,9 @@ class Player(models.Model):
         return segments
 
     def get_alive_states(self, round_object):
-        deaths = self.deaths.filter(round=round_object, ability__type=Ability.DAMAGING_TYPE, dying_npc=None).all()
+        from django.db.models import Q
+        deaths = self.deaths.filter(round=round_object, dying_npc=None)
+        deaths = deaths.filter(Q(ability__isnull=True) | Q(ability__type=Ability.DAMAGING_TYPE)).all()
         round_end = round_object.end - round_object.begin
         if len(deaths) == 0:
             return [{'begin': 0, 'end': round_end, 'status': 'alive'}]
