@@ -866,7 +866,7 @@ class Round(models.Model):
         cur_beg = Decimal('0.00')
         segments = []
         for i, s in enumerate(interruptions):
-            segments.append([cur_beg, s.start_time])
+            segments.append([cur_beg, s.start_time - Decimal('0.1')])
             if s.end_time is not None:
                 cur_beg = s.end_time
             else:
