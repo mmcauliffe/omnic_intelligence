@@ -96,6 +96,7 @@ class GameAdmin(admin.ModelAdmin):
 class PatchAdmin(admin.ModelAdmin):
     list_display = ('version_number', 'live_date', 'end_date')
 
+
 @admin.register(Match)
 class MatchAdmin(admin.ModelAdmin):
     list_display = ('id', 'get_event_name', 'get_event_spectator_mode', 'get_team_description', 'date')
@@ -119,10 +120,15 @@ class MatchAdmin(admin.ModelAdmin):
     get_team_description.short_description = 'Team description'  # Renames column head
 
 
+def reset_annotations(modeladmin, request, queryset):
+    queryset.update(annotation_status='N')
+reset_annotations.short_description = "Reset annotations of selected rounds"
+
 @admin.register(Round)
 class RoundAdmin(admin.ModelAdmin):
     list_display = ('id', 'round_number', 'get_game_number', 'get_event_name', 'annotation_status')
 
+    actions = [reset_annotations]
     def get_game_number(self, obj):
         return obj.game.game_number
 

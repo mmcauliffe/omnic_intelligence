@@ -763,6 +763,17 @@ class Round(models.Model):
                                                                self.game.left_team.team, self.game.right_team.team,
                                                                self.game.match.event)
 
+    def reset(self):
+        self.annotation_status = 'N'
+        self.heropick_set.all().delete()
+        self.killfeedevent_set.all().delete()
+        self.ultimate_set.all().delete()
+        self.statuseffect_set.all().delete()
+        self.pointflip_set.all().delete()
+        self.pointgain_set.all().delete()
+        self.overtime_set.all().delete()
+        self.save()
+
     @property
     def duration(self):
         return self.end - self.begin
