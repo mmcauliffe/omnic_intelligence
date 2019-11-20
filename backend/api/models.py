@@ -125,6 +125,7 @@ class StreamVod(models.Model):
                        'left_color': [],
                        'right_color': [],
                        'map': [],
+                       'attacking_side': [],
                        'left': [],
                        'right': []
                        }
@@ -143,6 +144,7 @@ class StreamVod(models.Model):
             return_dict['game'].append({'begin': b, 'end': r.begin, 'status': 'not_game'})
             return_dict['film_format'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
             return_dict['map'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
+            return_dict['attacking_side'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
             return_dict['left_color'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
             return_dict['right_color'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
             return_dict['spectator_mode'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
@@ -159,6 +161,7 @@ class StreamVod(models.Model):
             return_dict['spectator_mode'].append({'begin': r.begin, 'end': r.end, 'status': spectator_mode})
             return_dict['film_format'].append({'begin': r.begin, 'end': r.end, 'status': film_format})
             return_dict['map'].append({'begin': r.begin, 'end': r.end, 'status': map})
+            return_dict['attacking_side'].append({'begin': r.begin, 'end': r.end, 'status': r.get_attacking_side_display().lower()})
             return_dict['left_color'].append({'begin': r.begin, 'end': r.end, 'status': left_color})
             return_dict['right_color'].append({'begin': r.begin, 'end': r.end, 'status': right_color})
             if not statuses:
