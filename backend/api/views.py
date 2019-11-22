@@ -1184,7 +1184,7 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                 ability = event['ability'].replace(' headshot', '')
                 ability = hero.abilities.filter(name__iexact=ability).first()
                 assists = []
-                for a in event['assists']:
+                for a in event['assisting_heroes']:
                     hero = models.Hero.objects.get(name__iexact=a.replace('_assist', ''))
                     assists.append(hero.name)
                 try:

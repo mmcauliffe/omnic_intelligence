@@ -401,7 +401,7 @@ const getters = {
 
         for (i = 0; i < state.kill_feed_items.item.length; i++) {
             event = state.kill_feed_items.item[i];
-            if (event.time_point < time_point - 7) {
+            if (event.time_point < time_point - 7.3) {
                 continue
             }
             if (event.time_point > time_point) {
