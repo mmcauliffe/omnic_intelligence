@@ -409,7 +409,7 @@ class AnnotateVodSerializer(serializers.ModelSerializer):
                 team_two = models.Team.objects.get(name__iexact=team_two)
                 team_two_data = TeamSerializer(team_two).data
             except models.Team.DoesNotExist:
-                print("Could not find '{}'".format(team_one))
+                print("Could not find '{}'".format(team_two))
         return team_one_data, team_two_data
 
 
