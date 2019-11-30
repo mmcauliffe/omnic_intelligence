@@ -392,10 +392,10 @@ class AnnotateVodSerializer(serializers.ModelSerializer):
         team_one_data = None
         team_two_data = None
         if m is not None:
-            team_one = m.group('team_one')
+            team_one = m.group('team_one').strip()
             if team_one in owl_mapping:
                 team_one = owl_mapping[team_one]
-            team_two = m.group('team_two')
+            team_two = m.group('team_two').strip()
             if team_two in owl_mapping:
                 team_two = owl_mapping[team_two]
             team_one = team_one.lower()
