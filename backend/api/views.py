@@ -624,9 +624,11 @@ class GameViewSet(viewsets.ModelViewSet):
         game = self.get_object()
         left_t = models.TeamParticipation.objects.prefetch_related('playerparticipation_set').get(
             id=request.data['left_team']['id'])
+        player_mapping = {}
         left_t.color = request.data['left_team']['color']
         for i, p in enumerate(left_t.playerparticipation_set.all()):
             if p.player_id != request.data['left_team']['players'][i]['player']:
+                player_mapping[p.player_id] = request.data['left_team']['players'][i]['player']
                 p.player_id = request.data['left_team']['players'][i]['player']
                 p.save()
         left_t.save()
@@ -636,11 +638,20 @@ class GameViewSet(viewsets.ModelViewSet):
         right_t.color = request.data['right_team']['color']
         for i, p in enumerate(right_t.playerparticipation_set.all()):
             if p.player_id != request.data['right_team']['players'][i]['player']:
+                player_mapping[p.player_id] = request.data['right_team']['players'][i]['player']
                 p.player_id = request.data['right_team']['players'][i]['player']
                 p.save()
         right_t.save()
         game.right_team = right_t
         game.save()
+        for old_p, new_p in player_mapping.items():
+            models.HeroPick.objects.filter(round__game=game, player_id=old_p).update(player_id=new_p)
+            print(models.HeroPick.objects.filter(round__game=game, player_id=new_p))
+            models.Ultimate.objects.filter(round__game=game, player_id=old_p).update(player_id=new_p)
+            models.StatusEffect.objects.filter(round__game=game, player_id=old_p).update(player_id=new_p)
+            models.KillFeedEvent.objects.filter(round__game=game, killing_player_id=old_p).update(killing_player_id=new_p)
+            models.KillFeedEvent.objects.filter(round__game=game, dying_player_id=old_p).update(dying_player_id=new_p)
+            models.Assist.objects.filter(kill__round__game=game, player_id=old_p).update(player_id=new_p)
         return Response('Success')
 
     @action(methods=['get'], detail=True)
