@@ -3,6 +3,7 @@ from . import models
 from django.contrib.auth.models import User, Group
 from django.db.models import Sum, F
 from django.conf import settings
+import re
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -353,6 +354,63 @@ class VodDisplaySerializer(serializers.ModelSerializer):
         model = models.StreamVod
         fields = ('id', 'title', 'url', 'broadcast_date', 'vod_link', 'film_format',
                   'sequences', 'channel', 'status', 'type')
+
+
+class AnnotateVodSerializer(serializers.ModelSerializer):
+    channel = StreamChannelSerializer()
+    teams = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.StreamVod
+        fields = ('id', 'title', 'url', 'broadcast_date', 'vod_link', 'film_format',
+                  'sequences', 'channel', 'status', 'type', 'teams')
+
+    def get_teams(self, obj):
+        owl_mapping = {'DAL': 'Dallas Fuel',
+                       'PHI': 'Philadelphia Fusion', 'SEO': 'Seoul Dynasty',
+                       'LDN': 'London Spitfire', 'SFS': 'San Francisco Shock', 'HOU': 'Houston Outlaws',
+                       'BOS': 'Boston Uprising', 'VAL': 'Los Angeles Valiant', 'GLA': 'Los Angeles Gladiators',
+                       'FLA': 'Florida Mayhem', 'SHD': 'Shanghai Dragons', 'NYE': 'New York Excelsior',
+                       'PAR': 'Paris Eternal', 'TOR': 'Toronto Defiant', 'WAS': 'Washington Justice',
+                       'VAN': 'Vancouver Titans', 'CDH': 'Chengdu Hunters', 'HZS': 'Hangzhou Spark',
+                       'ATL': 'Atlanta Reign', 'GZC': 'Guangzhou Charge'}
+        if obj.channel.name.lower() in ['overwatchcontenders', 'overwatchcontendersbr']:
+            pattern = r'''(?P<team_one>[-\w ']+) (vs|V) (?P<team_two>[-\w ']+) \| (?P<desc>[\w ]+) Game (?P<game_num>\d) \| ((?P<sub>[\w :]+) \| )?(?P<main>[\w ]+)'''
+        elif obj.channel.name.lower() == 'overwatch contenders':
+            pattern = r'''(?P<team_one>[-\w .']+) (vs|V) (?P<team_two>[-\w .']+) \(Part.*'''
+        elif obj.channel.name.lower() == 'overwatchleague':
+            pattern = r'Game (\d+) (?P<team_one>\w+) @ (?P<team_two>\w+) \| ([\w ]+)'
+        elif obj.channel.name.lower() == 'owlettournament':
+            pattern = r'''.* - (?P<team_one>[-\w ']+) (vs[.]?|V) (?P<team_two>[-\w ']+)'''
+        elif obj.channel.name.lower() =='owlet tournament':
+            pattern = r'''.*: (?P<team_one>[-\w ']+) (vs[.]?|V) (?P<team_two>[-\w ']+)'''
+        elif obj.channel.name.lower() == 'rivalcade':
+            pattern = r'''.*, (?P<team_one>[-\w '?]+) (vs[.]?|VS) (?P<team_two>[-\w '?]+)'''
+        else:
+            pattern = r'''(.*[-,:] )?(?P<team_one>[-\w '?]+) (vs[.]?|VS) (?P<team_two>[-\w '?]+)( [-].*)?'''
+        m = re.match(pattern, obj.title)
+        team_one_data = None
+        team_two_data = None
+        if m is not None:
+            team_one = m.group('team_one')
+            if team_one in owl_mapping:
+                team_one = owl_mapping[team_one]
+            team_two = m.group('team_two')
+            if team_two in owl_mapping:
+                team_two = owl_mapping[team_two]
+            team_one = team_one.lower()
+            team_two = team_two.lower()
+            try:
+                team_one = models.Team.objects.get(name__iexact=team_one)
+                team_one_data = TeamSerializer(team_one).data
+            except models.Team.DoesNotExist:
+                print("Could not find '{}'".format(team_one))
+            try:
+                team_two = models.Team.objects.get(name__iexact=team_two)
+                team_two_data = TeamSerializer(team_two).data
+            except models.Team.DoesNotExist:
+                print("Could not find '{}'".format(team_one))
+        return team_one_data, team_two_data
 
 
 class EventVodDisplaySerializer(serializers.ModelSerializer):

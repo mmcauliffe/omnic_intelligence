@@ -165,7 +165,7 @@ class TrainInfoViewSet(viewsets.ViewSet):
         max_spectator_modes = 20
         max_film_formats = 20
         max_statuses = 15
-        heroes = models.Hero.objects.order_by('id').prefetch_related('npc_set').prefetch_related('abilities').all()
+        heroes = models.Hero.objects.exclude(name__iexact='n/a').order_by('id').prefetch_related('npc_set').prefetch_related('abilities').all()
         maps = models.Map.objects.order_by('id').all()
         map_modes = [x[1].lower() for x in models.Map.MODE_CHOICES]
         colors = [x[1].lower() for x in models.TeamParticipation.COLOR_CHOICES]
@@ -842,7 +842,7 @@ class VodStatusViewSet(viewsets.ModelViewSet):
 class AnnotateVodViewSet(viewsets.ModelViewSet):
     model = models.StreamVod
     queryset = models.StreamVod.objects.all()
-    serializer_class = serializers.VodDisplaySerializer
+    serializer_class = serializers.AnnotateVodSerializer
 
     @action(methods=['get'], detail=False)
     def in_out_game(self, request):
