@@ -83,8 +83,9 @@ class StreamVod(models.Model):
         rounds = self.rounds
         games = []
         for r in rounds:
-            if r.game not in games:
-                games.append(r.game)
+            for g in r.game.match.game_set.all():
+                if g not in games:
+                    games.append(g)
         return games
 
     @property
