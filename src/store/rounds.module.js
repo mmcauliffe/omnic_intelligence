@@ -388,6 +388,9 @@ const getters = {
                     break;
                 }
                 hero = state.hero_picks[i].new_hero;
+                if (hero.name === 'n/a'){
+                    hero = '';
+                }
             }
         }
         return hero
