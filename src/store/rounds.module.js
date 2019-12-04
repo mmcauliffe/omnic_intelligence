@@ -69,6 +69,13 @@ const actions = {
                 error => commit('getRoundsFailure', error)
             );
     },
+    getPossibleDenyRounds({commit}, data) {
+        roundService.getPossibleDenyRounds(data)
+            .then(
+                rounds => commit('getRoundsSuccess', rounds.data),
+                error => commit('getRoundsFailure', error)
+            );
+    },
     getOne({commit}, id) {
         commit('getOneRoundRequest');
 

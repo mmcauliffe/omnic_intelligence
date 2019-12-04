@@ -12,6 +12,7 @@ import MatchDetailPage from '../views/annotator/MatchDetailPage'
 import GameDetailPage from '../views/annotator/GameDetailPage'
 import RoundDetailPage from '../views/annotator/RoundDetailPage'
 import RoundStatusPage from '../views/annotator/RoundStatusPage'
+import SearchPage from '../views/annotator/SearchPage'
 import VodStatusPage from '../views/annotator/VodStatusPage'
 import VodDetailPage from '../views/annotator/VodDetailPage'
 import ReporterPage from '../views/reporter/ReporterPage'
@@ -75,6 +76,11 @@ export const router = new Router({
                     path: 'round_status/',
                     component: RoundStatusPage,
                     name: 'round-status'
+                },
+                {
+                    path: 'search/',
+                    component: SearchPage,
+                    name: 'search'
                 },
                 {
                     path: 'vod_status/',

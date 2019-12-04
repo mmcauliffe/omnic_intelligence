@@ -718,6 +718,57 @@ class StreamChannelViewSet(viewsets.ModelViewSet):
         return Response(vods)
 
 
+class PossibleDenySearchViewSet(viewsets.ModelViewSet):
+    model = models.Round
+    queryset = models.Round.objects.prefetch_related('game', 'game__match', 'game__match__event').filter(
+        ~Q(stream_vod=None)).all()
+    serializer_class = serializers.RoundStatusSerializer
+    filter_backends = (filters.SearchFilter, RelatedOrderingFilter,)
+    pagination_class = pagination.LimitOffsetPagination
+    search_fields = ('game__match__event__name', 'game__match__teams__name', 'annotation_status')
+
+    def get_queryset(self):
+        min_ult_duration = 0.3
+        max_ult_duration = 1.2
+        rounds = []
+        hero = self.request.query_params.get('hero', None)
+        if hero is not None:
+            heroes = models.Hero.objects.filter(id=hero, abilities__deniable=True).distinct()
+        else:
+            heroes = models.Hero.objects.filter(abilities__deniable=True).distinct()
+        deniers = models.Hero.objects.filter(abilities__type=models.Ability.DENYING_TYPE).distinct()
+        print(heroes)
+        print(deniers)
+        ultimates = models.Ultimate.objects.prefetch_related('round', 'player').filter(
+            ended__lte=F('used') + Decimal(max_ult_duration),
+            ended__gte=F('used') + Decimal(min_ult_duration))
+
+        annotation_status = self.request.query_params.get('annotation_status', None)
+        if annotation_status is not None:
+            ultimates = ultimates.filter(round__annotation_status=annotation_status)
+        spectator_mode = self.request.query_params.get('spectator_mode', None)
+        if spectator_mode is not None:
+            ultimates = ultimates.filter(round__game__match__event__spectator_mode=spectator_mode)
+        for u in ultimates:
+            r = u.round
+            player = u.player
+            h = player.get_hero_at_timepoint(r, u.gained)
+            if h not in heroes:
+                continue
+            side = 'left'
+            if player not in r.game.left_team.players.all():
+                side = 'right'
+            if not r.has_hero(deniers, u.ended, side):
+                continue
+            if r.id not in rounds:
+                rounds.append(r.id)
+        queryset = models.Round.objects.filter(id__in=rounds).all()
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        print(request.query_params)
+        return super(PossibleDenySearchViewSet, self).list(request, *args, **kwargs)
+
 class RoundStatusViewSet(viewsets.ModelViewSet):
     model = models.Round
     queryset = models.Round.objects.prefetch_related('game', 'game__match', 'game__match__event').filter(

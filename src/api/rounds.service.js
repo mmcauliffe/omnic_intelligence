@@ -5,6 +5,7 @@ import axios from 'axios';
 export const roundService = {
     getById,
     getRounds,
+    getPossibleDenyRounds,
     createRound,
     updateRound,
     deleteRound,
@@ -60,6 +61,16 @@ function getRounds(params){
     };
 
     return axios.get(`${config.apiUrl}/round_status/`, requestOptions);
+
+}
+
+function getPossibleDenyRounds(params){
+    const requestOptions = {
+        headers: authHeader(),
+        params: params
+    };
+
+    return axios.get(`${config.apiUrl}/possible_denies/`, requestOptions);
 
 }
 

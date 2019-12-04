@@ -808,6 +808,19 @@ class Round(models.Model):
             if hero.name.lower() == hero_name.lower():
                 return p.player
 
+    def has_hero(self, hero, time_point, side):
+        q = HeroPick.objects.filter(round=self, time_point__lte=time_point,
+                                    end_time_point__gt=time_point)
+        if side == 'left':
+            q = q.filter(player__in=self.game.left_team.players.all())
+        else:
+            q = q.filter(player__in=self.game.right_team.players.all())
+        if isinstance(hero, Hero):
+            q = q.filter(new_hero=hero)
+        else:
+            q = q.filter(new_hero__in=hero)
+        return bool(len(q))
+
     def get_player_states(self):
         data = {'left': {}, 'right': {}}
         left_team = self.game.left_team.playerparticipation_set.all()
