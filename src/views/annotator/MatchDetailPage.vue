@@ -81,10 +81,25 @@
 </template>
 
 <script>
-    import Vod from '../../components/Vod'
     import {mapState, mapActions} from 'vuex'
-    import VDataTable from "vuetify/es5/components/VDataTable/VDataTable";
-    import VTextField from "vuetify/es5/components/VTextField/VTextField";
+    const Vod = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['../../components/Vod'], () => {
+            resolve(require('../../components/Vod'))
+        })
+    };
+    const VDataTable = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VDataTable/VDataTable'], () => {
+            resolve(require('vuetify/es5/components/VDataTable/VDataTable'))
+        })
+    };
+    const VTextField = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VTextField/VTextField'], () => {
+            resolve(require('vuetify/es5/components/VTextField/VTextField'))
+        })
+    };
 
     export default {
         components: {

@@ -52,16 +52,6 @@ const actions = {
             );
 
     },
-    updateRound( { commit }, round){
-        commit('updateRequest');
-
-        roundService.updateRound(round.data)
-            .then(
-                round => commit('updateSuccess', round.data),
-                error => commit('updateFailure', error)
-            );
-
-    },
     getRounds({commit}, data) {
         roundService.getRounds(data)
             .then(
@@ -71,6 +61,13 @@ const actions = {
     },
     getPossibleDenyRounds({commit}, data) {
         roundService.getPossibleDenyRounds(data)
+            .then(
+                rounds => commit('getRoundsSuccess', rounds.data),
+                error => commit('getRoundsFailure', error)
+            );
+    },
+    getPossibleErrorRounds({commit}, data) {
+        roundService.getPossibleErrorRounds(data)
             .then(
                 rounds => commit('getRoundsSuccess', rounds.data),
                 error => commit('getRoundsFailure', error)

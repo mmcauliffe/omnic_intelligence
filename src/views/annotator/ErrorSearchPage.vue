@@ -10,9 +10,6 @@
         <v-select :items="annotation_sources.items" clearable
                   label="Annotation status" v-model="filters.annotation_status" item-text="name" item-value="id">
         </v-select>
-        <v-select :items="heroes.items" clearable
-                  label="Hero" v-model="filters.hero" item-text="name" item-value="id">
-        </v-select>
         <v-btn class='primary raised' v-on:click="refresh()">Update filters
         </v-btn>
         </v-layout>
@@ -120,7 +117,7 @@
                 return ''
             },
             ...mapActions('rounds', {
-                getPossibleDenyRounds: 'getPossibleDenyRounds',
+                getPossibleErrorRounds: 'getPossibleErrorRounds',
                 updatePagination: 'updatePagination'
             }),
             ...mapActions('overwatch', {
@@ -149,7 +146,7 @@
                     ordering: ordering, ...this.filters
                 };
 
-                this.getPossibleDenyRounds(params);
+                this.getPossibleErrorRounds(params);
             }
         },
         watch: {

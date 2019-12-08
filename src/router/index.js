@@ -13,6 +13,7 @@ import GameDetailPage from '../views/annotator/GameDetailPage'
 import RoundDetailPage from '../views/annotator/RoundDetailPage'
 import RoundStatusPage from '../views/annotator/RoundStatusPage'
 import SearchPage from '../views/annotator/SearchPage'
+import ErrorSearchPage from '../views/annotator/ErrorSearchPage'
 import VodStatusPage from '../views/annotator/VodStatusPage'
 import VodDetailPage from '../views/annotator/VodDetailPage'
 import ReporterPage from '../views/reporter/ReporterPage'
@@ -81,6 +82,11 @@ export const router = new Router({
                     path: 'search/',
                     component: SearchPage,
                     name: 'search'
+                },
+                {
+                    path: 'error_search/',
+                    component: ErrorSearchPage,
+                    name: 'error_search'
                 },
                 {
                     path: 'vod_status/',

@@ -145,35 +145,165 @@
 </template>
 
 <script>
-    import Vod from '../../components/Vod';
-    import HeroPicks from '../../components/RoundDetail/PointEvents/HeroPicks';
-    import KillFeedEvents from '../../components/RoundDetail/PointEvents/KillFeedEvents';
-
-    import Ultimates from '../../components/RoundDetail/IntervalEvents/Ultimates';
-
-    import StatusEffects from '../../components/RoundDetail/IntervalEvents/StatusEffects';
-    import PointGains from '../../components/RoundDetail/PointEvents/PointGains';
-    import PointFlips from '../../components/RoundDetail/PointEvents/PointFlips';
-    import Overtimes from '../../components/RoundDetail/IntervalEvents/Overtimes';
-    import Pauses from '../../components/RoundDetail/IntervalEvents/Pauses';
-    import Replays from '../../components/RoundDetail/IntervalEvents/Replays';
-    import SmallerWindows from '../../components/RoundDetail/IntervalEvents/SmallerWindows';
-    import Zooms from '../../components/RoundDetail/IntervalEvents/Zooms';
-    import StatusBar from '../../components/RoundDetail/StatusBar';
-    import KillFeed from '../../components/RoundDetail/KillFeed';
     import {mapState, mapActions, mapGetters} from 'vuex'
-    import VInput from "vuetify/es5/components/VInput/VInput";
-    import VTabs from "vuetify/es5/components/VTabs/VTabs";
-    import VTab from "vuetify/es5/components/VTabs/VTab";
-    import VCard from "vuetify/es5/components/VCard/VCard";
-    import VSelect from "vuetify/es5/components/VSelect/VSelect";
-    import VBtn from "vuetify/es5/components/VBtn/VBtn";
-    import VIcon from "vuetify/es5/components/VIcon/VIcon";
-    import VTooltip from "vuetify/es5/components/VTooltip/VTooltip";
-    import VTabsItems from "vuetify/es5/components/VTabs/VTabsItems";
-    import VTabItem from "vuetify/es5/components/VTabs/VTabItem";
-    import VFlex from "vuetify/es5/components/VGrid/VFlex";
-    import VLayout from "vuetify/es5/components/VGrid/VLayout";
+
+    const Vod = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['../../components/Vod'], () => {
+            resolve(require('../../components/Vod'))
+        })
+    };
+    const HeroPicks = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['../../components/RoundDetail/PointEvents/HeroPicks'], () => {
+            resolve(require('../../components/RoundDetail/PointEvents/HeroPicks'))
+        })
+    };
+    const KillFeedEvents = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['../../components/RoundDetail/PointEvents/KillFeedEvents'], () => {
+            resolve(require('../../components/RoundDetail/PointEvents/KillFeedEvents'))
+        })
+    };
+    const Ultimates = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['../../components/RoundDetail/IntervalEvents/Ultimates'], () => {
+            resolve(require('../../components/RoundDetail/IntervalEvents/Ultimates'))
+        })
+    };
+    const StatusEffects = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['../../components/RoundDetail/IntervalEvents/StatusEffects'], () => {
+            resolve(require('../../components/RoundDetail/IntervalEvents/StatusEffects'))
+        })
+    };
+    const PointGains = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['../../components/RoundDetail/PointEvents/PointGains'], () => {
+            resolve(require('../../components/RoundDetail/PointEvents/PointGains'))
+        })
+    };
+    const PointFlips = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['../../components/RoundDetail/PointEvents/PointFlips'], () => {
+            resolve(require('../../components/RoundDetail/PointEvents/PointFlips'))
+        })
+    };
+    const Overtimes = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['../../components/RoundDetail/IntervalEvents/Overtimes'], () => {
+            resolve(require('../../components/RoundDetail/IntervalEvents/Overtimes'))
+        })
+    };
+    const Pauses = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['../../components/RoundDetail/IntervalEvents/Pauses'], () => {
+            resolve(require('../../components/RoundDetail/IntervalEvents/Pauses'))
+        })
+    };
+    const Replays = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['../../components/RoundDetail/IntervalEvents/Replays'], () => {
+            resolve(require('../../components/RoundDetail/IntervalEvents/Replays'))
+        })
+    };
+
+    const SmallerWindows = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['../../components/RoundDetail/IntervalEvents/SmallerWindows'], () => {
+            resolve(require('../../components/RoundDetail/IntervalEvents/SmallerWindows'))
+        })
+    };
+    const Zooms = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['../../components/RoundDetail/IntervalEvents/Zooms'], () => {
+            resolve(require('../../components/RoundDetail/IntervalEvents/Zooms'))
+        })
+    };
+    const StatusBar = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['../../components/RoundDetail/StatusBar'], () => {
+            resolve(require('../../components/RoundDetail/StatusBar'))
+        })
+    };
+    const KillFeed = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['../../components/RoundDetail/KillFeed'], () => {
+            resolve(require('../../components/RoundDetail/KillFeed'))
+        })
+    };
+    const VInput = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VInput/VInput'], () => {
+            resolve(require('vuetify/es5/components/VInput/VInput'))
+        })
+    };
+    const VTabs = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VTabs/VTabs'], () => {
+            resolve(require('vuetify/es5/components/VTabs/VTabs'))
+        })
+    };
+    const VTab = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VTabs/VTab'], () => {
+            resolve(require('vuetify/es5/components/VTabs/VTab'))
+        })
+    };
+    const VTabsItems = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VTabs/VTabsItems'], () => {
+            resolve(require('vuetify/es5/components/VTabs/VTabsItems'))
+        })
+    };
+    const VTabItem = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VTabs/VTabItem'], () => {
+            resolve(require('vuetify/es5/components/VTabs/VTabItem'))
+        })
+    };
+    const VCard = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VCard/VCard'], () => {
+            resolve(require('vuetify/es5/components/VCard/VCard'))
+        })
+    };
+    const VSelect = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VSelect/VSelect'], () => {
+            resolve(require('vuetify/es5/components/VSelect/VSelect'))
+        })
+    };
+    const VBtn = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VBtn/VBtn'], () => {
+            resolve(require('vuetify/es5/components/VBtn/VBtn'))
+        })
+    };
+    const VIcon = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VIcon/VIcon'], () => {
+            resolve(require('vuetify/es5/components/VIcon/VIcon'))
+        })
+    };
+    const VTooltip = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VTooltip/VTooltip'], () => {
+            resolve(require('vuetify/es5/components/VTooltip/VTooltip'))
+        })
+    };
+    const VFlex = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VGrid/VFlex'], () => {
+            resolve(require('vuetify/es5/components/VGrid/VFlex'))
+        })
+    };
+    const VLayout = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VGrid/VLayout'], () => {
+            resolve(require('vuetify/es5/components/VGrid/VLayout'))
+        })
+    };
 
     export default {
         name: "round-detail-page",
@@ -297,7 +427,7 @@
                 this.window.width = window.innerWidth;
                 this.window.height = window.innerHeight;
                 this.window.colWidth = this.window.width - 1280 - 40;
-                if (this.window.colWidth < 400){
+                if (this.window.colWidth < 400) {
                     this.window.colWidth = 600;
                 }
             }

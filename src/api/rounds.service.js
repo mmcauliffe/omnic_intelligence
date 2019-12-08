@@ -6,6 +6,7 @@ export const roundService = {
     getById,
     getRounds,
     getPossibleDenyRounds,
+    getPossibleErrorRounds,
     createRound,
     updateRound,
     deleteRound,
@@ -71,6 +72,16 @@ function getPossibleDenyRounds(params){
     };
 
     return axios.get(`${config.apiUrl}/possible_denies/`, requestOptions);
+
+}
+
+function getPossibleErrorRounds(params){
+    const requestOptions = {
+        headers: authHeader(),
+        params: params
+    };
+
+    return axios.get(`${config.apiUrl}/possible_errors/`, requestOptions);
 
 }
 

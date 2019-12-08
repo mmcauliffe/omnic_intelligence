@@ -718,6 +718,38 @@ class StreamChannelViewSet(viewsets.ModelViewSet):
         return Response(vods)
 
 
+class GameParsingErrorViewSet(viewsets.ModelViewSet):
+    model = models.Round
+    queryset = models.Round.objects.prefetch_related('game', 'game__match', 'game__match__event').filter(
+        ~Q(stream_vod=None)).all()
+    serializer_class = serializers.RoundStatusSerializer
+    filter_backends = (filters.SearchFilter, RelatedOrderingFilter,)
+    pagination_class = pagination.LimitOffsetPagination
+    search_fields = ('game__match__event__name', 'game__match__teams__name', 'annotation_status')
+
+    def get_queryset(self):
+        rounds = []
+
+        rq = models.Round.objects.all()
+
+        annotation_status = self.request.query_params.get('annotation_status', None)
+        if annotation_status is not None:
+            rq = rq.filter(annotation_status=annotation_status)
+        spectator_mode = self.request.query_params.get('spectator_mode', None)
+        if spectator_mode is not None:
+            rq = rq.filter(game__match__event__spectator_mode=spectator_mode)
+        for r in rq:
+            if not r.has_overlapping_heroes():
+                continue
+            rounds.append(r.id)
+        queryset = models.Round.objects.filter(id__in=rounds).all()
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        print(request.query_params)
+        return super(GameParsingErrorViewSet, self).list(request, *args, **kwargs)
+
+
 class PossibleDenySearchViewSet(viewsets.ModelViewSet):
     model = models.Round
     queryset = models.Round.objects.prefetch_related('game', 'game__match', 'game__match__event').filter(

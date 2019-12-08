@@ -64,6 +64,7 @@ api_router.register(r'train_rounds_plus', api.TrainRoundPlusViewSet, base_name='
 api_router.register(r'annotate_rounds', api.AnnotateRoundViewSet, base_name='annotate_rounds')
 api_router.register(r'round_status', api.RoundStatusViewSet, base_name='round_status')
 api_router.register(r'possible_denies', api.PossibleDenySearchViewSet, base_name='possible_denies')
+api_router.register(r'possible_errors', api.GameParsingErrorViewSet, base_name='possible_errors')
 api_router.register(r'vod_status', api.VodStatusViewSet, base_name='vod_status')
 
 api_router.register(r'hero_picks', api.HeroPickViewSet, base_name='hero_picks')

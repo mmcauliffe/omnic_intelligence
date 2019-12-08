@@ -185,16 +185,60 @@
 </template>
 
 <script>
-    import VDataTable from "vuetify/es5/components/VDataTable/VDataTable";
-    import Vod from '../../components/Vod';
-    import TeamBar from '../../components/TeamBar';
     import {mapState, mapActions, mapGetters} from 'vuex'
-    import VTextField from "vuetify/es5/components/VTextField/VTextField";
-    import VTabsItems from "vuetify/es5/components/VTabs/VTabsItems";
-    import VTabItem from "vuetify/es5/components/VTabs/VTabItem";
-    import VTabs from "vuetify/es5/components/VTabs/VTabs";
-    import VTab from "vuetify/es5/components/VTabs/VTab";
-    import VSelect from "vuetify/es5/components/VSelect/VSelect";
+    const Vod = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['../../components/Vod'], () => {
+            resolve(require('../../components/Vod'))
+        })
+    };
+    const TeamBar = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['../../components/TeamBar'], () => {
+            resolve(require('../../components/TeamBar'))
+        })
+    };
+    const VDataTable = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VDataTable/VDataTable'], () => {
+            resolve(require('vuetify/es5/components/VDataTable/VDataTable'))
+        })
+    };
+    const VTextField = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VTextField/VTextField'], () => {
+            resolve(require('vuetify/es5/components/VTextField/VTextField'))
+        })
+    };const VTabs = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VTabs/VTabs'], () => {
+            resolve(require('vuetify/es5/components/VTabs/VTabs'))
+        })
+    };
+    const VTab = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VTabs/VTab'], () => {
+            resolve(require('vuetify/es5/components/VTabs/VTab'))
+        })
+    };
+    const VTabsItems = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VTabs/VTabsItems'], () => {
+            resolve(require('vuetify/es5/components/VTabs/VTabsItems'))
+        })
+    };
+    const VTabItem = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VTabs/VTabItem'], () => {
+            resolve(require('vuetify/es5/components/VTabs/VTabItem'))
+        })
+    };
+    const VSelect = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VSelect/VSelect'], () => {
+            resolve(require('vuetify/es5/components/VSelect/VSelect'))
+        })
+    };
 
     export default {
         name: "vod-detail-page",

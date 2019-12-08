@@ -821,6 +821,31 @@ class Round(models.Model):
             q = q.filter(new_hero__in=hero)
         return bool(len(q))
 
+    def has_overlapping_heroes(self):
+        teams = [self.game.left_team.playerparticipation_set.all(), self.game.right_team.playerparticipation_set.all()]
+        for t in teams:
+            hero_states = {}
+            for p in t:
+                pp = p.player
+                hero_states[pp.name] = pp.get_hero_states(self)
+
+            for i, (k, v) in enumerate(hero_states.items()):
+                to_check = list(hero_states.items())[i+1:]
+                for k2, v2 in to_check:
+                    for interval_one in v:
+                        for interval_two in v2:
+                            if interval_two['begin'] <= interval_one['begin'] <= interval_two['end'] \
+                                    and interval_one['hero'] == interval_two['hero']:
+                                print('FOUND')
+                                print(self.id)
+                                print(k, k2)
+                                print(interval_one)
+                                print(interval_two)
+                                return True
+
+        return False
+
+
     def get_player_states(self):
         data = {'left': {}, 'right': {}}
         left_team = self.game.left_team.playerparticipation_set.all()
