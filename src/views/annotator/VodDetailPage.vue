@@ -83,11 +83,6 @@
 
                     <template slot="items" slot-scope="props">
                         <td>
-
-                    <v-select :items="event_matches.items" v-model="props.item.match"
-                              item-text="name" item-value="id" v-on:change="changeGame(props.item)"></v-select>
-                        </td>
-                        <td>
                                 <v-text-field v-model="props.item.game_number" v-on:change="changeGame(props.item)"></v-text-field>
                         </td>
                         <td>
@@ -295,7 +290,6 @@
             },
             gameHeaders(){
                 return [
-                    {text: 'Match', sortable: false},
                     {text: 'Game number', sortable: false},
                     {text: 'Map', sortable: false},
                     {text: 'Actions', sortable: false}
