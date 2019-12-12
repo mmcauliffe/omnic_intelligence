@@ -405,11 +405,11 @@ class EventViewSet(viewsets.ModelViewSet):
             cursor = ''
             break_early = False
             if c.site == 'T':
+                key = 'fgjp7t0f365uazgs84n7t9xhf19xt2'
                 response = requests.get('https://api.twitch.tv/helix/users?login={}'.format(c.name),
-                                        headers={'Client-ID': 'fgjp7t0f365uazgs84n7t9xhf19xt2'})
+                                        headers={'Client-ID': key})
                 data = response.json()['data'][0]
                 id = data['id']
-                key = 'fgjp7t0f365uazgs84n7t9xhf19xt2'
                 while True:
                     vod_urls = [x.url for x in c.streamvod_set.all()]
                     if not cursor:
@@ -761,7 +761,7 @@ class PossibleDenySearchViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         min_ult_duration = 0.3
-        max_ult_duration = 1.2
+        max_ult_duration = 2
         rounds = []
         hero = self.request.query_params.get('hero', None)
         if hero is not None:
