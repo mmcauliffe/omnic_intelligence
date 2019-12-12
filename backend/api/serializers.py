@@ -373,13 +373,14 @@ class AnnotateVodSerializer(serializers.ModelSerializer):
                        'FLA': 'Florida Mayhem', 'SHD': 'Shanghai Dragons', 'NYE': 'New York Excelsior',
                        'PAR': 'Paris Eternal', 'TOR': 'Toronto Defiant', 'WAS': 'Washington Justice',
                        'VAN': 'Vancouver Titans', 'CDH': 'Chengdu Hunters', 'HZS': 'Hangzhou Spark',
-                       'ATL': 'Atlanta Reign', 'GZC': 'Guangzhou Charge'}
+                       'ATL': 'Atlanta Reign', 'GZC': 'Guangzhou Charge',
+                       'CHE': 'Chengdu Hunters', 'GUA': 'Guangzhou Charge', 'HAN': 'Hangzhou Spark'}
         if obj.channel.name.lower() in ['overwatchcontenders', 'overwatchcontendersbr']:
             pattern = r'''(?P<team_one>[-\w ']+) (vs|V) (?P<team_two>[-\w ']+) \| (?P<desc>[\w ]+) Game (?P<game_num>\d) \| ((?P<sub>[\w :]+) \| )?(?P<main>[\w ]+)'''
         elif obj.channel.name.lower() == 'overwatch contenders':
             pattern = r'''(?P<team_one>[-\w .']+) (vs|V) (?P<team_two>[-\w .']+) \(Part.*'''
         elif obj.channel.name.lower() == 'overwatchleague':
-            pattern = r'Game (\d+) (?P<team_one>\w+) @ (?P<team_two>\w+) \| ([\w ]+)'
+            pattern = r'Game [#]?(\d+) (?P<team_one>\w+) @ (?P<team_two>\w+) \| ([\w ]+)'
         elif obj.channel.name.lower() == 'owlettournament':
             pattern = r'''.* - (?P<team_one>[-\w ']+) (vs[.]?|V) (?P<team_two>[-\w ']+)'''
         elif obj.channel.name.lower() =='owlet tournament':
