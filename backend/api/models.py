@@ -821,6 +821,17 @@ class Round(models.Model):
             q = q.filter(new_hero__in=hero)
         return bool(len(q))
 
+    def has_many_empty_deaths(self):
+        absolute_threshold = 5
+        relative_threshold = 0.3
+        empty_death_count = self.killfeedevent_set.filter(killing_player__isnull=True).count()
+        if empty_death_count > absolute_threshold:
+            return True
+        all_kills = self.killfeedevent_set.count()
+        if empty_death_count / all_kills > relative_threshold:
+            return True
+        return False
+
     def has_overlapping_heroes(self):
         teams = [self.game.left_team.playerparticipation_set.all(), self.game.right_team.playerparticipation_set.all()]
         for t in teams:
