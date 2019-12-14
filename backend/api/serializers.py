@@ -375,42 +375,44 @@ class AnnotateVodSerializer(serializers.ModelSerializer):
                        'VAN': 'Vancouver Titans', 'CDH': 'Chengdu Hunters', 'HZS': 'Hangzhou Spark',
                        'ATL': 'Atlanta Reign', 'GZC': 'Guangzhou Charge',
                        'CHE': 'Chengdu Hunters', 'GUA': 'Guangzhou Charge', 'HAN': 'Hangzhou Spark'}
+        patterns = []
         if obj.channel.name.lower() in ['overwatchcontenders', 'overwatchcontendersbr']:
-            pattern = r'''(?P<team_one>[-\w ']+) (vs|V) (?P<team_two>[-\w ']+) \| (?P<desc>[\w ]+) Game (?P<game_num>\d) \| ((?P<sub>[\w :]+) \| )?(?P<main>[\w ]+)'''
+            patterns.append(r'''(?P<team_one>[-\w ']+) (vs|V) (?P<team_two>[-\w ']+) \| (?P<desc>[\w ]+) Game (?P<game_num>\d) \| ((?P<sub>[\w :]+) \| )?(?P<main>[\w ]+)''')
         elif obj.channel.name.lower() == 'overwatch contenders':
-            pattern = r'''(?P<team_one>[-\w .']+) (vs|V) (?P<team_two>[-\w .']+) \(Part.*'''
+            patterns.append(r'''(?P<team_one>[-\w .']+) (vs|V) (?P<team_two>[-\w .']+) \(Part.*''')
         elif obj.channel.name.lower() == 'overwatchleague':
-            pattern = r'Game [#]?(\d+) (?P<team_one>\w+) @ (?P<team_two>\w+) \| ([\w ]+)'
+            patterns.append(r'Game [#]?(\d+) (?P<team_one>\w+) @ (?P<team_two>\w+) \| ([\w ]+)')
         elif obj.channel.name.lower() == 'owlettournament':
-            pattern = r'''.* - (?P<team_one>[-\w ']+) (vs[.]?|V) (?P<team_two>[-\w ']+)'''
+            patterns.append(r'''.* - (?P<team_one>[-\w ']+) (vs[.]?|V) (?P<team_two>[-\w ']+)''')
         elif obj.channel.name.lower() =='owlet tournament':
-            pattern = r'''.*: (?P<team_one>[-\w ']+) (vs[.]?|V) (?P<team_two>[-\w ']+)'''
+            patterns.append(r'''.*: (?P<team_one>[-\w ']+) (vs[.]?|V) (?P<team_two>[-\w ']+)''')
         elif obj.channel.name.lower() == 'rivalcade':
-            pattern = r'''.*, (?P<team_one>[-\w '?]+) (vs[.]?|VS) (?P<team_two>[-\w '?]+)'''
-        else:
-            pattern = r'''(.*[-,:] )?(?P<team_one>[\w '?]+) (vs[.]?|VS) (?P<team_two>[\w '?]+)( [-].*)?'''
-        m = re.match(pattern, obj.title)
-        team_one_data = None
-        team_two_data = None
-        if m is not None:
-            team_one = m.group('team_one').strip()
-            if team_one in owl_mapping:
-                team_one = owl_mapping[team_one]
-            team_two = m.group('team_two').strip()
-            if team_two in owl_mapping:
-                team_two = owl_mapping[team_two]
-            team_one = team_one.lower()
-            team_two = team_two.lower()
-            try:
-                team_one = models.Team.objects.get(name__iexact=team_one)
-                team_one_data = TeamSerializer(team_one).data
-            except models.Team.DoesNotExist:
-                print("Could not find '{}'".format(team_one))
-            try:
-                team_two = models.Team.objects.get(name__iexact=team_two)
-                team_two_data = TeamSerializer(team_two).data
-            except models.Team.DoesNotExist:
-                print("Could not find '{}'".format(team_two))
+            patterns.append(r'''.*, (?P<team_one>[-\w '?]+) (vs[.]?|VS) (?P<team_two>[-\w '?]+)''')
+        patterns.append(r'''(.*[-,:] )?(?P<team_one>[\w '?]+) (vs[.]?|VS) (?P<team_two>[\w '?]+)( [-].*)?''')
+        for pattern in patterns:
+            m = re.match(pattern, obj.title)
+            team_one_data = None
+            team_two_data = None
+            if m is not None:
+                team_one = m.group('team_one').strip()
+                if team_one in owl_mapping:
+                    team_one = owl_mapping[team_one]
+                team_two = m.group('team_two').strip()
+                if team_two in owl_mapping:
+                    team_two = owl_mapping[team_two]
+                team_one = team_one.lower()
+                team_two = team_two.lower()
+                try:
+                    team_one = models.Team.objects.get(name__iexact=team_one)
+                    team_one_data = TeamSerializer(team_one).data
+                except models.Team.DoesNotExist:
+                    print("Could not find '{}'".format(team_one))
+                try:
+                    team_two = models.Team.objects.get(name__iexact=team_two)
+                    team_two_data = TeamSerializer(team_two).data
+                except models.Team.DoesNotExist:
+                    print("Could not find '{}'".format(team_two))
+                break
         return team_one_data, team_two_data
 
 
