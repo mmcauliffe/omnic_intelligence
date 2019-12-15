@@ -379,7 +379,7 @@ class AnnotateVodSerializer(serializers.ModelSerializer):
         if obj.channel.name.lower() in ['overwatchcontenders', 'overwatchcontendersbr']:
             patterns.append(r'''(?P<team_one>[-\w ']+) (vs|V) (?P<team_two>[-\w ']+) \| (?P<desc>[\w ]+) Game (?P<game_num>\d) \| ((?P<sub>[\w :]+) \| )?(?P<main>[\w ]+)''')
         elif obj.channel.name.lower() == 'overwatch contenders':
-            patterns.append(r'''(?P<team_one>[-\w .']+) (vs|V) (?P<team_two>[-\w .']+) \(Part.*''')
+            patterns.append(r'''(?P<team_one>[-\w .']+) (vs|V) (?P<team_two>[-\w .']+) (\(Part)?.*''')
         elif obj.channel.name.lower() == 'overwatchleague':
             patterns.append(r'Game [#]?(\d+) (?P<team_one>\w+) @ (?P<team_two>\w+) \| ([\w ]+)')
         elif obj.channel.name.lower() == 'owlettournament':
