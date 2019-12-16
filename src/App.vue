@@ -11,19 +11,9 @@
 </template>
 
 <script>
+    import Navigation from './components/Navigation';
     import {mapState, mapActions} from 'vuex';
-    const VApp = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['vuetify/es5/components/VApp/VApp'], () => {
-            resolve(require('vuetify/es5/components/VApp/VApp'))
-        })
-    };
-    const Navigation = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['./components/Navigation'], () => {
-            resolve(require('./components/Navigation'))
-        })
-    };
+    import VApp from "vuetify/es5/components/VApp/VApp";
 
     export default {
         name: 'app',

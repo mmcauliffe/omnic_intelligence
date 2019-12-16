@@ -95,38 +95,12 @@
 </template>
 
 <script>
-    import {mapState, mapActions} from 'vuex';
-
-    const VBtn = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['vuetify/es5/components/VBtn/VBtn'], () => {
-            resolve(require('vuetify/es5/components/VBtn/VBtn'))
-        })
-    };
-    const VIcon = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['vuetify/es5/components/VIcon/VIcon'], () => {
-            resolve(require('vuetify/es5/components/VIcon/VIcon'))
-        })
-    };
-    const VTooltip = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['vuetify/es5/components/VTooltip/VTooltip'], () => {
-            resolve(require('vuetify/es5/components/VTooltip/VTooltip'))
-        })
-    };
-    const TwitchPlayer = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['./TwitchPlayer'], () => {
-            resolve(require('./TwitchPlayer'))
-        })
-    };
-    const YouTubePlayer = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['./YouTubePlayer'], () => {
-            resolve(require('./YouTubePlayer'))
-        })
-    };
+    import VBtn from "vuetify/es5/components/VBtn/VBtn";
+    import VIcon from "vuetify/es5/components/VIcon/VIcon";
+    import VTooltip from "vuetify/es5/components/VTooltip/VTooltip";
+    import TwitchPlayer from './TwitchPlayer';
+    import YouTubePlayer from './YouTubePlayer';
+    import {mapState, mapActions, mapGetters} from 'vuex';
 
     export default {
         props: {

@@ -18,7 +18,6 @@
 
 <script>
 import { mapState, mapActions } from 'vuex'
-
     export default {
         name: "event-list-page",
     computed: {

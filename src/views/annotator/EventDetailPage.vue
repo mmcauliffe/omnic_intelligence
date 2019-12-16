@@ -113,97 +113,15 @@
 
 <script>
     import {mapState, mapActions} from 'vuex'
-
-    const VInput = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['vuetify/es5/components/VInput/VInput'], () => {
-            resolve(require('vuetify/es5/components/VInput/VInput'))
-        })
-    };
-    const VTabs = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['vuetify/es5/components/VTabs/VTabs'], () => {
-            resolve(require('vuetify/es5/components/VTabs/VTabs'))
-        })
-    };
-    const VTab = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['vuetify/es5/components/VTabs/VTab'], () => {
-            resolve(require('vuetify/es5/components/VTabs/VTab'))
-        })
-    };
-    const VTabsItems = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['vuetify/es5/components/VTabs/VTabsItems'], () => {
-            resolve(require('vuetify/es5/components/VTabs/VTabsItems'))
-        })
-    };
-    const VTabItem = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['vuetify/es5/components/VTabs/VTabItem'], () => {
-            resolve(require('vuetify/es5/components/VTabs/VTabItem'))
-        })
-    };
-    const VCard = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['vuetify/es5/components/VCard/VCard'], () => {
-            resolve(require('vuetify/es5/components/VCard/VCard'))
-        })
-    };
-    const VSelect = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['vuetify/es5/components/VSelect/VSelect'], () => {
-            resolve(require('vuetify/es5/components/VSelect/VSelect'))
-        })
-    };
-    const VDataTable = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['vuetify/es5/components/VDataTable/VDataTable'], () => {
-            resolve(require('vuetify/es5/components/VDataTable/VDataTable'))
-        })
-    };
-    const VBtn = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['vuetify/es5/components/VBtn/VBtn'], () => {
-            resolve(require('vuetify/es5/components/VBtn/VBtn'))
-        })
-    };
-    const VIcon = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['vuetify/es5/components/VIcon/VIcon'], () => {
-            resolve(require('vuetify/es5/components/VIcon/VIcon'))
-        })
-    };
-    const VTooltip = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['vuetify/es5/components/VTooltip/VTooltip'], () => {
-            resolve(require('vuetify/es5/components/VTooltip/VTooltip'))
-        })
-    };
-    const VFlex = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['vuetify/es5/components/VGrid/VFlex'], () => {
-            resolve(require('vuetify/es5/components/VGrid/VFlex'))
-        })
-    };
-    const VLayout = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['vuetify/es5/components/VGrid/VLayout'], () => {
-            resolve(require('vuetify/es5/components/VGrid/VLayout'))
-        })
-    };
-    const VExpansionPanel = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['vuetify/es5/components/VExpansionPanel/VExpansionPanel'], () => {
-            resolve(require('vuetify/es5/components/VExpansionPanel/VExpansionPanel'))
-        })
-    };
-    const VExpansionPanelContent = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['vuetify/es5/components/VExpansionPanel/VExpansionPanelContent'], () => {
-            resolve(require('vuetify/es5/components/VExpansionPanel/VExpansionPanelContent'))
-        })
-    };
+    import VSelect from "vuetify/es5/components/VSelect/VSelect";
+    import VTabItem from "vuetify/es5/components/VTabs/VTabItem";
+    import VTabsItems from "vuetify/es5/components/VTabs/VTabsItems";
+    import VTab from "vuetify/es5/components/VTabs/VTab";
+    import VTabs from "vuetify/es5/components/VTabs/VTabs";
+    import VExpansionPanel from "vuetify/es5/components/VExpansionPanel/VExpansionPanel";
+    import VExpansionPanelContent from "vuetify/es5/components/VExpansionPanel/VExpansionPanelContent";
+    import VDataTable from "vuetify/es5/components/VDataTable/VDataTable";
+    import VBtn from "vuetify/es5/components/VBtn/VBtn";
 
     export default {
         components: {

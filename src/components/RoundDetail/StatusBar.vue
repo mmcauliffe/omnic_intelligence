@@ -28,31 +28,11 @@
 </template>
 
 <script>
-    import {mapState, mapGetters} from 'vuex'
-    const VBtn = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['vuetify/es5/components/VBtn/VBtn'], () => {
-            resolve(require('vuetify/es5/components/VBtn/VBtn'))
-        })
-    };
-    const VImg = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['vuetify/es5/components/VImg/VImg'], () => {
-            resolve(require('vuetify/es5/components/VImg/VImg'))
-        })
-    };
-    const VLayout = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['vuetify/es5/components/VGrid/VLayout'], () => {
-            resolve(require('vuetify/es5/components/VGrid/VLayout'))
-        })
-    };
-    const StatusPortrait = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['./StatusPortrait'], () => {
-            resolve(require('./StatusPortrait'))
-        })
-    };
+    import VBtn from "vuetify/es5/components/VBtn/VBtn";
+    import VImg from "vuetify/es5/components/VImg/VImg";
+    import VLayout from "vuetify/es5/components/VGrid/VLayout";
+    import StatusPortrait from "./StatusPortrait";
+    import {mapState, mapActions, mapGetters} from 'vuex'
 
     export default {
         name: "status-bar",

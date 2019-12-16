@@ -204,8 +204,7 @@
         require.ensure(['vuetify/es5/components/VTextField/VTextField'], () => {
             resolve(require('vuetify/es5/components/VTextField/VTextField'))
         })
-    };
-    const VTabs = resolve => {
+    };const VTabs = resolve => {
         // require.ensure is Webpack's special syntax for a code-split point.
         require.ensure(['vuetify/es5/components/VTabs/VTabs'], () => {
             resolve(require('vuetify/es5/components/VTabs/VTabs'))

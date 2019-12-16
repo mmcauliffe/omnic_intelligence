@@ -50,14 +50,9 @@
 
 <script>
 
-    import {mapGetters} from 'vuex'
+    import {mapState, mapActions, mapGetters} from 'vuex'
 
-    const interval_events = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['./BaseIntervalEvents'], () => {
-            resolve(require('./BaseIntervalEvents'))
-        })
-    };
+    import interval_events from './BaseIntervalEvents';
 
     export default {
         name: "smaller_windows",

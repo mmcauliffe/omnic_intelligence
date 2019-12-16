@@ -44,14 +44,9 @@
 
 <script>
 
-    import {mapGetters} from 'vuex'
+    import {mapState, mapActions, mapGetters} from 'vuex'
 
-    const events = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['./BaseRoundEvents'], () => {
-            resolve(require('./BaseRoundEvents'))
-        })
-    };
+    import events from './BaseRoundEvents';
 
     export default {
         name: "point_flips",

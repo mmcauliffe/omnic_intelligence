@@ -53,13 +53,8 @@
 </template>
 
 <script>
-    import {mapState, mapActions} from 'vuex'
-    const VDataTable = resolve => {
-        // require.ensure is Webpack's special syntax for a code-split point.
-        require.ensure(['vuetify/es5/components/VDataTable/VDataTable'], () => {
-            resolve(require('vuetify/es5/components/VDataTable/VDataTable'))
-        })
-    };
+    import {mapState, mapActions, mapGetters} from 'vuex'
+    import VDataTable from "vuetify/es5/components/VDataTable/VDataTable";
 
     export default {
         name: "search-page",
