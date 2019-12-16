@@ -109,16 +109,32 @@
 <script>
     import Vod from '../../components/Vod'
 import { mapState, mapActions } from 'vuex'
-    import VDataTable from "vuetify/es5/components/VDataTable/VDataTable";
-    import VInput from "vuetify/es5/components/VInput/VInput";
-    import VSelect from "vuetify/es5/components/VSelect/VSelect";
+    const VDataTable = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VDataTable/VDataTable'], () => {
+            resolve(require('vuetify/es5/components/VDataTable/VDataTable'))
+        })
+    };
+    const VInput = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VInput/VInput'], () => {
+            resolve(require('vuetify/es5/components/VInput/VInput'))
+        })
+    };
+    const VSelect = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VSelect/VSelect'], () => {
+            resolve(require('vuetify/es5/components/VSelect/VSelect'))
+        })
+    };
 
     export default {
         name: "game-detail-page",
         components: {
             VSelect,
             VInput,
-            VDataTable, Vod},
+            VDataTable,
+            Vod},
     computed: {
         ...mapState({
             account: state => state.account,

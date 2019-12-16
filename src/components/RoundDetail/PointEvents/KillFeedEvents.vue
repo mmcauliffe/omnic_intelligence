@@ -141,10 +141,20 @@
 </template>
 
 <script>
-    import {mapState, mapActions, mapGetters} from 'vuex'
+    import {mapGetters} from 'vuex'
 
-    import events from './BaseRoundEvents';
-    import VSelect from "vuetify/es5/components/VSelect/VSelect";
+    const events = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['./BaseRoundEvents'], () => {
+            resolve(require('./BaseRoundEvents'))
+        })
+    };
+    const VSelect = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VSelect/VSelect'], () => {
+            resolve(require('vuetify/es5/components/VSelect/VSelect'))
+        })
+    };
 
     export default {
         components: {VSelect},

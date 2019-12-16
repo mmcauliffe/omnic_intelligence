@@ -47,10 +47,25 @@
 </template>
 
 <script>
-    import VIcon from "vuetify/es5/components/VIcon/VIcon";
-    import VTooltip from "vuetify/es5/components/VTooltip/VTooltip";
-    import VLayout from "vuetify/es5/components/VGrid/VLayout";
-    import {mapState, mapActions, mapGetters} from 'vuex'
+    import {mapState, mapActions} from 'vuex'
+    const VIcon = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VIcon/VIcon'], () => {
+            resolve(require('vuetify/es5/components/VIcon/VIcon'))
+        })
+    };
+    const VTooltip = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VTooltip/VTooltip'], () => {
+            resolve(require('vuetify/es5/components/VTooltip/VTooltip'))
+        })
+    };
+    const VLayout = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VGrid/VLayout'], () => {
+            resolve(require('vuetify/es5/components/VGrid/VLayout'))
+        })
+    };
 
 
     export default {

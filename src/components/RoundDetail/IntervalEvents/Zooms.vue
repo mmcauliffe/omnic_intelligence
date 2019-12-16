@@ -1,7 +1,7 @@
 <template>
     <div>
 
-        <v-layout layout="row" layout-align="space-between start" v-if="can_edit">
+        <v-layout layout="row" layout-align="space-between start" v-if="can_edit && sides">
             <v-select v-model="newEvent.side" :items="sides"
                       item-text="name" item-value="id" label="Sides">
 
@@ -58,9 +58,20 @@
 
 <script>
 
-    import {mapState, mapActions, mapGetters} from 'vuex'
+    import {mapGetters} from 'vuex'
 
-    import interval_events from './BaseIntervalEvents';
+    const interval_events = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['./BaseIntervalEvents'], () => {
+            resolve(require('./BaseIntervalEvents'))
+        })
+    };
+    const VSelect = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VSelect/VSelect'], () => {
+            resolve(require('vuetify/es5/components/VSelect/VSelect'))
+        })
+    };
 
     export default {
         name: "zooms",

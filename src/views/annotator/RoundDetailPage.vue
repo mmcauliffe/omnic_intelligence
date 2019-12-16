@@ -145,7 +145,7 @@
 </template>
 
 <script>
-    import {mapState, mapActions, mapGetters} from 'vuex'
+    import {mapState, mapActions} from 'vuex'
 
     const Vod = resolve => {
         // require.ensure is Webpack's special syntax for a code-split point.

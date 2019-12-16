@@ -38,10 +38,20 @@
 
 <script>
 
-    import {mapState, mapActions, mapGetters} from 'vuex'
+    import {mapGetters} from 'vuex'
 
-    import events from './BaseRoundEvents';
-    import VTextField from "vuetify/es5/components/VTextField/VTextField";
+    const events = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['./BaseRoundEvents'], () => {
+            resolve(require('./BaseRoundEvents'))
+        })
+    };
+    const VTextField = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VTextField/VTextField'], () => {
+            resolve(require('vuetify/es5/components/VTextField/VTextField'))
+        })
+    };
 
     export default {
         components: {VTextField},

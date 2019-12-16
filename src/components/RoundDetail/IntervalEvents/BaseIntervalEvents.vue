@@ -4,14 +4,49 @@
 
 <script>
     import {mapState, mapActions, mapGetters} from 'vuex'
+    const VDataTable = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VDataTable/VDataTable'], () => {
+            resolve(require('vuetify/es5/components/VDataTable/VDataTable'))
+        })
+    };
+    const VBtn = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VBtn/VBtn'], () => {
+            resolve(require('vuetify/es5/components/VBtn/VBtn'))
+        })
+    };
+    const VIcon = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VIcon/VIcon'], () => {
+            resolve(require('vuetify/es5/components/VIcon/VIcon'))
+        })
+    };
+    const VTooltip = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VTooltip/VTooltip'], () => {
+            resolve(require('vuetify/es5/components/VTooltip/VTooltip'))
+        })
+    };
+    const VSelect = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VSelect/VSelect'], () => {
+            resolve(require('vuetify/es5/components/VSelect/VSelect'))
+        })
+    };
+    const VCheckbox = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VCheckbox/VCheckbox'], () => {
+            resolve(require('vuetify/es5/components/VCheckbox/VCheckbox'))
+        })
+    };
+    const VInput = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VInput/VInput'], () => {
+            resolve(require('vuetify/es5/components/VInput/VInput'))
+        })
+    };
 
-    import VBtn from "vuetify/es5/components/VBtn/VBtn";
-    import VIcon from "vuetify/es5/components/VIcon/VIcon";
-    import VTooltip from "vuetify/es5/components/VTooltip/VTooltip";
-    import VDataTable from "vuetify/es5/components/VDataTable/VDataTable";
-    import VSelect from "vuetify/es5/components/VSelect/VSelect";
-    import VCheckbox from "vuetify/es5/components/VCheckbox/VCheckbox";
-    import VInput from "vuetify/es5/components/VInput/VInput";
 
     export default {
         name: "interval_events",

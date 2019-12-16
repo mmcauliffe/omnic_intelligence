@@ -53,12 +53,33 @@
 </template>
 
 <script>
-    import {mapState, mapActions, mapGetters} from 'vuex'
+    import {mapState, mapGetters} from 'vuex'
 
-    import VBtn from "vuetify/es5/components/VBtn/VBtn";
-    import VIcon from "vuetify/es5/components/VIcon/VIcon";
-    import VTooltip from "vuetify/es5/components/VTooltip/VTooltip";
-    import VDataTable from "vuetify/es5/components/VDataTable/VDataTable";
+    const VDataTable = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VDataTable/VDataTable'], () => {
+            resolve(require('vuetify/es5/components/VDataTable/VDataTable'))
+        })
+    };
+    const VBtn = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VBtn/VBtn'], () => {
+            resolve(require('vuetify/es5/components/VBtn/VBtn'))
+        })
+    };
+    const VIcon = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VIcon/VIcon'], () => {
+            resolve(require('vuetify/es5/components/VIcon/VIcon'))
+        })
+    };
+    const VTooltip = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VTooltip/VTooltip'], () => {
+            resolve(require('vuetify/es5/components/VTooltip/VTooltip'))
+        })
+    };
+
 
 
     export default {

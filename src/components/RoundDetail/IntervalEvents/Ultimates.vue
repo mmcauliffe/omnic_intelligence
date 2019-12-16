@@ -75,10 +75,20 @@
 
 <script>
 
-    import {mapState, mapActions, mapGetters} from 'vuex'
+    import {mapActions, mapGetters} from 'vuex'
 
-    import interval_events from './BaseIntervalEvents';
-    import VSelect from "vuetify/es5/components/VSelect/VSelect";
+    const interval_events = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['./BaseIntervalEvents'], () => {
+            resolve(require('./BaseIntervalEvents'))
+        })
+    };
+    const VSelect = resolve => {
+        // require.ensure is Webpack's special syntax for a code-split point.
+        require.ensure(['vuetify/es5/components/VSelect/VSelect'], () => {
+            resolve(require('vuetify/es5/components/VSelect/VSelect'))
+        })
+    };
 
     export default {
         components: {VSelect},
