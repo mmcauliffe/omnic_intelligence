@@ -1,7 +1,7 @@
 <template>
     <div>
 
-        <v-layout layout="row" layout-align="space-between start" v-if="can_edit">
+        <v-layout layout="row" layout-align="space-between start" v-if="can_edit && sides">
             <v-select v-model="newEvent.side" :items="sides"
                       item-text="name" item-value="id" label="Sides">
 
