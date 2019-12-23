@@ -66,7 +66,6 @@
                                               item-text="name" item-value="id" label="Attacking side">
 
                                     </v-select>
-                                    {{round.item}}
                                     <v-select v-if="round.item.game.map.mode === 'Control'" v-model="round.item.submap"
                                               v-on:change="saveRound" :items="filteredSubmaps"
                                               item-text="name" item-value="id" label="Submap" clearable>
