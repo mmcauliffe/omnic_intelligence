@@ -53,7 +53,7 @@
             <td>{{ props.item.duration |secondsToMoment | moment('mm:ss.S') }}</td>
             <td>{{ props.item.annotation_status }}</td>
             <td> <v-layout row><div v-for="hero in props.item.heroes_used">
-            <v-tooltip bottom v-if="hero.name">
+            <v-tooltip bottom v-if="hero.name && hero.name !== 'n/a'">
                 <img style="width: 32px;height:32px" class="hero-icon" slot="activator"
                      :src="require('../../assets/'+ make_safe(hero.name) +'.png')"/>
                 <span>{{ hero.play_time |secondsToMoment | moment('mm:ss.S') }}</span>
