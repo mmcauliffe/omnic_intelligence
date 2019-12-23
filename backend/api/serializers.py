@@ -80,6 +80,12 @@ class MapSerializer(serializers.ModelSerializer):
         return obj.get_mode_display()
 
 
+class SubmapSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Submap
+        fields = '__all__'
+
+
 class NPCSerializer(serializers.ModelSerializer):
     spawning_hero = HeroSerializer()
     class Meta:
@@ -314,7 +320,8 @@ class RoundSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Round
         fields = (
-            'id', 'round_number', 'game', 'attacking_side', 'begin', 'end', 'stream_vod', 'annotation_status',
+            'id', 'round_number', 'game', 'attacking_side', 'submap',
+            'begin', 'end', 'stream_vod', 'annotation_status',
             'sequences')
 
 class RoundAnalysisSerializer(serializers.ModelSerializer):
@@ -465,7 +472,8 @@ class RoundDisplaySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Round
         fields = (
-            'id', 'round_number', 'game', 'attacking_side', 'begin', 'end', 'annotation_status',
+            'id', 'round_number', 'game', 'attacking_side', 'submap',
+            'begin', 'end', 'annotation_status',
             'spectator_mode',
             'sequences', 'stream_vod')
 

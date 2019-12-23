@@ -32,6 +32,7 @@ api_router.register(r'npcs', api.NPCViewSet, base_name='npcs')
 api_router.register(r'team_colors', api.TeamColorViewSet, base_name='team_colors')
 api_router.register(r'map_modes', api.MapModeViewSet, base_name='map_modes')
 api_router.register(r'sides', api.SideViewSet, base_name='sides')
+api_router.register(r'submaps', api.SubmapViewSet, base_name='submaps')
 
 # Recording
 api_router.register(r'annotation_source_choices', api.AnnotationChoiceViewSet, base_name='annotation_source_choices')

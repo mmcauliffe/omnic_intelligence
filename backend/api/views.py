@@ -126,6 +126,7 @@ class TrainStatsViewSet(viewsets.ModelViewSet):
             writer.writerow(row)
         return response
 
+
 class TrainInfoViewSet(viewsets.ViewSet):
     @action(methods=['get'], detail=False)
     def stats(self, request):
@@ -168,6 +169,19 @@ class TrainInfoViewSet(viewsets.ViewSet):
         heroes = models.Hero.objects.exclude(name__iexact='n/a').order_by('id').prefetch_related('npc_set').prefetch_related('abilities').all()
         maps = models.Map.objects.order_by('id').all()
         map_modes = [x[1].lower() for x in models.Map.MODE_CHOICES]
+        submaps = []
+        for m in maps:
+            if m.mode == 'C':
+                for s in m.submap_set.all():
+                    submaps.append(s.display_name.lower())
+            else:
+                if m.mode == 'A':
+                    max_points = 2
+                else:
+                    max_points = 3
+                for i in range(1, max_points+1):
+                    submaps.append('{}_{}'.format(m.name.lower(), i))
+
         colors = [x[1].lower() for x in models.TeamParticipation.COLOR_CHOICES]
         spectator_modes = [x[1].lower() for x in models.Event.SPECTATOR_MODE_CHOICES]
         film_formats = [x[1].lower() for x in models.Event.FILM_FORMAT_CHOICES]
@@ -219,6 +233,7 @@ class TrainInfoViewSet(viewsets.ViewSet):
             'heroes': heroes,
             'map_modes': map_modes,
             'maps': maps,
+            'submaps': submaps,
             'npcs': npcs,
             'status': status_values,
             'extra_statuses': extra_statuses,
@@ -343,6 +358,12 @@ class MapViewSet(viewsets.ModelViewSet):
     def training_map_list(self, request):
         queryset = models.Map.objects.order_by('id')
         return Response(self.serializer_class(queryset, many=True).data)
+
+
+class SubmapViewSet(viewsets.ModelViewSet):
+    model = models.Submap
+    queryset = models.Submap.objects.all()
+    serializer_class = serializers.SubmapSerializer
 
 
 class NPCViewSet(viewsets.ModelViewSet):
@@ -1442,6 +1463,7 @@ class RoundViewSet(viewsets.ModelViewSet):
                                             round_number=request.data['round_number'],
                                             game_id=request.data['game'],
                                             attacking_side=request.data['attacking_side'],
+                                            submap=request.data.get('submap', None),
                                             begin=request.data['begin'],
                                             end=request.data['end'])
         return Response(self.serializer_class(round).data)
@@ -1490,6 +1512,10 @@ class RoundViewSet(viewsets.ModelViewSet):
             instance.game = models.Game.objects.get(id=game)
         if request.data['attacking_side']:
             instance.attacking_side = request.data['attacking_side']
+        s = request.data.get('submap', None)
+        if s is not None:
+            s = int(s)
+        instance.submap_id = s
         if request.data['round_number']:
             instance.round_number = int(request.data['round_number'])
         instance.save()

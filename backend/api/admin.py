@@ -1,12 +1,17 @@
 from django.contrib import admin
 # Register your models here.
-from .models import Map, Hero, Ability, NPC, Team, Player, Event, Match, Round, StreamChannel, StreamVod, \
+from .models import Map, Submap, Hero, Ability, NPC, Team, Player, Event, Match, Round, StreamChannel, StreamVod, \
     TeamParticipation, Affiliation, Game, Status, StatusEffect, Patch
 
 
 @admin.register(Map)
 class MapAdmin(admin.ModelAdmin):
     list_display = ('name', 'mode')
+
+
+@admin.register(Submap)
+class SubmapAdmin(admin.ModelAdmin):
+    list_display = ('name', 'map')
 
 
 class AbilityInline(admin.TabularInline):

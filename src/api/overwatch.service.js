@@ -12,6 +12,7 @@ export const overwatchService = {
     getTeamColors,
     getMapModes,
     getSides,
+    getSubmaps,
     getStatusEffectChoices,
 };
 
@@ -113,6 +114,15 @@ function getSides() {
     };
 
     return fetch(`${config.apiUrl}/sides/`, requestOptions).then(handleResponse);
+}
+
+function getSubmaps() {
+    const requestOptions = {
+        method: 'GET',
+        headers: authHeader()
+    };
+
+    return fetch(`${config.apiUrl}/submaps/`, requestOptions).then(handleResponse);
 }
 
 

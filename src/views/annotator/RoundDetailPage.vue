@@ -37,7 +37,7 @@
 
                             </v-card-title>
                             <v-card-text>
-                                <div>
+                                <div v-if="round.item">
                                     <p>{{round.item.stream_vod.title }}</p>
                                     <div>
                                         <label>Begin
@@ -66,7 +66,12 @@
                                               item-text="name" item-value="id" label="Attacking side">
 
                                     </v-select>
-                                    <v-btn class='raised primary' v-on:click="saveRound">Save</v-btn>
+                                    {{round.item}}
+                                    <v-select v-if="round.item.game.map.mode === 'Control'" v-model="round.item.submap"
+                                              v-on:change="saveRound" :items="filteredSubmaps"
+                                              item-text="name" item-value="id" label="Submap" clearable>
+
+                                    </v-select>
                                 </div>
 
 
@@ -352,13 +357,21 @@
                 events: state => state.rounds.events,
                 annotation_sources: state => state.vods.annotation_sources.items,
                 sides: state => state.overwatch.sides.items,
+                submaps: state => state.overwatch.submaps.items,
                 timestamp: state => state.vods.timestamp,
             }),
+            filteredSubmaps(){
+                if (this.submaps === undefined){
+                    return []
+                }
+            return this.submaps.filter(x => {return x.map == this.round.item.game.map.id})
+            }
         },
         created() {
             this.can_edit = true;
             this.getOne(this.$route.params.id);
             this.getSides();
+            this.getSubmaps();
             this.getHeroes();
             this.getNPCs();
             this.getAnnotationSources();
@@ -401,6 +414,7 @@
             }),
             ...mapActions('overwatch', {
                 getSides: 'getSides',
+                getSubmaps: 'getSubmaps',
                 getHeroes: 'getHeroes',
                 getNPCs: 'getNPCs',
                 getStatusEffectChoices: 'getStatusEffectChoices',

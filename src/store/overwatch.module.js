@@ -10,6 +10,7 @@ const state = {
     status_effect_choices: {},
     team_colors: {},
     sides: {},
+    submaps: {},
 };
 
 const actions = {
@@ -90,6 +91,15 @@ const actions = {
             .then(
                 events => commit('getSidesSuccess', events),
                 error => commit('getSidesFailure', error)
+            );
+    },
+    getSubmaps({commit}) {
+        commit('getSubmapsRequest');
+
+        overwatchService.getSubmaps()
+            .then(
+                events => commit('getSubmapsSuccess', events),
+                error => commit('getSubmapsFailure', error)
             );
     },
 };
@@ -231,6 +241,16 @@ const mutations = {
     },
     getSidesFailure(state, error) {
         state.sides = {error};
+    },
+
+    getSubmapsRequest(state) {
+        state.submaps = {loading: true};
+    },
+    getSubmapsSuccess(state, submaps) {
+        state.submaps = {items: submaps};
+    },
+    getSubmapsFailure(state, error) {
+        state.submaps = {error};
     },
 
 

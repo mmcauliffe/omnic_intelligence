@@ -126,6 +126,7 @@ class StreamVod(models.Model):
                        'left_color': [],
                        'right_color': [],
                        'map': [],
+                       'submap': [],
                        'attacking_side': [],
                        'left': [],
                        'right': []
@@ -137,7 +138,8 @@ class StreamVod(models.Model):
             b = Decimal('0.0')
             spectator_mode = r.game.match.event.get_spectator_mode_display().lower()
             film_format = r.game.match.event.get_film_format_display().lower()
-            map = r.game.map.name.lower()
+            m = r.game.map
+            map_name = m.name.lower()
             left_color = r.game.left_team.get_color_display().lower()
             right_color = r.game.right_team.get_color_display().lower()
             if return_dict['game']:
@@ -145,6 +147,7 @@ class StreamVod(models.Model):
             return_dict['game'].append({'begin': b, 'end': r.begin, 'status': 'not_game'})
             return_dict['film_format'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
             return_dict['map'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
+            return_dict['submap'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
             return_dict['attacking_side'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
             return_dict['left_color'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
             return_dict['right_color'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
@@ -161,7 +164,14 @@ class StreamVod(models.Model):
 
             return_dict['spectator_mode'].append({'begin': r.begin, 'end': r.end, 'status': spectator_mode})
             return_dict['film_format'].append({'begin': r.begin, 'end': r.end, 'status': film_format})
-            return_dict['map'].append({'begin': r.begin, 'end': r.end, 'status': map})
+            return_dict['map'].append({'begin': r.begin, 'end': r.end, 'status': map_name})
+            if r.submap is not None:
+                return_dict['submap'].append({'begin': r.begin, 'end': r.end, 'status': r.submap.display_name.lower()})
+            else:
+                for p in r.get_point_status_states():
+                    return_dict['submap'].append({'begin': r.begin + p['begin'], 'end': r.begin + p['end'],
+                                                  'status': map_name + '_' + p['status'].split('_')[-1]})
+
             return_dict['attacking_side'].append({'begin': r.begin, 'end': r.end, 'status': r.get_attacking_side_display().lower()})
             return_dict['left_color'].append({'begin': r.begin, 'end': r.end, 'status': left_color})
             return_dict['right_color'].append({'begin': r.begin, 'end': r.end, 'status': right_color})
@@ -207,6 +217,7 @@ class StreamVod(models.Model):
                         {'begin': return_dict['right'][-1]['end'], 'end': r.end, 'status': 'not_zoom'})
         return return_dict
 
+
 class Map(models.Model):
     MODE_CHOICES = (
         ('A', 'Assault'),
@@ -219,6 +230,15 @@ class Map(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Submap(models.Model):
+    name = models.CharField(max_length=128, unique=True)
+    map = models.ForeignKey(Map, on_delete=models.CASCADE)
+
+    @property
+    def display_name(self):
+        return self.map.name + '_' + self.name
 
 
 class Hero(models.Model):
@@ -754,6 +774,7 @@ class Round(models.Model):
     round_number = models.IntegerField()
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     attacking_side = models.CharField(max_length=1, choices=SIDE_CHOICES, default=NEITHER)
+    submap = models.ForeignKey(Submap, null=True, blank=True, on_delete=models.SET_NULL)
     begin = models.DecimalField(max_digits=6, decimal_places=1, default=Decimal('0.0'))
     end = models.DecimalField(max_digits=6, decimal_places=1, default=Decimal('0.0'))
     annotation_status = models.CharField(max_length=1, choices=ANNOTATION_CHOICES, default='N')
@@ -852,7 +873,6 @@ class Round(models.Model):
                                 return True
 
         return False
-
 
     def get_player_states(self):
         data = {'left': {}, 'right': {}}
