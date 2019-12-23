@@ -44,6 +44,7 @@
                 </router-link>
             </td>
             <td>{{ props.item.attacking_side }}</td>
+            <td>{{ props.item.submap }}</td>
             <td>
                 <a :href="props.item.stream_vod.url">{{ props.item.stream_vod.title }}
                     ({{ props.item.stream_vod.id }})</a>
@@ -80,6 +81,7 @@
             headers: [
                 {text: 'Round', value: 'round_number'},
                 {text: 'Attacking side', value: 'attacking_side'},
+                {text: 'Submap', value: 'submap'},
                 {text: 'VOD', value: 'vod', sortable: false},
                 {text: 'Date', value: 'stream_vod__broadcast_date', sortable: true},
                 {text: 'Duration', value: 'duration', sortable: true},

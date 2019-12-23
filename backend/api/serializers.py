@@ -506,6 +506,7 @@ class VodEditSerializer(serializers.ModelSerializer):
 class RoundStatusSerializer(serializers.ModelSerializer):
     stream_vod = EventVodDisplaySerializer()
     annotation_status = serializers.SerializerMethodField()
+    submap = serializers.SerializerMethodField()
     attacking_side = serializers.SerializerMethodField()
     heroes_used = serializers.SerializerMethodField()
     duration = serializers.SerializerMethodField()
@@ -513,7 +514,8 @@ class RoundStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Round
         fields = ('id',
-                  'round_number', 'game', 'attacking_side', 'begin', 'end', 'stream_vod', 'heroes_used',
+                  'round_number', 'game', 'attacking_side', 'submap',
+                  'begin', 'end', 'stream_vod', 'heroes_used',
                   'annotation_status', 'duration')
 
     def get_heroes_used(self, obj):
@@ -525,6 +527,11 @@ class RoundStatusSerializer(serializers.ModelSerializer):
 
     def get_attacking_side(self, obj):
         return obj.get_attacking_side_display()
+
+    def get_submap(self, obj):
+        if obj.submap is None:
+            return 'None'
+        return obj.submap.name
 
     def get_duration(self, obj):
         return obj.end - obj.begin
