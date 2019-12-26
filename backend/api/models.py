@@ -79,6 +79,16 @@ class StreamVod(models.Model):
         return rounds
 
     @property
+    def event(self):
+        events = self.channel.events.filter(end_date__gte=self.broadcast_date, start_date__lte=self.broadcast_date).all()
+        for e in events:
+            if e.channel_query_string is not None:
+                if e.channel_query_string not in self.title:
+                    continue
+            return e
+        return None
+
+    @property
     def games(self):
         rounds = self.rounds
         games = []

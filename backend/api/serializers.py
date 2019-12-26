@@ -366,11 +366,18 @@ class VodDisplaySerializer(serializers.ModelSerializer):
 class AnnotateVodSerializer(serializers.ModelSerializer):
     channel = StreamChannelSerializer()
     teams = serializers.SerializerMethodField()
+    spectator_mode = serializers.SerializerMethodField()
 
     class Meta:
         model = models.StreamVod
         fields = ('id', 'title', 'url', 'broadcast_date', 'vod_link', 'film_format',
-                  'sequences', 'channel', 'status', 'type', 'teams')
+                  'sequences', 'channel', 'status', 'type', 'teams', 'spectator_mode')
+
+    def get_spectator_mode(self, obj):
+        e = obj.event
+        if e is None:
+            return None
+        return e.get_spectator_mode_display()
 
     def get_teams(self, obj):
         owl_mapping = {'DAL': 'Dallas Fuel',
@@ -414,11 +421,17 @@ class AnnotateVodSerializer(serializers.ModelSerializer):
                     team_one_data = TeamSerializer(team_one).data
                 except models.Team.DoesNotExist:
                     print("Could not find '{}'".format(team_one))
+                except models.Team.MultipleObjectsReturned:
+                    team_one = models.Team.objects.filter(name__iexact=team_one).first()
+                    team_one_data = TeamSerializer(team_one).data
                 try:
                     team_two = models.Team.objects.get(name__iexact=team_two)
                     team_two_data = TeamSerializer(team_two).data
                 except models.Team.DoesNotExist:
                     print("Could not find '{}'".format(team_two))
+                except models.Team.MultipleObjectsReturned:
+                    team_two = models.Team.objects.filter(name__iexact=team_two).first()
+                    team_two_data = TeamSerializer(team_two).data
                 break
         return team_one_data, team_two_data
 
