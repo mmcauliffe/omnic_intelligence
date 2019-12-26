@@ -1100,9 +1100,14 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
                     r = models.Round.objects.get(game=game, stream_vod=vod, begin=r_data['begin'], end=r_data['end'])
                     print('found it!')
                 except models.Round.DoesNotExist:
+                    submap = None
+                    if map.mode == 'C' and 'submap' in r_data:
+                        submaps = models.Submap.objects.filter(name__iexact=r_data['submap'].split('_')[-1], map=map)
+                        if len(submaps) > 0:
+                            submap = submaps[0]
                     r = models.Round.objects.create(stream_vod=vod, round_number=i + 1, game=game,
                                                     begin=r_data['begin'], end=r_data['end'],
-                                                    attacking_side=r_data['attacking_side'])
+                                                    attacking_side=r_data['attacking_side'], submap=submap)
                     pauses = []
                     smaller_windows = []
                     replays = []
