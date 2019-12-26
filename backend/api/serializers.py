@@ -348,6 +348,8 @@ class StreamVodSerializer(serializers.ModelSerializer):
     rounds = RoundSerializer(many=True)
     games = GameEditSerializer(many=True)
     matches = MatchSerializer(many=True)
+    channel = StreamChannelSerializer()
+
     class Meta:
         model = models.StreamVod
         fields = ('id', 'title', 'url', 'broadcast_date', 'vod_link', 'film_format', 'sequences',
