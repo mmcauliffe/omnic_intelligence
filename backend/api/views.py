@@ -1072,6 +1072,7 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
                                         status=status.HTTP_400_BAD_REQUEST)
             try:
                 game = models.Game.objects.get(game_number=num_previous_games + g['game_number'], match=match)
+                map = game.map
             except models.Game.DoesNotExist:
                 if is_team_one_left:
                     left_participation = models.TeamParticipation.objects.create(team=team_one, color=left_color_code)
