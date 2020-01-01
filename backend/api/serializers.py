@@ -404,7 +404,7 @@ class AnnotateVodSerializer(serializers.ModelSerializer):
             patterns.append(r'''.*: (?P<team_one>[-\w ']+) (vs[.]?|V) (?P<team_two>[-\w ']+)''')
         elif obj.channel.name.lower() == 'rivalcade':
             patterns.append(r'''.*, (?P<team_one>[-\w '?]+) (vs[.]?|VS) (?P<team_two>[-\w '?]+)''')
-        patterns.append(r'''(.*[-,:] )?(?P<team_one>[\w '?]+) (vs[.]?|VS) (?P<team_two>[\w '?]+)( [-].*)?''')
+        patterns.append(r'''(.*[-,:] )?(?P<team_one>[\w '?.]+) (vs[.]?|VS) (?P<team_two>[\w '?.]+)( [-,:].*)?''')
         for pattern in patterns:
             m = re.match(pattern, obj.title)
             team_one_data = None
