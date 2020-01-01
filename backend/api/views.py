@@ -12,6 +12,7 @@ from rest_framework import filters
 
 from rest_framework import pagination, status
 
+import jamotools
 import django
 from django.http import HttpResponse
 from django.db.models import Q
@@ -187,7 +188,9 @@ class TrainInfoViewSet(viewsets.ViewSet):
         film_formats = [x[1].lower() for x in models.Event.FILM_FORMAT_CHOICES]
         characters = set()
         for p in models.Player.objects.all():
-            characters.update(p.name.lower())
+            name = p.name.lower()
+            name = jamotools.split_syllables(name)
+            characters.update(name)
         npcs = []
         labels = ['neither', 'left', 'right']
         #for c in colors + ['nonwhite']:

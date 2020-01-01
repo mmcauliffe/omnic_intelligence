@@ -856,6 +856,8 @@ class Round(models.Model):
         relative_threshold = 0.3
         empty_death_count = self.killfeedevent_set.filter(killing_player__isnull=True).count()
         all_kills = self.killfeedevent_set.count()
+        if all_kills == 0:
+            return True
         if empty_death_count / all_kills > relative_threshold:
             return True
         return False
