@@ -916,8 +916,9 @@ class Round(models.Model):
         return status_durations
 
     def get_hero_play_time(self):
+        from django.db.models import Q
         used_heroes = Counter()
-        q = self.heropick_set.all()
+        q = self.heropick_set.filter(~Q(hero__name='n/a')).all()
         for h in q:
             if self.pk == 7015:
                 print(h, h.player.name, h.time_point, h.end_time_point)
