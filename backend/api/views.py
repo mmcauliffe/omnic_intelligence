@@ -1264,6 +1264,8 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
             else:
                 continue
             event = event['event']
+            if event['first_side'] == event['second_side'] and event['ability'] != 'resurrect':
+                event['first_hero'] = 'n/a'
             if event['ability'] == 'resurrect':
                 side = event['first_side']
                 reviving_player = instance.get_player_of_hero(event['first_hero'], time_point, side)
