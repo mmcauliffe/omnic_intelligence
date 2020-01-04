@@ -40,7 +40,7 @@
                                 {{ props.item.name }}
                             </td>
                             <td>
-                                {{ props.item.value |secondsToMoment | moment('DD:HH:mm:ss.S') }}
+                                {{ props.item.value |secondsToMoment | moment('HH:mm:ss.S') }}
                             </td>
                         </template>
                     </v-data-table>
