@@ -414,7 +414,7 @@ class PlayerStatusViewSet(viewsets.ModelViewSet):
         player = self.get_object()
         stats = player.generate_stats()
         stats['stats'] = [{'name': k.replace('_', ' ').title(), 'value': v} for k,v  in stats['stats'].items()]
-        stats['hero_play_time'] = [{'name': k, 'value': v} for k,v  in stats['hero_play_time'].items()]
+        stats['hero_play_time'] = [{'name': k, 'value': v} for k, v in sorted(stats['hero_play_time'].items(), key=lambda x: -1 * x[1])]
         return Response(stats)
 
     @action(methods=['get'], detail=True)
