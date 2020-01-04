@@ -47,7 +47,9 @@ api_router.register(r'annotate_vods', api.AnnotateVodViewSet, base_name='annotat
 
 # Teams
 api_router.register(r'teams', api.TeamViewSet, base_name='teams')
+api_router.register(r'team_status', api.TeamStatusViewSet, base_name='team_status')
 api_router.register(r'players', api.PlayerViewSet, base_name='players')
+api_router.register(r'player_status', api.PlayerStatusViewSet, base_name='player_status')
 api_router.register(r'train_players', api.TrainPlayerViewSet, base_name='train_players')
 
 

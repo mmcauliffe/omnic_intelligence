@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from . import models
 from django.contrib.auth.models import User, Group
-from django.db.models import Sum, F
+from django.db.models import Sum, F, Q
 from django.conf import settings
 import re
 
@@ -99,11 +99,59 @@ class PlayerSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class PlayerStatusSerializer(serializers.ModelSerializer):
+    position = serializers.SerializerMethodField()
+    heroes = serializers.SerializerMethodField()
+    last_match = serializers.SerializerMethodField()
+
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.Player
+        fields = ('id', 'name', 'position', 'heroes', 'last_match')
+
+    def get_name(self, obj):
+        import kroman
+        n = obj.name
+        t = kroman.parse(n).replace('-', '')
+        if t == n:
+            return n
+        return '{} ({})'.format(n, t)
+
+    def get_heroes(self, obj):
+        d = obj.get_hero_play_time()
+        return [{'name': x[0], 'play_time':x[1]} for x in sorted(d.items(), key=lambda x: -x[1])][:5]
+
+    def get_position(self, obj):
+        return obj.get_position()
+
+    def get_last_match(self, obj):
+        m = models.Match.objects.filter(Q(game__left_team__playerparticipation__player=obj) |
+                                        Q(game__right_team__playerparticipation__player=obj)).order_by('-date').first()
+        if m is None:
+            return ''
+        return m.date
+
+
 class TeamSerializer(serializers.ModelSerializer):
     players = PlayerSerializer(many=True)
 
     class Meta:
         model = models.Team
+        fields = '__all__'
+
+
+class TeamDisplaySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Team
+        fields = '__all__'
+
+
+class AffiliationSerializer(serializers.ModelSerializer):
+    team = TeamDisplaySerializer()
+
+    class Meta:
+        model = models.Affiliation
         fields = '__all__'
 
 

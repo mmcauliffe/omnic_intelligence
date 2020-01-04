@@ -624,16 +624,6 @@ const mutations = {
         state.one = {error, loading:false};
     },
 
-    updateRequest(state) {
-    },
-    updateSuccess(state, game) {
-
-    },
-    updateFailure(state, error) {
-        console.log(error)
-        state.one = { error };
-    },
-
     createRequest(state) {
     },
     createSuccess(state, game) {

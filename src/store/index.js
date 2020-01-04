@@ -11,6 +11,7 @@ import { vods } from './vod.module';
 import { overwatch } from './overwatch.module';
 import { rounds } from './rounds.module'
 import { teams } from './teams.module'
+import { players } from './players.module'
 
 Vue.use(Vuex);
 
@@ -24,6 +25,7 @@ export const store = new Vuex.Store({
         games,
         rounds,
         teams,
+        players,
         vods,
         overwatch
     }

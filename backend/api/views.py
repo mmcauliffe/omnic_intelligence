@@ -381,10 +381,58 @@ class TeamViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.TeamSerializer
 
 
+class TeamStatusViewSet(viewsets.ModelViewSet):
+    model = models.Team
+    queryset = models.Team.objects.all()
+    serializer_class = serializers.TeamSerializer
+
+
 class PlayerViewSet(viewsets.ModelViewSet):
     model = models.Player
     queryset = models.Player.objects.all()
     serializer_class = serializers.PlayerSerializer
+
+
+class PlayerStatusViewSet(viewsets.ModelViewSet):
+    model = models.Player
+    queryset = models.Player.objects.all()
+    serializer_class = serializers.PlayerStatusSerializer
+
+    filter_backends = (filters.SearchFilter, RelatedOrderingFilter,)
+    pagination_class = pagination.LimitOffsetPagination
+    search_fields = ('name',)
+
+    def get_queryset(self):
+        queryset = models.Player.objects.all()
+        name_search = self.request.query_params.get('name', None)
+        if name_search:
+            queryset = queryset.filter(name__icontains=name_search)
+        return queryset
+
+    @action(methods=['get'], detail=True)
+    def stats(self, request, pk=None):
+        player = self.get_object()
+        stats = player.generate_stats()
+        stats['stats'] = [{'name': k.replace('_', ' ').title(), 'value': v} for k,v  in stats['stats'].items()]
+        stats['hero_play_time'] = [{'name': k, 'value': v} for k,v  in stats['hero_play_time'].items()]
+        return Response(stats)
+
+    @action(methods=['get'], detail=True)
+    def teams(self, request, pk=None):
+        player = self.get_object()
+        q = player.affiliation_set.all()
+        s = serializers.AffiliationSerializer(q, many=True)
+        return Response(s.data)
+
+    @action(methods=['get'], detail=True)
+    def recent_matches(self, request, pk=None):
+        player = self.get_object()
+        s = serializers.MatchDisplaySerializer(player.get_latest_matches(), many=True)
+        return Response(s.data)
+
+    def list(self, request, *args, **kwargs):
+        print(request.query_params)
+        return super(PlayerStatusViewSet, self).list(request, *args, **kwargs)
 
 
 class EventViewSet(viewsets.ModelViewSet):
@@ -824,6 +872,7 @@ class PossibleDenySearchViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         print(request.query_params)
         return super(PossibleDenySearchViewSet, self).list(request, *args, **kwargs)
+
 
 class RoundStatusViewSet(viewsets.ModelViewSet):
     model = models.Round

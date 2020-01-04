@@ -20,6 +20,7 @@
 
                             <b-nav-item-dropdown text="Reporter" right>
                                 <b-dropdown-item :to="{name: 'team-list'}">Team listing</b-dropdown-item>
+                                <b-dropdown-item :to="{name: 'player-list'}">Player listing</b-dropdown-item>
                             </b-nav-item-dropdown>
                         <!-- Right aligned nav items -->
                         <b-navbar-nav class="ml-auto">

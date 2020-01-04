@@ -38,7 +38,12 @@
                             </v-card-title>
                             <v-card-text>
                                 <div v-if="round.item">
-                                    <p>{{round.item.stream_vod.title }}</p>
+
+                <router-link :to="{name: 'vod-detail', params:{id: round.item.stream_vod.id}}">
+                    {{round.item.stream_vod.title }}
+
+                </router-link>
+                                    <p></p>
                                     <div>
                                         <label>Begin
                                         </label><span>

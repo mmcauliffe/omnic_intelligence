@@ -19,6 +19,8 @@ import VodDetailPage from '../views/annotator/VodDetailPage'
 import ReporterPage from '../views/reporter/ReporterPage'
 import TeamDetailPage from '../views/reporter/TeamDetailPage'
 import TeamListPage from '../views/reporter/TeamListPage'
+import PlayerListPage from '../views/reporter/PlayerListPage'
+import PlayerDetailPage from '../views/reporter/PlayerDetailPage'
 
 
 Vue.use(Router);
@@ -42,6 +44,16 @@ export const router = new Router({
                     path: 'team/:id',
                     component: TeamDetailPage,
                     name: 'team-detail'
+                },
+                {
+                    path: 'players/',
+                    component: PlayerListPage,
+                    name: 'player-list'
+                },
+                {
+                    path: 'player/:id',
+                    component: PlayerDetailPage,
+                    name: 'player-detail'
                 },
                 ]
         },

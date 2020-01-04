@@ -1,7 +1,8 @@
 from django.contrib import admin
 # Register your models here.
-from .models import Map, Submap, Hero, Ability, NPC, Team, Player, Event, Match, Round, StreamChannel, StreamVod, \
-    TeamParticipation, Affiliation, Game, Status, StatusEffect, Patch
+from .models import Map, Submap, Hero, Ability, NPC, Team, Player, Event, Match, Round, StreamChannel, \
+    StreamVod, TeamParticipation, Affiliation, Game, Status, StatusEffect, Patch, HeroPick, Ultimate, \
+    Assist, KillFeedEvent, PlayerParticipation
 
 
 @admin.register(Map)
@@ -62,10 +63,30 @@ class TeamAdmin(admin.ModelAdmin):
     inlines = (AffiliationInline,)
 
 
+def combine_players(modeladmin, request, queryset):
+    new_p = queryset.order_by('pk').first()
+    for old_p in queryset:
+        if old_p == new_p:
+            continue
+        HeroPick.objects.filter(player=old_p).update(player=new_p)
+        Ultimate.objects.filter(player=old_p).update(player=new_p)
+        StatusEffect.objects.filter(player=old_p).update(player=new_p)
+        KillFeedEvent.objects.filter(killing_player=old_p).update(killing_player=new_p)
+        KillFeedEvent.objects.filter(dying_player=old_p).update(dying_player=new_p)
+        Assist.objects.filter(player=old_p).update(player=new_p)
+        PlayerParticipation.objects.filter(player=old_p).update(player=new_p)
+        Player.objects.filter(id=old_p.id).delete()
+
+
+combine_players.short_description = "Combine players into one"
+
+
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
     list_display = ('id', 'name')
     readonly_fields = ('id',)
+
+    actions = [combine_players]
 
 
 class TeamInline(admin.TabularInline):
@@ -97,6 +118,7 @@ class StreamVodAdmin(admin.ModelAdmin):
 class GameAdmin(admin.ModelAdmin):
     list_display = ('id', 'match', 'game_number')
 
+
 @admin.register(Patch)
 class PatchAdmin(admin.ModelAdmin):
     list_display = ('version_number', 'live_date', 'end_date')
@@ -127,13 +149,17 @@ class MatchAdmin(admin.ModelAdmin):
 
 def reset_annotations(modeladmin, request, queryset):
     queryset.update(annotation_status='N')
+
+
 reset_annotations.short_description = "Reset annotations of selected rounds"
+
 
 @admin.register(Round)
 class RoundAdmin(admin.ModelAdmin):
     list_display = ('id', 'round_number', 'get_game_number', 'get_event_name', 'annotation_status')
 
     actions = [reset_annotations]
+
     def get_game_number(self, obj):
         return obj.game.game_number
 

@@ -7,6 +7,7 @@ from django.conf import settings
 import subprocess
 from collections import Counter
 from colorful.fields import RGBColorField
+from django.db.models import Q
 
 LEFT = 'L'
 RIGHT = 'R'
@@ -332,6 +333,53 @@ class Player(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_hero_play_time(self):
+        used_heroes = Counter()
+        q = self.heropick_set.filter(~Q(new_hero__name='n/a')).all()
+        for h in q:
+            end = h.end_time_point
+            if end is None:
+                end = h.round.duration
+            used_heroes[h.new_hero.name] += end - h.time_point
+        return used_heroes
+
+    def get_position(self):
+        hero_types = Counter()
+        q = self.heropick_set.filter(~Q(new_hero__name='n/a')).all()
+        for h in q:
+            end = h.end_time_point
+            if end is None:
+                end = h.round.duration
+            hero_types[h.new_hero.get_type_display()] += end - h.time_point
+        if not hero_types:
+            return ''
+        return max(hero_types.keys(), key=lambda x: hero_types[x])
+
+    def generate_stats(self, all_stats=False):
+        stat_types = ['final_blows', 'assists', 'deaths', 'ults_gained', 'ults_used']
+        #stat_types += [x + '_per10' for x in stat_types]
+        stats = {x: 0 for x in stat_types}
+        hero_specific_stats = {}
+        hero_play_time = self.get_hero_play_time()
+        total_time = sum(hero_play_time.values())
+        total_time_per_ten = total_time * 600
+
+        ultimates = Ultimate.objects.filter(player=self)
+        stats['ults_gained'] = ultimates.count() / total_time_per_ten
+        stats['ults_used'] = ultimates.filter(used__isnull=False).count() / total_time_per_ten
+        stats['final_blows'] = self.kills.filter(ability__type=Ability.DAMAGING_TYPE).count() / total_time_per_ten
+        stats['assists'] = self.assist_set.count() / total_time_per_ten
+        stats['deaths'] = self.deaths.filter(ability__type=Ability.DAMAGING_TYPE,
+                                            dying_npc__isnull=True, denied_ult__isnull=True).count() / total_time_per_ten
+
+        d = {'stats': stats, 'hero_play_time': hero_play_time}
+        return d
+
+    def get_latest_matches(self):
+        m = Match.objects.filter(Q(game__left_team__playerparticipation__player=self) |
+                                        Q(game__right_team__playerparticipation__player=self)).order_by('-date').distinct()[:5]
+        return m
 
     def get_hero_at_timepoint(self, round_object, time_point):
         time_point = round(time_point, 1)
