@@ -363,7 +363,7 @@ class Player(models.Model):
         hero_specific_stats = {}
         hero_play_time = self.get_hero_play_time()
         total_time = sum(hero_play_time.values())
-        total_time_per_ten = total_time * 600
+        total_time_per_ten = total_time / 600
 
         ultimates = Ultimate.objects.filter(player=self)
         stats['ults_gained'] = ultimates.count() / total_time_per_ten
