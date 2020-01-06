@@ -37,7 +37,8 @@
                             autoplay: 0,
                             controls: 0,
                             rel: 0,
-                            modestbranding: 1
+                            modestbranding: 1,
+                            origin:'https://omnicintelligence.com'
                         },
                         events: {
                             'onReady': () => {

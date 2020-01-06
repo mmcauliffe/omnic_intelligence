@@ -674,7 +674,7 @@ class Game(models.Model):
                 kills = r.killfeedevent_set.filter(killing_player=p, ability__type=Ability.DAMAGING_TYPE)
                 stats[side][p.name]['final_blows'] += len(kills)
 
-                assists = p.assisted_kills.filter(round=r)
+                assists = p.assist_set.filter(round=r)
                 stats[side][p.name]['assists'] += len(assists)
                 deaths = r.killfeedevent_set.filter(dying_player=p, ability__type=Ability.DAMAGING_TYPE,
                                                     dying_npc__isnull=True, denied_ult__isnull=True)
