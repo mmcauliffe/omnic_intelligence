@@ -76,6 +76,8 @@
                                               item-text="name" item-value="id" label="Submap" clearable>
 
                                     </v-select>
+                                    <v-checkbox v-model="round.item.exclude_for_training" v-on:change="saveRound"
+                                                label="Exclude from training data"></v-checkbox>
                                 </div>
 
 

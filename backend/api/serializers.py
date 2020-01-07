@@ -369,7 +369,7 @@ class RoundSerializer(serializers.ModelSerializer):
         model = models.Round
         fields = (
             'id', 'round_number', 'game', 'attacking_side', 'submap',
-            'begin', 'end', 'stream_vod', 'annotation_status',
+            'begin', 'end', 'stream_vod', 'annotation_status', 'exclude_for_training',
             'sequences')
 
 class RoundAnalysisSerializer(serializers.ModelSerializer):
@@ -537,7 +537,7 @@ class RoundDisplaySerializer(serializers.ModelSerializer):
         fields = (
             'id', 'round_number', 'game', 'attacking_side', 'submap',
             'begin', 'end', 'annotation_status',
-            'spectator_mode',
+            'spectator_mode', 'exclude_for_training',
             'sequences', 'stream_vod')
 
     def get_spectator_mode(self, obj):
@@ -551,7 +551,7 @@ class RoundEditSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Round
         fields = (
-            'id', 'round_number', 'game', 'attacking_side', 'begin', 'end', 'stream_vod', 'annotation_status',
+            'id', 'round_number', 'game', 'attacking_side', 'begin', 'end', 'stream_vod', 'annotation_status', 'exclude_for_training',
             'sequences')
 
 
@@ -578,7 +578,7 @@ class RoundStatusSerializer(serializers.ModelSerializer):
         model = models.Round
         fields = ('id',
                   'round_number', 'game', 'attacking_side', 'submap',
-                  'begin', 'end', 'stream_vod', 'heroes_used',
+                  'begin', 'end', 'stream_vod', 'heroes_used', 'exclude_for_training',
                   'annotation_status', 'duration')
 
     def get_heroes_used(self, obj):

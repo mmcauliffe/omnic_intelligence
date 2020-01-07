@@ -836,6 +836,7 @@ class Round(models.Model):
     begin = models.DecimalField(max_digits=6, decimal_places=1, default=Decimal('0.0'))
     end = models.DecimalField(max_digits=6, decimal_places=1, default=Decimal('0.0'))
     annotation_status = models.CharField(max_length=1, choices=ANNOTATION_CHOICES, default='N')
+    exclude_for_training = models.BooleanField(default=False)
 
     class Meta:
         unique_together = (("game", "round_number"),)

@@ -921,7 +921,7 @@ class RoundStatusViewSet(viewsets.ModelViewSet):
 
 class TrainRoundViewSet(viewsets.ModelViewSet):
     model = models.Round
-    queryset = models.Round.objects.filter(annotation_status__in=['M', 'O']).order_by('pk').all()
+    queryset = models.Round.objects.filter(annotation_status__in=['M', 'O']).exclude(exclude_for_training=True).order_by('pk').all()
     serializer_class = serializers.RoundDisplaySerializer
 
 
@@ -1561,6 +1561,7 @@ class RoundViewSet(viewsets.ModelViewSet):
             instance.overtime_set.update(start_time=F('start_time') - begin_shift, end_time=F('end_time') - begin_shift)
         instance.begin = request.data['begin']
         instance.end = request.data['end']
+        instance.exclude_for_training = request.data.get('exclude_for_training', False)
         if request.data['annotation_status']:
             instance.annotation_status = request.data['annotation_status']
         if instance.annotation_status == 'M':
