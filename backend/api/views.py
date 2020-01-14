@@ -533,10 +533,10 @@ class EventViewSet(viewsets.ModelViewSet):
                     else:
                         url = 'https://www.googleapis.com/youtube/v3/search?key={}&channelId={}&part=snippet,id&order=date&maxResults=50&pageToken={}'.format(
                             key, c.youtube_channel_id, cursor)
-                    if event.channel_query_string is not None:
-                        query = '&q=allintitle: "{}"'.format(event.channel_query_string)
-                        query = query.replace(' ', '+').replace(':', '%3A')
-                        url += query
+                    #if event.channel_query_string is not None:
+                    #    query = '&q=allintitle:"{}"'.format(event.channel_query_string)
+                    #    query = query.replace(' ', '+').replace(':', '%3A')
+                    #    url += query
                     if end_date is not None:
                         mod_end_date = end_date + datetime.timedelta(days=1)  # Inclusive
                         query = '&publishedBefore=' + mod_end_date.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
@@ -545,6 +545,7 @@ class EventViewSet(viewsets.ModelViewSet):
                         mod_start_date = start_date - datetime.timedelta(days=1)  # Inclusive
                         query = '&publishedAfter=' + mod_start_date.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
                         url += query
+                    print(url)
                     response = requests.get(url)
                     data = response.json()
                     print(data)
@@ -552,6 +553,8 @@ class EventViewSet(viewsets.ModelViewSet):
                         try:
                             url = 'https://www.youtube.com/watch?v=' + item['id']['videoId']
                         except KeyError:
+                            continue
+                        if event.channel_query_string is not None and event.channel_query_string not in item['snippet']['title']:
                             continue
                         if url in vod_urls:
                             continue
