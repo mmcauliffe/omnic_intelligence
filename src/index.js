@@ -1,10 +1,12 @@
 import Vue from 'vue'
 import Vuetify from 'vuetify'
-import moment from 'moment'
 
+import vueHeadful from 'vue-headful';
 Vue.use(Vuetify);
 
 Vue.use(require('vue-moment'))
+
+Vue.component('vue-headful', vueHeadful);
 import 'vuetify/dist/vuetify.min.css' // Ensure you are using css-loader
 import App from './App.vue'
 import BootstrapVue from 'bootstrap-vue';
@@ -20,19 +22,10 @@ import {router} from './router';
 Vue.config.productionTip = false;
 
 // Vue.use(VueRouter)
+import './f&d/directives'
+import './f&d/filters'
 
 
-Vue.filter('secondsToMoment', function (seconds) {
-        var m = moment({hour: 0, minute: 0});
-        m.seconds(Math.floor(seconds));
-        m.milliseconds(Math.round(seconds % 1 * 1000));
-        return m;
-    }
-);
-
-Vue.filter('playerTemplate', function (playerNum){
-    return 'Player '+ playerNum
-});
 
 new Vue({
     el: '#app',

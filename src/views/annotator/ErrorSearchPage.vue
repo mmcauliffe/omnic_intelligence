@@ -1,5 +1,6 @@
 <template>
     <div>
+        <vue-headful :title="title" />
 
     <v-flex>
         <v-layout row>
@@ -59,7 +60,7 @@
             VDataTable
         },
         data: () => ({
-
+            title: 'Error search | Omnic Intelligence',
             selected: [],
             filters: {},
             headers: [

@@ -1,4 +1,7 @@
 <template>
+    <div>
+
+        <vue-headful :title="title" />
      <v-data-table
             :total-items="totalItems"
             :pagination.sync="pagination"
@@ -18,6 +21,7 @@
             </td>
         </template>
     </v-data-table>
+    </div>
 </template>
 
 <script>
@@ -30,7 +34,7 @@
             VDataTable
         },
         data: () => ({
-
+            title: 'VOD status | Omnic Intelligence',
             selected: [],
             headers: [
                 {text: 'VOD', value: 'title'},

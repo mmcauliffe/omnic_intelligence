@@ -1,5 +1,6 @@
 <template>
     <div class='row text-center'>
+        <vue-headful :title="title" />
         <div class="col-sm-3"></div>
         <div class='col-sm-6'>
             <em v-if="event.loading">Loading event...</em>
@@ -137,6 +138,11 @@
         },
         name: "event-detail-page",
         computed: {
+            title(){
+               if (this.event.item){
+                   return this.event.item.name + ' | Omnic Intelligence'
+               }
+            },
             ...mapState({
                 account: state => state.account,
                 spectator_modes: state => state.vods.spectator_modes,

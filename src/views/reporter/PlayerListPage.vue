@@ -1,6 +1,7 @@
 <template>
 <div>
     <v-flex>
+        <vue-headful :title="title" />
 
         <v-layout row>
 
@@ -73,6 +74,7 @@
 
         data() {
             return {
+                title: 'Players | Omnic Intelligence',
                 selected: [],
                 filters: {},
                 headers: [

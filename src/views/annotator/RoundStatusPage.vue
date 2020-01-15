@@ -1,6 +1,7 @@
 <template>
     <div>
 
+        <vue-headful :title="title" />
     <v-flex>
         <v-layout row>
 
@@ -75,7 +76,7 @@
             VDataTable
         },
         data: () => ({
-
+            title: 'Round status | Omnic Intelligence',
             selected: [],
             filters: {},
             headers: [

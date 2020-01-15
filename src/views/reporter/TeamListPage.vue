@@ -1,6 +1,7 @@
 <template>
 
     <v-layout row>
+        <vue-headful :title="title" />
         <v-flex>
 
             <v-data-table :headers="headers" :items="teams.items" v-if="teams.items" :rows-per-page-items="rowsPerPage">
@@ -53,6 +54,7 @@
 
         data() {
             return {
+                title: 'Teams | Omnic Intelligence',
                 headers: [
                     {text: '', sortable: true}
                 ],

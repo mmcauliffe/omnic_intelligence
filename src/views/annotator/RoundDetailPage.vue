@@ -1,5 +1,6 @@
 <template>
     <v-layout row flex-nowrap>
+        <vue-headful :title="title" />
         <div class="vod-column" v-if="round.item">
             <StatusBar></StatusBar>
             <Vod :vod_type="round.item.stream_vod.vod_link[0]" :id="round.item.stream_vod.vod_link[1]"
@@ -366,6 +367,12 @@
                 submaps: state => state.overwatch.submaps.items,
                 timestamp: state => state.vods.timestamp,
             }),
+            title(){
+                if (this.round.item !== undefined){
+                return this.round.item.game.match.name + ' | ' + 'Game ' +this.round.item.game.game_number
+                    + ' ('+ this.round.item.game.map.name+')' + ' | ' + 'Round '+this.round.item.round_number + ' | Omnic Intelligence'
+                }
+            },
             filteredSubmaps(){
                 if (this.submaps === undefined){
                     return []

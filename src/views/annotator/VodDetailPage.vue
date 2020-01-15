@@ -1,6 +1,7 @@
 <template>
 
     <v-layout row>
+        <vue-headful :title="title" />
         <div class="vod-column" v-if="vod.item">
             <TeamBar :game="selectedGame" :match="selectedMatch"></TeamBar>
             <Vod :vod_type="vod.item.vod_link[0]" :id="vod.item.vod_link[1]"></Vod>
@@ -260,6 +261,11 @@
             }
         },
         computed: {
+            title(){
+               if (this.vod.item){
+                   return this.vod.item.title + ' | Omnic Intelligence'
+               }
+            },
             ...mapState({
                 account: state => state.account,
                 vod: state => state.vods.one,

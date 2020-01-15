@@ -1,5 +1,6 @@
 <template>
     <v-layout row flex-nowrap>
+        <vue-headful :title="title" />
         <v-flex xs8>
 
             <v-card v-if="stats">
@@ -120,6 +121,11 @@
         },
 
         computed: {
+            title(){
+                if (this.player.item){
+                    return this.player.name + ' | Omnic Intelligence'
+                }
+            },
             ...mapState({
                 account: state => state.account,
                 player: state => state.players.one.item,
