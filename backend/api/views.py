@@ -1456,7 +1456,7 @@ class VodViewSet(viewsets.ModelViewSet):
         vod = models.StreamVod.objects.create(channel_id=request.data['channel'], url=request.data['url'],
                                               title=request.data['title'], status='N',
                                               type=vod_type,
-                                              film_format=request.data.get('film_format', models.StreamVod.ORIGINAL),
+                                              film_format=request.data.get('film_format', models.ORIGINAL),
                                               broadcast_date=b, last_modified=t)
         return Response(self.serializer_class(vod).data)
 

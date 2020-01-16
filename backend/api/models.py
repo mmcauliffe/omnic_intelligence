@@ -18,6 +18,15 @@ SIDE_CHOICES = (
     (NEITHER, 'Neither'),
 )
 
+ORIGINAL = 'O'
+FILM_FORMAT_CHOICES = ((ORIGINAL, 'Original'),
+                       ('W', 'World Cup 2017'),
+                       ('A', 'APEX'),
+                       ('1', 'Korean Contenders season 1'),
+                       ('K', 'Korean Contenders season 2'),
+                       ('U', 'Australia Contenders season 2'),
+                       ('G', 'Gauntlet 2019'),
+                       ('2', 'Overwatch league season 2'))
 
 # Create your models here.
 
@@ -39,15 +48,6 @@ class StreamChannel(models.Model):
 
 
 class StreamVod(models.Model):
-    ORIGINAL = 'O'
-    FILM_FORMAT_CHOICES = ((ORIGINAL, 'Original'),
-                           ('W', 'World Cup 2017'),
-                           ('A', 'APEX'),
-                           ('1', 'Korean Contenders season 1'),
-                           ('K', 'Korean Contenders season 2'),
-                           ('U', 'Australia Contenders season 2'),
-                           ('G', 'Gauntlet 2019'),
-                           ('2', 'Overwatch league season 2'))
     STATUS_CHOICES = (
         ('N', 'Not analyzed'),
         ('G', 'Automatically annotated for in-game/out-of-game'),
@@ -538,11 +538,6 @@ class Event(models.Model):
     WORLD_CUP = 'W'
     OWL = 'L'
     CONTENDERS = 'C'
-    FILM_FORMAT_CHOICES = ((ORIGINAL, 'Original'),
-                           ('W', 'World Cup 2017'),
-                           ('A', 'APEX'),
-                           ('K', 'Korean Contenders'),
-                           ('2', 'Overwatch league season 2'))
     SPECTATOR_MODE_CHOICES = ((ORIGINAL, 'Original'),
                               (WORLD_CUP, 'World Cup'),
                               (OWL, 'Overwatch League'),
