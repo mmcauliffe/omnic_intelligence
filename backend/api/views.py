@@ -185,7 +185,7 @@ class TrainInfoViewSet(viewsets.ViewSet):
 
         colors = [x[1].lower() for x in models.TeamParticipation.COLOR_CHOICES]
         spectator_modes = [x[1].lower() for x in models.Event.SPECTATOR_MODE_CHOICES]
-        film_formats = [x[1].lower() for x in models.Event.FILM_FORMAT_CHOICES]
+        film_formats = [x[1].lower() for x in models.FILM_FORMAT_CHOICES]
         characters = set()
         for p in models.Player.objects.all():
             name = p.name.lower()
@@ -265,7 +265,7 @@ class MapModeViewSet(viewsets.ViewSet):
 
 class FilmFormatViewSet(viewsets.ViewSet):
     def list(self, request):
-        choices = [{'id': x[0], 'name': x[1]} for x in models.StreamVod.FILM_FORMAT_CHOICES]
+        choices = [{'id': x[0], 'name': x[1]} for x in models.FILM_FORMAT_CHOICES]
         return Response(choices)
 
 
@@ -935,7 +935,7 @@ class ExampleRoundViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = []
-        for c in models.StreamVod.FILM_FORMAT_CHOICES:
+        for c in models.FILM_FORMAT_CHOICES:
             r = models.Round.objects.filter(annotation_status='M', stream_vod__film_format=c[0]).order_by('pk').first()
             if r is None:
                 continue
