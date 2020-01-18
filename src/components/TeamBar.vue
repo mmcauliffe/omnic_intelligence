@@ -38,7 +38,16 @@
                     </v-select>
             </div>
         </div>
-        <v-flex></v-flex>
+        <v-flex>
+            <v-layout column align-center>
+                <span>{{  currentTime |secondsToMoment | moment('mm:ss.S')}}</span>
+                <span>{{round_state}}</span>
+                <span v-if="isOvertime">Overtime</span>
+                <span v-if="isPaused">Paused</span>
+                <span v-if="isReplay">Replay</span>
+
+            </v-layout>
+        </v-flex>
         <div class="team" v-if="game.right_team" >
             <div v-for="player in game.right_team.players" v-if="game.right_team" class="right-player player">
                     <v-select v-model="player.player" :items="right_players"
@@ -77,7 +86,11 @@
         computed: {
             ...mapState({
                 team_colors: state => state.overwatch.team_colors,
+                timestamp: state => state.vods.timestamp,
             }),
+            currentTime() {
+                return  Math.round((this.timestamp) * 10) / 10;
+            },
         },
         created(){
             this.getTeamColors();
