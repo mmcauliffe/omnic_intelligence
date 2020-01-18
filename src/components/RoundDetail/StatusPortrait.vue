@@ -31,7 +31,10 @@
             </v-tooltip>
 
         </v-layout>
-        <span>{{ status.name}}</span><br>
+            <v-tooltip bottom>
+        <div class="caption text-no-wrap text-truncate" style="width: 60px;" slot="activator">{{ status.name}}</div>
+                <span>{{ status.name}}</span>
+            </v-tooltip>
         <v-layout row>
 
             <v-icon v-if="!status.alive">person_outline</v-icon>

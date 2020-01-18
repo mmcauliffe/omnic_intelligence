@@ -360,11 +360,15 @@
             },
             seekTo(time) {
                 this.updateTimestamp(time);
+                let r = this.vod.item.rounds.filter(x => {return (x.begin <= time && x.end >= time)})[0];
+                this.selectedGame = this.vod.item.games.filter(x => {return x.id === r.game})[0];
+                this.selectedMatch = this.vod.item.matches.filter(x => {return x.id === this.selectedGame.match})[0];
             },
             selectGame(game){
                 this.selectedMatch = this.vod.item.matches.filter(x => {return x.id === game.match})[0];
                 this.selectedGame = game;
-                this.seekTo(this.vod.item.rounds.filter(x=> {return x.game === game.id})[0].begin);
+                this.updateTimestamp(this.vod.item.rounds.filter(x=> {return x.game === game.id})[0].begin);
+
             },
             addMatch(){
                 this.createMatch(this.newMatch).then(x=>this.getOne(this.$route.params.id));

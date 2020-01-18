@@ -25,24 +25,29 @@
         <v-flex></v-flex>
     </v-layout>
 
-    <v-layout row align-content-space-between class="status" v-if="game.left_team">
-        <v-flex></v-flex>
+    <v-layout row align-content-space-between  class="status" v-if="game.left_team">
         <div class="team" v-if="game.left_team" >
             <div v-for="player in game.left_team.players" class="left player">
-                <v-layout row>
 
                     <v-select v-model="player.player" :items="left_players"
-                              item-text="name" item-value="id"  v-on:change="saveTeams()"></v-select>
-                </v-layout>
+                              item-text="name" item-value="id"  v-on:change="saveTeams()">
+
+      <template slot="selection" slot-scope="{ item, index }">
+          <span class="caption text-no-wrap text-truncate" style="max-width: 60px;">{{ item.name }}</span>
+      </template>
+                    </v-select>
             </div>
         </div>
         <v-flex></v-flex>
         <div class="team" v-if="game.right_team" >
             <div v-for="player in game.right_team.players" v-if="game.right_team" class="right-player player">
-                <v-layout row>
                     <v-select v-model="player.player" :items="right_players"
-                              item-text="name" item-value="id"  v-on:change="saveTeams()" ></v-select>
-                </v-layout>
+                              item-text="name" item-value="id"  v-on:change="saveTeams()" >
+
+      <template slot="selection" slot-scope="{ item, index }">
+          <span class="caption text-no-wrap text-truncate" style="max-width: 60px;">{{ item.name }}</span>
+      </template>
+                    </v-select>
             </div>
         </div>
 
@@ -131,18 +136,20 @@
     }
 
     .team {
-        width: 600px;
+        width: 560px;
         display: table-cell;
+        padding-left: 15px;
+        margin-left: 15px;
     }
 
     .player {
         display: table-cell;
         height: 80px;
         width: 80px;
-        padding-left: 10px;
-        padding-right: 10px;
-        margin-left: 10px;
-        margin-right: 10px;
+        padding-left: 5px;
+        margin-left: 5px;
+        padding-right: 5px;
+        margin-right: 5px;
     }
 
 
