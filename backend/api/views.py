@@ -1477,9 +1477,12 @@ class VodViewSet(viewsets.ModelViewSet):
     @action(methods=['get'], detail=True)
     def possible_matches(self, request, pk=None):
         vod = self.get_object()
-        events = vod.channel.events.prefetch_related('match_set').all()
+        events = vod.channel.events.filter(start_date__lte=vod.broadcast_date,
+                                           end_date__gte=vod.broadcast_date).prefetch_related('match_set').all()
         matches = []
         for e in events:
+            if e.channel_query_string is not None and e.channel_query_string not in vod.title:
+                continue
             matches.extend(e.match_set.all())
         return Response(serializers.MatchSerializer(matches, many=True).data)
 
