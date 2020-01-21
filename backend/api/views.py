@@ -1283,6 +1283,8 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                     hero_picks.append(models.HeroPick(round=instance, player=p, new_hero=hero,
                                                       time_point=s['begin'], end_time_point=s['end']))
             for s, m in status_models.items():
+                if s not in v:
+                    continue
                 for st in v[s]:
                     status_effects.append(models.StatusEffect(player=p, round=instance, start_time=st['begin'],
                                                               end_time=st['end'], status=m))
