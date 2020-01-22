@@ -37,7 +37,8 @@
             </v-tooltip>
         <v-layout row>
 
-            <v-icon v-if="!status.alive" small>person_outline</v-icon>
+            <v-icon v-if="status.status === 'resurrecting'" small>call_merge</v-icon>
+            <v-icon v-else-if="!status.alive" small>person_outline</v-icon>
             <v-icon v-else-if="status.status === 'frozen'" small>ac_unit</v-icon>
             <v-icon v-else-if="status.status === 'asleep'" small>notifications_paused</v-icon>
             <v-icon v-else-if="status.status === 'stunned'" small>stars</v-icon>
