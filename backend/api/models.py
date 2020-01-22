@@ -283,6 +283,8 @@ class Status(models.Model):
     helpful = models.BooleanField(default=False)
     causing_hero = models.ForeignKey(Hero, on_delete=models.CASCADE, null=True, blank=True)
     default_duration = models.DecimalField(max_digits=6, decimal_places=1, default=Decimal('1.0'))
+    icon_name = models.CharField(max_length=100, null=True, blank=True)
+
 
     class Meta:
         verbose_name_plural = "statuses"
@@ -463,7 +465,7 @@ class Player(models.Model):
                     segments.append({'begin': segments[-1]['end'], 'end': s.start_time, 'status': 'normal'})
                 else:
                     segments.append({'begin': Decimal('0.0'), 'end':  s.start_time, 'status': 'normal'})
-                segments.append({'begin': s.start_time, 'end': s.end_time, 'status': status_name})
+                segments.append({'begin': s.start_time, 'end': s.end_time, 'status': status_name, 'icon': s.status.icon_name})
             if segments[-1]['end'] < round_end:
                 segments.append({'begin': segments[-1]['end'], 'end': round_end, 'status': 'normal'})
         effects = {'status':segments}
@@ -480,7 +482,7 @@ class Player(models.Model):
                         segments.append({'begin': segments[-1]['end'], 'end': s.start_time, 'status': 'not_'+ status_name})
                     else:
                         segments.append({'begin': Decimal('0.0'), 'end':  s.start_time, 'status': 'not_'+ status_name})
-                    segments.append({'begin': s.start_time, 'end': s.end_time, 'status': status_name})
+                    segments.append({'begin': s.start_time, 'end': s.end_time, 'status': status_name, 'icon': s.status.icon_name})
                 if segments[-1]['end'] < round_end:
                     segments.append({'begin': segments[-1]['end'], 'end': round_end, 'status': 'not_'+ status_name})
             effects[status_name] = segments

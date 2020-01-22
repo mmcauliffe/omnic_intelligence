@@ -37,14 +37,16 @@
             </v-tooltip>
         <v-layout row>
 
-            <v-icon v-if="!status.alive">person_outline</v-icon>
-            <v-icon v-else-if="status.status === 'frozen'">ac_unit</v-icon>
-            <v-icon v-else-if="status.status === 'asleep'">notifications_paused</v-icon>
-            <v-icon v-else-if="status.status === 'stunned'">stars</v-icon>
-            <v-icon v-else-if="status.status === 'hacked'">wifi_lock</v-icon>
-            <v-icon v-else>person</v-icon>
-            <v-icon v-if="status.antiheal">block</v-icon>
-            <v-icon v-if="status.immortal">android</v-icon>
+            <v-icon v-if="!status.alive" small>person_outline</v-icon>
+            <v-icon v-else-if="status.status === 'frozen'" small>ac_unit</v-icon>
+            <v-icon v-else-if="status.status === 'asleep'" small>notifications_paused</v-icon>
+            <v-icon v-else-if="status.status === 'stunned'" small>stars</v-icon>
+            <v-icon v-else-if="status.status === 'hacked'" small>wifi_lock</v-icon>
+            <v-icon v-else-if="status.status === 'discord'" small>remove_circle</v-icon>
+            <v-icon v-else small>person</v-icon>
+            <v-icon v-if="status.antiheal" small>block</v-icon>
+            <v-icon v-if="status.immortal" small>android</v-icon>
+            <v-icon v-if="status.nanoboosted" small>trending_up</v-icon>
         </v-layout>
     </div>
 </template>

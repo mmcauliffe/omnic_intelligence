@@ -94,6 +94,7 @@
                         status: this.stateAtTime(player.id, this.currentTime, 'status'),
                         antiheal: this.stateAtTime(player.id, this.currentTime, 'antiheal'),
                         immortal: this.stateAtTime(player.id, this.currentTime, 'immortal'),
+                        nanoboosted: this.stateAtTime(player.id, this.currentTime, 'nanoboosted'),
                     })
                 });
                 return statuses
@@ -110,6 +111,7 @@
                         status: this.stateAtTime(player.id, this.currentTime, 'status'),
                         antiheal: this.stateAtTime(player.id, this.currentTime, 'antiheal'),
                         immortal: this.stateAtTime(player.id, this.currentTime, 'immortal'),
+                        nanoboosted: this.stateAtTime(player.id, this.currentTime, 'nanoboosted'),
                     })
                 });
                 return statuses
