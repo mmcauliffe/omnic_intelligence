@@ -414,10 +414,10 @@ class RoundAnalysisSerializer(serializers.ModelSerializer):
     def get_film_format(self, obj):
         if obj.stream_vod is None:
             return ''
-        return obj.stream_vod.get_film_format_display()
+        return obj.stream_vod.film_format.name
 
     def get_spectator_mode(self, obj):
-        return obj.game.match.event.get_spectator_mode_display()
+        return obj.game.match.event.spectator_mode.name
 
     def get_map(self, obj):
         return obj.game.map.name

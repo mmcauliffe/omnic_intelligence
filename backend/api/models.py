@@ -160,8 +160,8 @@ class StreamVod(models.Model):
             lefts = []
             rights = []
             b = Decimal('0.0')
-            spectator_mode = r.game.match.event.get_spectator_mode_display().lower()
-            film_format = r.game.match.event.get_film_format_display().lower()
+            spectator_mode = r.game.match.event.get_spectator_mode.name.lower()
+            film_format = r.stream_vod.film_format.name.lower()
             m = r.game.map
             map_name = m.name.lower()
             left_color = r.game.left_team.get_color_display().lower()
