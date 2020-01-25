@@ -18,17 +18,6 @@ SIDE_CHOICES = (
     (NEITHER, 'Neither'),
 )
 
-ORIGINAL = 'O'
-FILM_FORMAT_CHOICES = ((ORIGINAL, 'Original'),
-                       ('W', 'World Cup 2017'),
-                       ('A', 'APEX'),
-                       ('1', 'Korean Contenders season 1'),
-                       ('K', 'Korean Contenders season 2'),
-                       ('U', 'Australia Contenders season 2'),
-                       ('G', 'Gauntlet 2019'),
-                       ('2', 'Overwatch league season 2'))
-
-
 # Create your models here.
 
 
@@ -89,7 +78,6 @@ class StreamVod(models.Model):
     url = models.URLField(max_length=256, unique=True)
     title = models.CharField(max_length=256)
     broadcast_date = models.DateTimeField(blank=True, null=True)
-    film_format_old = models.CharField(max_length=1, choices=FILM_FORMAT_CHOICES, default=ORIGINAL)
     film_format = models.ForeignKey(FilmFormat, blank=True, null=True, on_delete=models.SET_NULL)
     status = models.CharField(max_length=1, choices=STATUS_CHOICES, default='N')
     type = models.CharField(max_length=1, choices=TYPE_CHOICES, default='M')
@@ -560,21 +548,11 @@ class Affiliation(models.Model):
 
 
 class Event(models.Model):
-    ORIGINAL = 'O'
-    WORLD_CUP = 'W'
-    OWL = 'L'
-    CONTENDERS = 'C'
-    SPECTATOR_MODE_CHOICES = ((ORIGINAL, 'Original'),
-                              (WORLD_CUP, 'World Cup'),
-                              (OWL, 'Overwatch League'),
-                              (CONTENDERS, 'Contenders'),)
     name = models.CharField(max_length=128)
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
     liquipedia_id = models.CharField(max_length=128, null=True, blank=True)
-    spectator_mode_old = models.CharField(max_length=1, choices=SPECTATOR_MODE_CHOICES, default='S')
     spectator_mode = models.ForeignKey(SpectatorMode, blank=True, null=True, on_delete=models.SET_NULL)
-    film_format_old = models.CharField(max_length=1, choices=FILM_FORMAT_CHOICES, default=ORIGINAL)
     film_format = models.ForeignKey(FilmFormat, blank=True, null=True, on_delete=models.SET_NULL)
     stream_channels = models.ManyToManyField(StreamChannel, related_name='events')
     teams = models.ManyToManyField(Team, through='EventParticipation')

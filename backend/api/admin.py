@@ -123,8 +123,8 @@ class TeamInline(admin.TabularInline):
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'spectator_mode_old', 'spectator_mode', 'film_format',
-                    'film_format_old', 'start_date', 'end_date')
+    list_display = ('id', 'name', 'spectator_mode', 'film_format',
+                    'start_date', 'end_date')
     inlines = [TeamInline]
 
 
@@ -138,7 +138,7 @@ class StreamChannelAdmin(admin.ModelAdmin):
 
 @admin.register(StreamVod)
 class StreamVodAdmin(admin.ModelAdmin):
-    list_display = ('id', 'channel', 'title', 'broadcast_date', 'film_format_old',
+    list_display = ('id', 'channel', 'title', 'broadcast_date',
                     'film_format', 'status', 'type', 'last_modified')
 
 
