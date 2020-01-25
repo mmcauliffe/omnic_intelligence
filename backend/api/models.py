@@ -36,6 +36,9 @@ class FilmFormat(models.Model):
     code = models.CharField(max_length=5)
     name = models.CharField(max_length=128)
 
+    def __str__(self):
+        return self.name
+
 
 class SpectatorMode(models.Model):
     code = models.CharField(max_length=5)
@@ -43,11 +46,17 @@ class SpectatorMode(models.Model):
     home_color = RGBColorField(blank=True, null=True)
     away_color = RGBColorField(blank=True, null=True)
 
+    def __str__(self):
+        return self.name
+
 
 class Patch(models.Model):
     version_number = models.CharField(max_length=128, unique=True)
     live_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
+
+    def __str__(self):
+        return self.version_number
 
 
 class StreamChannel(models.Model):
@@ -1248,6 +1257,9 @@ class Round(models.Model):
 class PauseType(models.Model):
     name = models.CharField(max_length=128)
 
+    def __str__(self):
+        return self.name
+
 
 class Pause(models.Model):
     start_time = models.DecimalField(max_digits=6, decimal_places=1, default=Decimal('0.0'))
@@ -1262,6 +1274,9 @@ class Pause(models.Model):
 
 class ReplayType(models.Model):
     name = models.CharField(max_length=128)
+
+    def __str__(self):
+        return self.name
 
 
 class Replay(models.Model):
@@ -1278,6 +1293,8 @@ class Replay(models.Model):
 class SmallerWindowType(models.Model):
     name = models.CharField(max_length=128)
 
+    def __str__(self):
+        return self.name
 
 class SmallerWindow(models.Model):
     start_time = models.DecimalField(max_digits=6, decimal_places=1, default=Decimal('0.0'))
