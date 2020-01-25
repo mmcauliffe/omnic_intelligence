@@ -34,6 +34,7 @@ class SpectatorMode(models.Model):
     name = models.CharField(max_length=128)
     home_color = RGBColorField(blank=True, null=True)
     away_color = RGBColorField(blank=True, null=True)
+    uses_team_colors = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
@@ -800,14 +801,15 @@ class TeamParticipation(models.Model):
     players = models.ManyToManyField(Player, through='PlayerParticipation')
 
     def get_color_hex(self, spectator_mode):
-        if spectator_mode == Event.CONTENDERS:
-            if self.color == 'W':
-                return settings.CONTENDERS_AWAY_COLOR
-            return settings.CONTENDERS_HOME_COLOR
-        elif spectator_mode in [Event.OWL, Event.WORLD_CUP]:
+        print(spectator_mode)
+        if spectator_mode.uses_team_colors:
             if self.color == 'W':
                 return self.team.away_color
             return self.team.home_color
+        if spectator_mode.code == 'C':
+            if self.color == 'W':
+                return spectator_mode.away_color
+            return spectator_mode.home_color
         return settings.COLOR_MAPPING[self.get_color_display().lower()]
 
     @classmethod

@@ -184,8 +184,8 @@ class TrainInfoViewSet(viewsets.ViewSet):
                     submaps.append('{}_{}'.format(m.name.lower(), i))
 
         colors = [x[1].lower() for x in models.TeamParticipation.COLOR_CHOICES]
-        spectator_modes = [x[1].lower() for x in models.Event.SPECTATOR_MODE_CHOICES]
-        film_formats = [x[1].lower() for x in models.FILM_FORMAT_CHOICES]
+        spectator_modes = [x.name.lower() for x in models.SpectatorMode.objects.all()]
+        film_formats = [x.name.lower() for x in models.FilmFormat.objects.all()]
         characters = set()
         for p in models.Player.objects.all():
             name = p.name.lower()
