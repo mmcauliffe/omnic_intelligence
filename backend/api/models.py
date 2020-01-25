@@ -179,7 +179,16 @@ class StreamVod(models.Model):
             return_dict['left'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
             return_dict['right'].append({'begin': b, 'end': r.begin, 'status': 'n/a'})
             for p in r.pause_set.all():
-                statuses.append({'begin': r.begin + p.start_time, 'end': r.begin + p.end_time, 'status': 'pause'})
+                if p.type is None:
+                    state = 'pause'
+                elif 'out' in p.type.name.lower():
+                    state = 'not_game'
+                elif 'game' in p.type.name.lower():
+                    state = 'pause'
+                else:
+                    state = 'pause_' + p.type.name.lower()
+                statuses.append({'begin': r.begin + p.start_time,
+                                 'end': r.begin + p.end_time, 'status': state})
             for p in r.replay_set.all():
                 statuses.append({'begin': r.begin + p.start_time, 'end': r.begin + p.end_time, 'status': 'replay'})
             for p in r.smallerwindow_set.all():

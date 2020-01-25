@@ -232,10 +232,22 @@ class TrainInfoViewSet(viewsets.ViewSet):
         extra_statuses = [x.name.lower() for x in extra_statuses]
         while len(status_values) < max_statuses:
             status_values.append('')
+        game_states = ['not_game', 'game', 'pause', 'replay', 'smaller_window']
+        for pt in models.PauseType.objects.all():
+            if 'out' in pt.name.lower():
+                continue
+            elif 'game' in pt.name.lower():
+                continue
+            game_states.append('pause_' + pt.name.lower())
+        for pt in models.ReplayType.objects.all():
+            game_states.append('replay_' + pt.name.lower())
+        for pt in models.SmallerWindowType.objects.all():
+            game_states.append('smaller_window_' + pt.name.lower())
         data = {
             'heroes': heroes,
             'map_modes': map_modes,
             'maps': maps,
+            'game': game_states,
             'submaps': submaps,
             'npcs': npcs,
             'status': status_values,
