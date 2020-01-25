@@ -34,6 +34,11 @@
                     v-bind:class="{ active: closeToCurrent(props.item.end_time) }">
                     {{ props.item.end_time | secondsToMoment | moment('mm:ss.S') }}
                 </td>
+                <td>
+                <v-select v-if="pause_types" v-model="props.item.type" :items="pause_types"
+                                              item-text="name" item-value="id"
+                 v-on:change="updateEvent(props.item)" clearable></v-select>
+                </td>
                 <td v-if="can_edit">
 
                     <v-tooltip bottom>
@@ -66,11 +71,30 @@
             }
         },
         computed: {
+            ...mapState({
+                pause_types: state => state.overwatch.pause_types.items,
+            }),
             ...mapGetters('rounds', [
                 'pauses',
             ]),
+            headers(){
+                return [
+                {text: '', sortable: false},
+                {text: 'Start time', sortable: false},
+                {text: '', sortable: false},
+                {text: 'End time', sortable: false},
+                {text: 'Type', sortable: false},
+                {text: 'Actions', sortable: false}]
+            }
+        },
+        created(){
+
+            this.getPauseTypes();
         },
         methods: {
+            ...mapActions('overwatch', [
+                'getPauseTypes',
+            ]),
 
             addEvent() {
                 this.newEvent.start_time = this.currentTime;
@@ -80,14 +104,6 @@
                     function (res) {
                         this.newEvent = {};
                     });
-            },
-            updateEventStart(event) {
-                event.start_time = this.currentTime;
-                this.updateRoundEvent({type: this.event_type, event: event});
-            },
-            updateEventEnd(event) {
-                event.end_time = this.currentTime;
-                this.updateRoundEvent({type: this.event_type, event: event});
             },
             eventChangeHandler(newNewEvent) {
                 console.log(newNewEvent)

@@ -28,7 +28,21 @@ FILM_FORMAT_CHOICES = ((ORIGINAL, 'Original'),
                        ('G', 'Gauntlet 2019'),
                        ('2', 'Overwatch league season 2'))
 
+
 # Create your models here.
+
+
+class FilmFormat(models.Model):
+    code = models.CharField(max_length=5)
+    name = models.CharField(max_length=128)
+
+
+class SpectatorMode(models.Model):
+    code = models.CharField(max_length=5)
+    name = models.CharField(max_length=128)
+    home_color = RGBColorField(blank=True, null=True)
+    away_color = RGBColorField(blank=True, null=True)
+
 
 class Patch(models.Model):
     version_number = models.CharField(max_length=128, unique=True)
@@ -66,7 +80,8 @@ class StreamVod(models.Model):
     url = models.URLField(max_length=256, unique=True)
     title = models.CharField(max_length=256)
     broadcast_date = models.DateTimeField(blank=True, null=True)
-    film_format = models.CharField(max_length=1, choices=FILM_FORMAT_CHOICES, default=ORIGINAL)
+    film_format_old = models.CharField(max_length=1, choices=FILM_FORMAT_CHOICES, default=ORIGINAL)
+    film_format = models.ForeignKey(FilmFormat, blank=True, null=True, on_delete=models.SET_NULL)
     status = models.CharField(max_length=1, choices=STATUS_CHOICES, default='N')
     type = models.CharField(max_length=1, choices=TYPE_CHOICES, default='M')
     last_modified = models.DateTimeField(blank=True, null=True)
@@ -548,8 +563,10 @@ class Event(models.Model):
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
     liquipedia_id = models.CharField(max_length=128, null=True, blank=True)
-    spectator_mode = models.CharField(max_length=1, choices=SPECTATOR_MODE_CHOICES, default='S')
-    film_format = models.CharField(max_length=1, choices=FILM_FORMAT_CHOICES, default=ORIGINAL)
+    spectator_mode_old = models.CharField(max_length=1, choices=SPECTATOR_MODE_CHOICES, default='S')
+    spectator_mode = models.ForeignKey(SpectatorMode, blank=True, null=True, on_delete=models.SET_NULL)
+    film_format_old = models.CharField(max_length=1, choices=FILM_FORMAT_CHOICES, default=ORIGINAL)
+    film_format = models.ForeignKey(FilmFormat, blank=True, null=True, on_delete=models.SET_NULL)
     stream_channels = models.ManyToManyField(StreamChannel, related_name='events')
     teams = models.ManyToManyField(Team, through='EventParticipation')
     channel_query_string = models.CharField(max_length=128, null=True, blank=True)
@@ -1228,30 +1245,45 @@ class Round(models.Model):
         return potential_killfeed
 
 
+class PauseType(models.Model):
+    name = models.CharField(max_length=128)
+
+
 class Pause(models.Model):
     start_time = models.DecimalField(max_digits=6, decimal_places=1, default=Decimal('0.0'))
     end_time = models.DecimalField(max_digits=6, decimal_places=1, blank=True, null=True)
     round = models.ForeignKey(Round, on_delete=models.CASCADE)
+    type = models.ForeignKey(PauseType, null=True, blank=True, on_delete=models.SET_NULL)
 
     class Meta:
         unique_together = (("round", "start_time"),)
         ordering = ['round', 'start_time']
+
+
+class ReplayType(models.Model):
+    name = models.CharField(max_length=128)
 
 
 class Replay(models.Model):
     start_time = models.DecimalField(max_digits=6, decimal_places=1, default=Decimal('0.0'))
     end_time = models.DecimalField(max_digits=6, decimal_places=1, blank=True, null=True)
     round = models.ForeignKey(Round, on_delete=models.CASCADE)
+    type = models.ForeignKey(ReplayType, null=True, blank=True, on_delete=models.SET_NULL)
 
     class Meta:
         unique_together = (("round", "start_time"),)
         ordering = ['round', 'start_time']
 
 
+class SmallerWindowType(models.Model):
+    name = models.CharField(max_length=128)
+
+
 class SmallerWindow(models.Model):
     start_time = models.DecimalField(max_digits=6, decimal_places=1, default=Decimal('0.0'))
     end_time = models.DecimalField(max_digits=6, decimal_places=1, blank=True, null=True)
     round = models.ForeignKey(Round, on_delete=models.CASCADE)
+    type = models.ForeignKey(SmallerWindowType, null=True, blank=True, on_delete=models.SET_NULL)
 
     class Meta:
         unique_together = (("round", "start_time"),)

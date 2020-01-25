@@ -6,6 +6,36 @@ from django.conf import settings
 import re
 
 
+class SpectatorModeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.SpectatorMode
+        fields = '__all__'
+
+
+class FilmFormatSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.FilmFormat
+        fields = '__all__'
+
+
+class PauseTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.PauseType
+        fields = '__all__'
+
+
+class ReplayTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.ReplayType
+        fields = '__all__'
+
+
+class SmallerWindowTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.SmallerWindowType
+        fields = '__all__'
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -427,7 +457,9 @@ class AnnotateVodSerializer(serializers.ModelSerializer):
         e = obj.event
         if e is None:
             return None
-        return e.get_spectator_mode_display()
+        if e.spectator_mode is None:
+            return None
+        return e.spectator_mode.name
 
     def get_teams(self, obj):
         owl_mapping = {'DAL': 'Dallas Fuel',
@@ -489,7 +521,7 @@ class AnnotateVodSerializer(serializers.ModelSerializer):
 class EventVodDisplaySerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
-    film_format = serializers.SerializerMethodField()
+    film_format = serializers.StringRelatedField()
 
     class Meta:
         model = models.StreamVod
@@ -501,9 +533,6 @@ class EventVodDisplaySerializer(serializers.ModelSerializer):
 
     def get_status(self, obj):
         return obj.get_status_display()
-
-    def get_film_format(self, obj):
-        return obj.get_film_format_display()
 
 
 class VodAnnotateSerializer(serializers.ModelSerializer):
@@ -541,7 +570,9 @@ class RoundDisplaySerializer(serializers.ModelSerializer):
             'sequences', 'stream_vod')
 
     def get_spectator_mode(self, obj):
-        return obj.game.match.event.get_spectator_mode_display()
+        if obj.game.match.event.spectator_mode is not None:
+            return obj.game.match.event.spectator_mode.name
+        return ''
 
 
 class RoundEditSerializer(serializers.ModelSerializer):
@@ -565,6 +596,34 @@ class VodEditSerializer(serializers.ModelSerializer):
     def get_rounds(self, obj):
         return RoundSerializer(obj.round_set.all(), many=True).data
 
+
+class SimpleRoundStatusSerializer(serializers.ModelSerializer):
+    stream_vod = EventVodDisplaySerializer()
+    annotation_status = serializers.SerializerMethodField()
+    submap = serializers.SerializerMethodField()
+    attacking_side = serializers.SerializerMethodField()
+    duration = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.Round
+        fields = ('id',
+                  'round_number', 'game', 'attacking_side', 'submap',
+                  'begin', 'end', 'stream_vod', 'exclude_for_training',
+                  'annotation_status', 'duration')
+
+    def get_annotation_status(self, obj):
+        return obj.get_annotation_status_display()
+
+    def get_attacking_side(self, obj):
+        return obj.get_attacking_side_display()
+
+    def get_submap(self, obj):
+        if obj.submap is None:
+            return 'None'
+        return obj.submap.name
+
+    def get_duration(self, obj):
+        return obj.end - obj.begin
 
 class RoundStatusSerializer(serializers.ModelSerializer):
     stream_vod = EventVodDisplaySerializer()

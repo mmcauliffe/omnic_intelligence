@@ -11,6 +11,9 @@ const state = {
     team_colors: {},
     sides: {},
     submaps: {},
+    pause_types: {},
+    replay_types: {},
+    smaller_window_types: {},
 };
 
 const actions = {
@@ -100,6 +103,33 @@ const actions = {
             .then(
                 events => commit('getSubmapsSuccess', events),
                 error => commit('getSubmapsFailure', error)
+            );
+    },
+    getPauseTypes({commit}) {
+        commit('getPauseTypesRequest');
+
+        overwatchService.getPauseTypes()
+            .then(
+                types => commit('getPauseTypesSuccess', types),
+                error => commit('getPauseTypesFailure', error)
+            );
+    },
+    getReplayTypes({commit}) {
+        commit('getReplayTypesRequest');
+
+        overwatchService.getReplayTypes()
+            .then(
+                types => commit('getReplayTypesSuccess', types),
+                error => commit('getReplayTypesFailure', error)
+            );
+    },
+    getSmallerWindowTypes({commit}) {
+        commit('getSmallerWindowTypesRequest');
+
+        overwatchService.getSmallerWindowTypes()
+            .then(
+                types => commit('getSmallerWindowTypesSuccess', types),
+                error => commit('getSmallerWindowTypesFailure', error)
             );
     },
 };
@@ -251,6 +281,36 @@ const mutations = {
     },
     getSubmapsFailure(state, error) {
         state.submaps = {error};
+    },
+
+    getPauseTypesRequest(state) {
+        state.pause_types = {loading: true};
+    },
+    getPauseTypesSuccess(state, types) {
+        state.pause_types = {items: types};
+    },
+    getPauseTypesFailure(state, error) {
+        state.pause_types = {error};
+    },
+
+    getReplayTypesRequest(state) {
+        state.replay_types = {loading: true};
+    },
+    getReplayTypesSuccess(state, types) {
+        state.replay_types = {items: types};
+    },
+    getReplayTypesFailure(state, error) {
+        state.replay_types = {error};
+    },
+
+    getSmallerWindowTypesRequest(state) {
+        state.smaller_window_types = {loading: true};
+    },
+    getSmallerWindowTypesSuccess(state, types) {
+        state.smaller_window_types = {items: types};
+    },
+    getSmallerWindowTypesFailure(state, error) {
+        state.smaller_window_types = {error};
     },
 
 

@@ -21,6 +21,7 @@ import TeamDetailPage from '../views/reporter/TeamDetailPage'
 import TeamListPage from '../views/reporter/TeamListPage'
 import PlayerListPage from '../views/reporter/PlayerListPage'
 import PlayerDetailPage from '../views/reporter/PlayerDetailPage'
+import BroadcastEventSearchPage from "../views/annotator/BroadcastEventSearchPage";
 
 
 Vue.use(Router);
@@ -94,6 +95,11 @@ export const router = new Router({
                     path: 'search/',
                     component: SearchPage,
                     name: 'search'
+                },
+                {
+                    path: 'broadcast_search/',
+                    component: BroadcastEventSearchPage,
+                    name: 'broadcast_search'
                 },
                 {
                     path: 'error_search/',

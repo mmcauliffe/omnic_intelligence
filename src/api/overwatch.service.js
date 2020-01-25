@@ -14,6 +14,9 @@ export const overwatchService = {
     getSides,
     getSubmaps,
     getStatusEffectChoices,
+    getPauseTypes,
+    getReplayTypes,
+    getSmallerWindowTypes,
 };
 
 function getHeroes() {
@@ -23,6 +26,33 @@ function getHeroes() {
     };
 
     return fetch(`${config.apiUrl}/heroes/`, requestOptions).then(handleResponse);
+}
+
+function getPauseTypes() {
+    const requestOptions = {
+        method: 'GET',
+        headers: authHeader()
+    };
+
+    return fetch(`${config.apiUrl}/pause_types/`, requestOptions).then(handleResponse);
+}
+
+function getReplayTypes() {
+    const requestOptions = {
+        method: 'GET',
+        headers: authHeader()
+    };
+
+    return fetch(`${config.apiUrl}/replay_types/`, requestOptions).then(handleResponse);
+}
+
+function getSmallerWindowTypes() {
+    const requestOptions = {
+        method: 'GET',
+        headers: authHeader()
+    };
+
+    return fetch(`${config.apiUrl}/smaller_window_types/`, requestOptions).then(handleResponse);
 }
 
 function getHeroDamagingAbilities(id) {

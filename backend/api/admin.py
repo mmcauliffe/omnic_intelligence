@@ -2,7 +2,8 @@ from django.contrib import admin
 # Register your models here.
 from .models import Map, Submap, Hero, Ability, NPC, Team, Player, Event, Match, Round, StreamChannel, \
     StreamVod, TeamParticipation, Affiliation, Game, Status, StatusEffect, Patch, HeroPick, Ultimate, \
-    Assist, KillFeedEvent, PlayerParticipation
+    Assist, KillFeedEvent, PlayerParticipation, PauseType, ReplayType, SmallerWindowType, \
+    SpectatorMode, FilmFormat
 
 
 @admin.register(Map)
@@ -13,6 +14,31 @@ class MapAdmin(admin.ModelAdmin):
 @admin.register(Submap)
 class SubmapAdmin(admin.ModelAdmin):
     list_display = ('name', 'map')
+
+
+@admin.register(PauseType)
+class PauseTypeAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+
+
+@admin.register(ReplayType)
+class ReplayTypeAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+
+
+@admin.register(SmallerWindowType)
+class SmallerWindowTypeAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+
+
+@admin.register(FilmFormat)
+class FilmFormatAdmin(admin.ModelAdmin):
+    list_display = ('name', 'code')
+
+
+@admin.register(SpectatorMode)
+class SpectatorModeAdmin(admin.ModelAdmin):
+    list_display = ('name', 'code')
 
 
 class AbilityInline(admin.TabularInline):
@@ -97,7 +123,8 @@ class TeamInline(admin.TabularInline):
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'spectator_mode', 'start_date', 'end_date')
+    list_display = ('id', 'name', 'spectator_mode_old', 'spectator_mode', 'film_format',
+                    'film_format_old', 'start_date', 'end_date')
     inlines = [TeamInline]
 
 
@@ -111,7 +138,8 @@ class StreamChannelAdmin(admin.ModelAdmin):
 
 @admin.register(StreamVod)
 class StreamVodAdmin(admin.ModelAdmin):
-    list_display = ('id', 'channel', 'title', 'broadcast_date', 'film_format', 'status', 'type', 'last_modified')
+    list_display = ('id', 'channel', 'title', 'broadcast_date', 'film_format_old',
+                    'film_format', 'status', 'type', 'last_modified')
 
 
 @admin.register(Game)

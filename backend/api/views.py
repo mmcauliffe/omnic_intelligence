@@ -263,10 +263,10 @@ class MapModeViewSet(viewsets.ViewSet):
         return Response(choices)
 
 
-class FilmFormatViewSet(viewsets.ViewSet):
-    def list(self, request):
-        choices = [{'id': x[0], 'name': x[1]} for x in models.FILM_FORMAT_CHOICES]
-        return Response(choices)
+class FilmFormatViewSet(viewsets.ModelViewSet):
+    model = models.FilmFormat
+    queryset = models.FilmFormat.objects.all()
+    serializer_class = serializers.FilmFormatSerializer
 
 
 class SideViewSet(viewsets.ViewSet):
@@ -275,10 +275,28 @@ class SideViewSet(viewsets.ViewSet):
         return Response(choices)
 
 
-class SpectatorModeViewSet(viewsets.ViewSet):
-    def list(self, request):
-        choices = [{'id': x[0], 'name': x[1]} for x in models.Event.SPECTATOR_MODE_CHOICES]
-        return Response(choices)
+class SpectatorModeViewSet(viewsets.ModelViewSet):
+    model = models.SpectatorMode
+    queryset = models.SpectatorMode.objects.all()
+    serializer_class = serializers.SpectatorModeSerializer
+
+
+class PauseTypeViewSet(viewsets.ModelViewSet):
+    model = models.PauseType
+    queryset = models.PauseType.objects.all()
+    serializer_class = serializers.PauseTypeSerializer
+
+
+class ReplayTypeViewSet(viewsets.ModelViewSet):
+    model = models.ReplayType
+    queryset = models.ReplayType.objects.all()
+    serializer_class = serializers.ReplayTypeSerializer
+
+
+class SmallerWindowTypeViewSet(viewsets.ModelViewSet):
+    model = models.SmallerWindowType
+    queryset = models.SmallerWindowType.objects.all()
+    serializer_class = serializers.SmallerWindowTypeSerializer
 
 
 class AnnotationChoiceViewSet(viewsets.ViewSet):
@@ -791,6 +809,51 @@ class StreamChannelViewSet(viewsets.ModelViewSet):
                 except KeyError:
                     break
         return Response(vods)
+
+
+class BroadcastEventViewSet(viewsets.ModelViewSet):
+    model = models.Round
+    queryset = models.Round.objects.prefetch_related('game', 'game__match', 'game__match__event').filter(
+        ~Q(stream_vod=None)).all()
+    serializer_class = serializers.SimpleRoundStatusSerializer
+    filter_backends = (filters.SearchFilter, RelatedOrderingFilter,)
+    pagination_class = pagination.LimitOffsetPagination
+    search_fields = ('game__match__event__name', 'game__match__teams__name', 'annotation_status')
+
+    def get_queryset(self):
+        rq = models.Round.objects.filter(stream_vod__isnull=False).all()
+        event_type = self.request.query_params.get('event_type', None)
+        type_id = self.request.query_params.get('type_id', None)
+        if not event_type:
+            return models.Round.objects.none()
+        if event_type == 'pause':
+            if type_id is None:
+                rq = rq.filter(pause__start_time__gte=0, pause__type__isnull=True)
+            else:
+                print(models.PauseType.objects.filter(id=type_id))
+                rq = rq.filter(pause__type_id=type_id)
+        elif event_type == 'replay':
+            if type_id is None:
+                rq = rq.filter(replay__start_time__gte=0, replay__type__isnull=True)
+            else:
+                rq = rq.filter(replay__type_id=type_id)
+        elif event_type == 'smaller_window':
+            if type_id is None:
+                rq = rq.filter(smallerwindow__start_time__gte=0, smallerwindow__type__isnull=True)
+            else:
+                rq = rq.filter(smallerwindow__type_id=type_id)
+
+        annotation_status = self.request.query_params.get('annotation_status', None)
+        if annotation_status is not None:
+            rq = rq.filter(annotation_status=annotation_status)
+        spectator_mode = self.request.query_params.get('spectator_mode', None)
+        if spectator_mode is not None:
+            rq = rq.filter(game__match__event__spectator_mode=spectator_mode)
+        return rq.distinct()
+
+    def list(self, request, *args, **kwargs):
+        print(request.query_params)
+        return super(BroadcastEventViewSet, self).list(request, *args, **kwargs)
 
 
 class GameParsingErrorViewSet(viewsets.ModelViewSet):
@@ -1761,6 +1824,7 @@ class PauseViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         instance.start_time = request.data['start_time']
         instance.end_time = request.data['end_time']
+        instance.type_id = request.data.get('type', None)
         instance.save()
         return Response()
 

@@ -86,6 +86,9 @@
                 event.end_time = this.currentTime;
                 this.updateRoundEvent({type: this.event_type, event: event});
             },
+            updateEvent(event) {
+                this.updateRoundEvent({type: this.event_type, event: event});
+            },
             deleteEvent(event_id) {
                 this.deleteRoundEvent({type: this.event_type, id: event_id});
             },

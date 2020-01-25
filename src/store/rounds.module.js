@@ -66,6 +66,13 @@ const actions = {
                 error => commit('getRoundsFailure', error)
             );
     },
+    getBroadcastEventRounds({commit}, data) {
+        roundService.getBroadcastEventRounds(data)
+            .then(
+                rounds => commit('getRoundsSuccess', rounds.data),
+                error => commit('getRoundsFailure', error)
+            );
+    },
     getPossibleErrorRounds({commit}, data) {
         roundService.getPossibleErrorRounds(data)
             .then(

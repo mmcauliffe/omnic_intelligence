@@ -34,6 +34,11 @@
                     v-bind:class="{ active: closeToCurrent(props.item.end_time) }">
                     {{ props.item.end_time | secondsToMoment | moment('mm:ss.S') }}
                 </td>
+                <td>
+                <v-select v-if="smaller_window_types" v-model="props.item.type" :items="smaller_window_types"
+                                              item-text="name" item-value="id"
+                 v-on:change="updateEvent(props.item)" clearable></v-select>
+                </td>
                 <td v-if="can_edit">
 
                     <v-tooltip bottom>
@@ -66,11 +71,30 @@
             }
         },
         computed: {
+            ...mapState({
+                smaller_window_types: state => state.overwatch.smaller_window_types.items,
+            }),
             ...mapGetters('rounds', [
                 'smaller_windows',
             ]),
+            headers(){
+                return [
+                {text: '', sortable: false},
+                {text: 'Start time', sortable: false},
+                {text: '', sortable: false},
+                {text: 'End time', sortable: false},
+                {text: 'Type', sortable: false},
+                {text: 'Actions', sortable: false}]
+            }
+        },
+        created(){
+
+            this.getSmallerWindowTypes();
         },
         methods: {
+            ...mapActions('overwatch', [
+                'getSmallerWindowTypes',
+            ]),
             eventChangeHandler(newNewEvent) {
                 //console.log(newNewEvent)
             },

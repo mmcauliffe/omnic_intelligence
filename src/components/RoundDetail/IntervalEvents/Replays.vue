@@ -34,6 +34,11 @@
                     v-bind:class="{ active: closeToCurrent(props.item.end_time) }">
                     {{ props.item.end_time | secondsToMoment | moment('mm:ss.S') }}
                 </td>
+                <td>
+                <v-select v-if="replay_types" v-model="props.item.type" :items="replay_types"
+                                              item-text="name" item-value="id"
+                 v-on:change="updateEvent(props.item)" clearable></v-select>
+                </td>
                 <td v-if="can_edit">
 
                     <v-tooltip bottom>
@@ -65,12 +70,31 @@
                 rowsPerPage: [5]
             }
         },
+        created(){
+
+            this.getReplayTypes();
+        },
         computed: {
+            ...mapState({
+                replay_types: state => state.overwatch.replay_types.items,
+            }),
             ...mapGetters('rounds', [
                 'replays',
             ]),
+            headers(){
+                return [
+                {text: '', sortable: false},
+                {text: 'Start time', sortable: false},
+                {text: '', sortable: false},
+                {text: 'End time', sortable: false},
+                {text: 'Type', sortable: false},
+                {text: 'Actions', sortable: false}]
+            }
         },
         methods: {
+            ...mapActions('overwatch', [
+                'getReplayTypes',
+            ]),
             eventChangeHandler(newNewEvent) {
                 console.log(newNewEvent)
             },

@@ -33,6 +33,9 @@ api_router.register(r'team_colors', api.TeamColorViewSet, base_name='team_colors
 api_router.register(r'map_modes', api.MapModeViewSet, base_name='map_modes')
 api_router.register(r'sides', api.SideViewSet, base_name='sides')
 api_router.register(r'submaps', api.SubmapViewSet, base_name='submaps')
+api_router.register(r'pause_types', api.PauseTypeViewSet, base_name='pause_types')
+api_router.register(r'replay_types', api.ReplayTypeViewSet, base_name='replay_types')
+api_router.register(r'smaller_window_types', api.SmallerWindowTypeViewSet, base_name='smaller_window_types')
 
 # Recording
 api_router.register(r'annotation_source_choices', api.AnnotationChoiceViewSet, base_name='annotation_source_choices')
@@ -68,6 +71,7 @@ api_router.register(r'annotate_rounds', api.AnnotateRoundViewSet, base_name='ann
 api_router.register(r'round_status', api.RoundStatusViewSet, base_name='round_status')
 api_router.register(r'possible_denies', api.PossibleDenySearchViewSet, base_name='possible_denies')
 api_router.register(r'possible_errors', api.GameParsingErrorViewSet, base_name='possible_errors')
+api_router.register(r'broadcast_events', api.BroadcastEventViewSet, base_name='broadcast_events')
 api_router.register(r'vod_status', api.VodStatusViewSet, base_name='vod_status')
 
 api_router.register(r'hero_picks', api.HeroPickViewSet, base_name='hero_picks')
