@@ -436,6 +436,7 @@ class StreamVodSerializer(serializers.ModelSerializer):
 
 class VodDisplaySerializer(serializers.ModelSerializer):
     channel = StreamChannelSerializer()
+    film_format = FilmFormatSerializer()
 
     class Meta:
         model = models.StreamVod
