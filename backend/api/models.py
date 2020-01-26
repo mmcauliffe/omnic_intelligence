@@ -810,7 +810,6 @@ class TeamParticipation(models.Model):
     players = models.ManyToManyField(Player, through='PlayerParticipation')
 
     def get_color_hex(self, spectator_mode):
-        print(spectator_mode)
         if spectator_mode.uses_team_colors:
             if self.color == 'W':
                 return self.team.away_color
@@ -988,8 +987,6 @@ class Round(models.Model):
         used_heroes = Counter()
         q = self.heropick_set.filter(~Q(new_hero__name='n/a')).all()
         for h in q:
-            if self.pk == 7015:
-                print(h, h.player.name, h.time_point, h.end_time_point)
             end = h.end_time_point
             if end is None:
                 end = self.duration
