@@ -999,7 +999,8 @@ class RoundStatusViewSet(viewsets.ModelViewSet):
 
 class TrainRoundViewSet(viewsets.ModelViewSet):
     model = models.Round
-    queryset = models.Round.objects.filter(annotation_status__in=['M', 'O']).exclude(exclude_for_training=True).order_by('pk').all()
+    queryset = models.Round.objects.filter(annotation_status__in=['M', 'O'],
+                                           id__gte=9359).exclude(exclude_for_training=True).order_by('pk').all()
     serializer_class = serializers.RoundDisplaySerializer
 
 
