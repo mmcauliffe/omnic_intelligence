@@ -1531,10 +1531,11 @@ class VodViewSet(viewsets.ModelViewSet):
             vod_type = models.StreamVod.GAME_TYPE
         else:
             vod_type = models.StreamVod.MATCH_TYPE
+        original_film_format = models.FilmFormat.objects.get(code='O')
         vod = models.StreamVod.objects.create(channel_id=request.data['channel'], url=request.data['url'],
                                               title=request.data['title'], status='N',
                                               type=vod_type,
-                                              film_format=request.data.get('film_format', models.ORIGINAL),
+                                              film_format_id=request.data.get('film_format', original_film_format.id),
                                               broadcast_date=b, last_modified=t)
         return Response(self.serializer_class(vod).data)
 
