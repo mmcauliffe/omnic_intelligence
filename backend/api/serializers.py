@@ -437,11 +437,15 @@ class StreamVodSerializer(serializers.ModelSerializer):
 class VodDisplaySerializer(serializers.ModelSerializer):
     channel = StreamChannelSerializer()
     film_format = FilmFormatSerializer()
+    event = serializers.SerializerMethodField()
 
     class Meta:
         model = models.StreamVod
         fields = ('id', 'title', 'url', 'broadcast_date', 'vod_link', 'film_format',
-                  'sequences', 'channel', 'status', 'type')
+                  'sequences', 'channel', 'status', 'type', 'event')
+
+    def get_event(self, obj):
+        return EventDisplaySerializer(obj.round_set.first().event).data
 
 
 class AnnotateVodSerializer(serializers.ModelSerializer):

@@ -1031,6 +1031,11 @@ class TrainVodViewSet(viewsets.ModelViewSet):
     queryset = models.StreamVod.objects.filter(round__annotation_status__in=['O', 'M']).order_by('pk').distinct().all()
     serializer_class = serializers.VodDisplaySerializer
 
+    def get_queryset(self):
+        round_queryset = models.Round.objects.filter(annotation_status__in=['M', 'O'],
+                                           id__gte=9359).exclude(exclude_for_training=True).order_by('pk').all()
+        return models.StreamVod.objects.filter(round__in=round_queryset).distinct()
+
     @action(methods=['get'], detail=False)
     def stats(self, request):
         import csv
