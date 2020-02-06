@@ -445,7 +445,7 @@ class VodDisplaySerializer(serializers.ModelSerializer):
                   'sequences', 'channel', 'status', 'type', 'event')
 
     def get_event(self, obj):
-        return EventDisplaySerializer(obj.round_set.first().event).data
+        return EventDisplaySerializer(obj.round_set.first().game.match.event).data
 
 
 class AnnotateVodSerializer(serializers.ModelSerializer):
