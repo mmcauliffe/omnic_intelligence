@@ -545,6 +545,7 @@ class EventVodDisplaySerializer(serializers.ModelSerializer):
 
 class VodAnnotateSerializer(serializers.ModelSerializer):
     rounds = serializers.SerializerMethodField()
+    film_format = FilmFormatSerializer()
 
     class Meta:
         model = models.StreamVod
