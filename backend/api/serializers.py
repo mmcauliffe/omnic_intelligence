@@ -220,6 +220,8 @@ class EventSerializer(serializers.ModelSerializer):
 
 
 class EventDisplaySerializer(serializers.ModelSerializer):
+    spectator_mode = serializers.StringRelatedField()
+    film_format = serializers.StringRelatedField()
 
     class Meta:
         model = models.Event
