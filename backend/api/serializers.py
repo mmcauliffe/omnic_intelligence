@@ -454,6 +454,7 @@ class AnnotateVodSerializer(serializers.ModelSerializer):
     channel = StreamChannelSerializer()
     teams = serializers.SerializerMethodField()
     spectator_mode = serializers.SerializerMethodField()
+    film_format = FilmFormatSerializer()
 
     class Meta:
         model = models.StreamVod
