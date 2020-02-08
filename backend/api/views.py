@@ -1618,6 +1618,67 @@ class RoundViewSet(viewsets.ModelViewSet):
                                             end=request.data['end'])
         return Response(self.serializer_class(round).data)
 
+    @action(methods=['get'], detail=True)
+    def team_fights(self, request, pk=None):
+        r = self.get_object()
+        team_fights = r.teamfight_set.all()
+        serializer = serializers.TeamFightSerializer(team_fights, many=True)
+        return Response(serializer.data)
+
+    @action(methods=['get'], detail=True)
+    def generate_team_fights(self, request, pk=None):
+        time_points = []
+        r = self.get_object()
+        r.teamfight_set.all().delete()
+        left_team = r.game.left_team
+        right_team = r.game.right_team
+        for ke in r.killfeedevent_set.all():
+            time_points.append(ke.time_point)
+        for u in r.ultimate_set.all():
+            if u.used is not None:
+                time_points.append(u.used)
+                time_points.append(u.ended)
+        cur_team_fight = None
+        team_fights = []
+        for i, tp in enumerate(sorted(time_points)):
+            print(tp)
+            if cur_team_fight is None:
+                cur_team_fight = {'begin': tp}
+            if i < len(time_points) - 1:
+                print(time_points[i+1], time_points[i+1] > tp + 25)
+                if time_points[i+1] > tp + 25:
+                    cur_team_fight['end'] = tp
+                    team_fights.append(cur_team_fight)
+                    cur_team_fight = None
+            elif cur_team_fight is not None:
+                cur_team_fight['end'] = tp
+                team_fights.append(cur_team_fight)
+                cur_team_fight = None
+        team_fight_objects = []
+        for tm in team_fights:
+
+            if r.attacking_side == 'L':
+                attacking_team = left_team
+                defending_team = right_team
+            elif r.attacking_side == 'R':
+                attacking_team = right_team
+                defending_team = left_team
+            else:
+                p = r.point_status(tm['begin'])
+                if 'left' in p:
+                    attacking_team = right_team
+                    defending_team = left_team
+                else:
+                    attacking_team = left_team
+                    defending_team = right_team
+            team_fight_objects.append(models.TeamFight(round=r, start_time=tm['begin'],
+                                                       end_time=tm['end'],
+                                                       attacking_team=attacking_team,
+                                                       defending_team=defending_team))
+        models.TeamFight.objects.bulk_create(team_fight_objects)
+        serializer = serializers.TeamFightSerializer(team_fight_objects, many=True)
+        return Response(serializer.data)
+
     def update(self, request, *args, **kwargs):
         print(request.data)
         from django.db.models import F

@@ -220,8 +220,8 @@ class EventSerializer(serializers.ModelSerializer):
 
 
 class EventDisplaySerializer(serializers.ModelSerializer):
-    spectator_mode = serializers.StringRelatedField()
-    film_format = serializers.StringRelatedField()
+    spectator_mode = SpectatorModeSerializer()
+    film_format = FilmFormatSerializer()
 
     class Meta:
         model = models.Event
@@ -229,19 +229,33 @@ class EventDisplaySerializer(serializers.ModelSerializer):
 
 
 class MatchSerializer(serializers.ModelSerializer):
-    event = EventSerializer()
-    teams = serializers.StringRelatedField(many=True)
+    event = serializers.StringRelatedField()
     name = serializers.SerializerMethodField()
+    teams = serializers.SerializerMethodField()
 
     start_time = serializers.DecimalField(10, 1)
 
     class Meta:
         model = models.Match
-        fields = ('id', 'event', 'teams', 'start_time', 'name')
+        fields = ('id', 'event', 'date', 'teams', 'start_time', 'name')
 
     def get_name(self, obj):
         teams = obj.teams.all()
         return '{} vs {}'.format(teams[0].name, teams[1].name)
+
+    def get_teams(self, obj):
+        teams = []
+        for t in obj.teams.all():
+            d = {'id': t.id, 'name': t.name, 'players': []}
+            for p in t.affiliation_set.all():
+                if p.start is not None:
+                    if obj.date < p.start:
+                        continue
+                    if p.end and obj.date > p.end:
+                        continue
+                d['players'].append(PlayerSerializer(p.player).data)
+            teams.append(d)
+        return teams
 
 
 class MatchDisplaySerializer(serializers.ModelSerializer):
@@ -819,7 +833,6 @@ class UltimateDisplaySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-
 class PointGainSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.PointGain
@@ -830,6 +843,21 @@ class PointFlipSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.PointFlip
         fields = '__all__'
+
+
+class TeamFightSerializer(serializers.ModelSerializer):
+    attacking_team = TeamParticipationSerializer()
+    defending_team = TeamParticipationSerializer()
+    attacking_composition = HeroSerializer(many=True)
+    defending_composition = HeroSerializer(many=True)
+    attacking_ults_used = PlayerSerializer(many=True)
+
+    class Meta:
+        model = models.TeamFight
+        fields = ('id', 'start_time', 'end_time',
+                  'attacking_team', 'defending_team', 'attacking_deaths',
+                  'defending_deaths', 'attacking_composition', 'defending_composition',
+                  'winning_side', 'attacking_ults_used')
 
 
 # AUTH
@@ -855,3 +883,4 @@ class UnauthorizedUserSerializer(serializers.ModelSerializer):
         model = User
         depth = 2
         fields = ('id', 'first_name', 'last_name', 'username', 'is_superuser')
+

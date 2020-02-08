@@ -41,10 +41,6 @@
         <v-flex>
             <v-layout column align-center>
                 <span>{{  currentTime |secondsToMoment | moment('mm:ss.S')}}</span>
-                <span>{{round_state}}</span>
-                <span v-if="isOvertime">Overtime</span>
-                <span v-if="isPaused">Paused</span>
-                <span v-if="isReplay">Replay</span>
 
             </v-layout>
         </v-flex>
@@ -126,10 +122,10 @@
             game: {
                 handler(newGame) {
 
-                this.left_players = this.match.event.teams.filter(x=>{return x.id === newGame.left_team.team})[0].players;
-                this.right_players = this.match.event.teams.filter(x=>{return x.id === newGame.right_team.team})[0].players;
-                this.left_team_name = this.match.event.teams.filter(x=>{return x.id === newGame.left_team.team})[0].name;
-                this.right_team_name = this.match.event.teams.filter(x=>{return x.id === newGame.right_team.team})[0].name;
+                this.left_players = this.match.teams.filter(x=>{return x.id === newGame.left_team.team})[0].players;
+                this.right_players = this.match.teams.filter(x=>{return x.id === newGame.right_team.team})[0].players;
+                this.left_team_name = this.match.teams.filter(x=>{return x.id === newGame.left_team.team})[0].name;
+                this.right_team_name = this.match.teams.filter(x=>{return x.id === newGame.right_team.team})[0].name;
 
                 },
                 deep: true

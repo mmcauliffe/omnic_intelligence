@@ -1470,3 +1470,60 @@ class HeroPick(models.Model):
         unique_together = (("round", "time_point", "player", "new_hero"),)
         ordering = ['round', 'time_point', 'player']
 
+
+class TeamFight(models.Model):
+    round = models.ForeignKey(Round, on_delete=models.CASCADE)
+    start_time = models.DecimalField(max_digits=6, decimal_places=1)
+    end_time = models.DecimalField(max_digits=6, decimal_places=1)
+    attacking_team = models.ForeignKey(TeamParticipation, related_name='attacking_team', on_delete=models.CASCADE)
+    defending_team = models.ForeignKey(TeamParticipation, related_name='defending_team', on_delete=models.CASCADE)
+
+    @property
+    def attacking_deaths(self):
+        q = KillFeedEvent.objects.filter(round=self.round,
+                                         time_point__gte=self.start_time,
+                                         time_point__lte=self.end_time,
+                                         dying_player__in=self.attacking_team.players.all(),
+                                         denied_ult__isnull=True,
+                                         dying_npc__isnull=True)
+        return q.count()
+
+    @property
+    def defending_deaths(self):
+        q = KillFeedEvent.objects.filter(round=self.round,
+                                         time_point__gte=self.start_time,
+                                         time_point__lte=self.end_time,
+                                         dying_player__in=self.defending_team.players.all(),
+                                         denied_ult__isnull=True,
+                                         dying_npc__isnull=True)
+        return q.count()
+
+    @property
+    def attacking_ults_used(self):
+        q = Ultimate.objects.filter(round=self.round,
+                                    used__gte=self.start_time,
+                                    used__lte=self.end_time,
+                                    player__in=self.attacking_team.players.all())
+        return [x.player for x in q.all()]
+
+    @property
+    def winning_side(self):
+        if self.attacking_deaths > self.defending_deaths:
+            return 'defenders'
+        elif self.attacking_deaths < self.defending_deaths:
+            return 'attackers'
+        return 'draw'
+
+    @property
+    def attacking_composition(self):
+        comp = []
+        for player in self.attacking_team.players.all():
+            comp.append(player.get_hero_at_timepoint(self.round, self.start_time))
+        return comp
+
+    @property
+    def defending_composition(self):
+        comp = []
+        for player in self.defending_team.players.all():
+            comp.append(player.get_hero_at_timepoint(self.round, self.start_time))
+        return comp
