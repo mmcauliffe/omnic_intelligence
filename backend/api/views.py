@@ -1252,11 +1252,20 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
                     replays = []
                     zooms = []
                     for p in r_data['pauses']:
-                        pauses.append(models.Pause(start_time=p['begin'], end_time=p['end'], round=r))
+                        pt = None
+                        if 'type' in p:
+                            pt = models.PauseType.objects.get(name=p['type'])
+                        pauses.append(models.Pause(start_time=p['begin'], end_time=p['end'], round=r, type=pt))
                     for p in r_data['replays']:
-                        replays.append(models.Replay(start_time=p['begin'], end_time=p['end'], round=r))
+                        pt = None
+                        if 'type' in p:
+                            pt = models.ReplayType.objects.get(name=p['type'])
+                        replays.append(models.Replay(start_time=p['begin'], end_time=p['end'], round=r, type=pt))
                     for p in r_data['smaller_windows']:
-                        smaller_windows.append(models.SmallerWindow(start_time=p['begin'], end_time=p['end'], round=r))
+                        pt = None
+                        if 'type' in p:
+                            pt = models.SmallerWindowType.objects.get(name=p['type'])
+                        smaller_windows.append(models.SmallerWindow(start_time=p['begin'], end_time=p['end'], round=r, type=pt))
                     for z in r_data['left_zooms']:
                         zooms.append(models.Zoom(start_time=z['begin'], end_time=z['end'], round=r, side='L'))
                     for z in r_data['right_zooms']:

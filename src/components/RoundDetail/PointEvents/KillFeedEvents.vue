@@ -129,6 +129,14 @@
                     <v-layout row v-else-if="props.item.killing_player && props.item.ability">
                         <span>{{props.item.ability.name}}</span>
                     </v-layout>
+                    <v-layout row v-else>
+                    <v-checkbox
+          prepend-icon="get_app"
+                            v-model="props.item.environmental"  dense
+                     v-on:change="updateEvent(props.item)">
+
+                    </v-checkbox>
+                    </v-layout>
                 </td>
                 <td>
                     <div class="caption text-no-wrap text-truncate" style="max-width: 67px;">
