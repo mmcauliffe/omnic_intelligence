@@ -99,11 +99,20 @@
       </template>
 
                     </v-select>
+                    <v-radio-group class="caption">
+
                     <v-checkbox
+          prepend-icon="cancel_schedule_send"
                             v-model="props.item.headshot" v-if="props.item.ability.headshot_capable" dense
+                     v-on:change="updateEvent(props.item)">
+                    </v-checkbox>
+                    <v-checkbox
+          prepend-icon="get_app"
+                            v-model="props.item.environmental"  dense
                      v-on:change="updateEvent(props.item)">
 
                     </v-checkbox>
+                    </v-radio-group>
 
                     </v-layout>
                     <v-layout row v-else-if="props.item.killing_player && props.item.ability && props.item.ability.type==='E'">
@@ -169,9 +178,10 @@
 
     import events from './BaseRoundEvents';
     import VSelect from "vuetify/es5/components/VSelect/VSelect";
+    import VRadioGroup from "vuetify/es5/components/VRadioGroup/VRadioGroup";
 
     export default {
-        components: {VSelect},
+        components: {VSelect, VRadioGroup},
         name: "kill_feed_events",
         extends: events,
         data() {
@@ -274,6 +284,7 @@
                 this.killablePlayers = this.allPlayers;
             },
             eventChangeHandler(newNewEvent){
+
                 this.generate_dyable_players();
                 if (newNewEvent.killing_player) {
                     console.log(newNewEvent);
@@ -297,6 +308,7 @@
 
                         newNewEvent.ability = undefined;
                         newNewEvent.headshot = false;
+                        newNewEvent.environmental = false;
                     }
                     console.log(this.availableAbilities)
 

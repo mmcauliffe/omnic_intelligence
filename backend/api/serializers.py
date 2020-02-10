@@ -730,7 +730,7 @@ class ZoomSerializer(serializers.ModelSerializer):
 class KillFeedEventSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.KillFeedEvent
-        fields = ('id', 'time_point', 'killing_player','ability', 'dying_player', )
+        fields = ('id', 'time_point', 'killing_player', 'ability', 'dying_player', )
 
 
 class KillFeedSerializer(serializers.ModelSerializer):
@@ -744,8 +744,8 @@ class KillFeedSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.KillFeedEvent
         fields = (
-            'time_point', 'killing_hero', 'killing_color', 'assists', 'ability', 'headshot', 'dying_entity',
-            'dying_color')
+            'time_point', 'killing_hero', 'killing_color', 'assists', 'ability', 'headshot', 'environmental',
+            'dying_entity', 'dying_color')
 
     def get_dying_entity(self, obj):
         return obj.killed_player.get_hero_at_timepoint(obj.round, obj.time_point).name
@@ -788,7 +788,7 @@ class KillFeedEventEditSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.KillFeedEvent
-        fields = ('id', 'time_point', 'killing_player', 'dying_player', 'ability', 'headshot',
+        fields = ('id', 'time_point', 'killing_player', 'dying_player', 'ability', 'headshot', 'environmental',
                   'assists', 'dying_npc', 'denied_ult',
                   )
 

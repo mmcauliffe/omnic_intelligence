@@ -407,8 +407,9 @@ class Player(models.Model):
 
     def get_hero_at_timepoint(self, round_object, time_point):
         time_point = round(time_point, 1)
-        s = self.heropick_set.filter(time_point__lte=time_point, round=round_object).order_by(
-            '-time_point').prefetch_related('new_hero', 'new_hero__abilities').first()
+
+        s = round_object.heropick_set.filter(time_point__lte=time_point, end_time_point__gte=time_point, player=self)\
+            .prefetch_related('new_hero', 'new_hero__abilities').first()
         if s is not None:
             return s.new_hero
         return ''
@@ -1185,45 +1186,78 @@ class Round(models.Model):
         return False
 
     def get_kill_feed_events(self):
+        import time
         potential_killfeed = []
+        beg = time.time()
         items = self.killfeedevent_set.prefetch_related('killing_player', 'dying_player', 'ability').all()
+        print('item query:', time.time() - beg)
+
+        beg = time.time()
+        side_mapping = {}
+        for p in self.game.left_team.players.all():
+            side_mapping[p.id] = 'left'
+        for p in self.game.right_team.players.all():
+            side_mapping[p.id] = 'right'
+        print('side query:', time.time() - beg)
+
+        beg = time.time()
+        hero_picks = self.heropick_set.prefetch_related('player', 'new_hero').all()
+        hero_pick_mapping = {}
+        for hp in hero_picks:
+            if hp.player.id not in hero_pick_mapping:
+                hero_pick_mapping[hp.player.id] = []
+            hero_pick_mapping[hp.player.id].append(hp)
+        print('hero pick query:', time.time() - beg)
+
+        def lookup_hero(player_id, time_point):
+            for hp in hero_pick_mapping[player_id]:
+                if hp.time_point <= time_point <= hp.end_time_point:
+                    return hp.new_hero
         for event in items:
+            event_beg = time.time()
+            print(event)
             killing_hero = 'N/A'
             killing_color = 'N/A'
             killing_color_hex = 'N/A'
             killing_player = 'N/A'
             killing_side = 'neither'
+            assisting_heroes = []
             if event.killing_player is not None:
-                killing_hero = event.killing_player.get_hero_at_timepoint(self, event.time_point).name
+                beg = time.time()
+                killing_hero = lookup_hero(event.killing_player_id, event.time_point).name
+                print('get_hero:', time.time()-beg)
                 killing_player = event.killing_player.name
-                if self.game.left_team.playerparticipation_set.filter(player=event.killing_player).count():
+                killing_side = side_mapping[event.killing_player.id]
+                if killing_side == 'left':
                     killing_team = self.game.left_team
-                    killing_side = 'left'
                 else:
                     killing_team = self.game.right_team
-                    killing_side = 'right'
 
                 killing_color = killing_team.get_color_display().lower()
                 killing_color_hex = killing_team.get_color_hex(self.game.match.event.spectator_mode)
-            if self.game.left_team.playerparticipation_set.filter(player=event.dying_player).count():
+                print('killing player time:', time.time() - beg)
+                beg = time.time()
+                assists = Assist.objects.filter(kill=event)
+                for a in assists:
+                    assisting_heroes.append(lookup_hero(a.player_id, event.time_point).name)
+                print('assist time:', time.time() - beg)
+
+
+            beg = time.time()
+            dying_side = side_mapping[event.dying_player.id]
+            if dying_side == 'left':
                 dying_team = self.game.left_team
-                dying_side = 'left'
             else:
                 dying_team = self.game.right_team
-                dying_side = 'right'
             dying_color = dying_team.get_color_display()
             dying_color_hex = dying_team.get_color_hex(self.game.match.event.spectator_mode)
-
-            assists = Assist.objects.filter(kill=event)
-            assisting_heroes = []
-            for a in assists:
-                assisting_heroes.append(a.player.get_hero_at_timepoint(self, event.time_point).name)
             if event.denied_ult is not None:
                 dying_hero = event.denied_ult.name
             elif event.dying_npc is not None:
                 dying_hero = event.dying_npc.name
             else:
-                dying_hero = event.dying_player.get_hero_at_timepoint(self, event.time_point).name
+                dying_hero = lookup_hero(event.dying_player_id, event.time_point).name
+            print('dying player time:', time.time() - beg)
             ability_name = 'N/A'
             if event.ability is not None:
                 ability_name = event.ability.name
@@ -1232,11 +1266,11 @@ class Round(models.Model):
                  'first_color': killing_color, 'first_color_hex': killing_color_hex,
                  'first_side': killing_side,
                  'assisting_heroes': assisting_heroes,
-                 'ability': ability_name, 'headshot': event.headshot,
+                 'ability': ability_name, 'headshot': event.headshot, 'environmental': event.environmental,
                  'second_hero': dying_hero, 'second_player': event.dying_player.name,
             'second_color': dying_color, 'second_color_hex': dying_color_hex, 'second_side': dying_side})
-
-        potential_killfeed = sorted(potential_killfeed, key=lambda x: x['time_point'])
+            print('overall event', time.time() - event_beg)
+        #potential_killfeed = sorted(potential_killfeed, key=lambda x: x['time_point'])
         return potential_killfeed
 
 
@@ -1368,6 +1402,7 @@ class KillFeedEvent(models.Model):
     assists = models.ManyToManyField(Player, through=Assist)
     ability = models.ForeignKey(Ability, on_delete=models.CASCADE, blank=True, null=True)
     headshot = models.BooleanField(default=False)
+    environmental = models.BooleanField(default=False)
     dying_player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='deaths')
     dying_npc = models.ForeignKey(NPC, on_delete=models.CASCADE, blank=True, null=True)
     denied_ult = models.ForeignKey(Ability, on_delete=models.CASCADE, related_name='denials', blank=True, null=True)

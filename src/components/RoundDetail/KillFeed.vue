@@ -21,6 +21,8 @@
                 </v-tooltip>
                 </td>
                 <td class="ability">
+                    <v-layout row justify-center>
+
                 <v-tooltip bottom v-if="item.ability === 'N/A'">
                     <img class="hero-icon" slot="activator"
                          :src="require('../../assets/Primary.png')"/>
@@ -34,7 +36,13 @@
 
                     <span>{{ item.ability}}</span>
                 </v-tooltip>
+                <v-tooltip bottom v-if="item.environmental">
+                    <img class="hero-icon" slot="activator"
+                         :src="require('../../assets/Environmental.png')"/>
+                    <span>environmental</span>
+                </v-tooltip>
 
+                    </v-layout>
                 </td>
                 <td class="second-hero" :style="{'background-color': item.second_color_hex}">
                 <v-tooltip bottom>
@@ -117,7 +125,7 @@
         width: 100px;
     }
     .ability {
-        width:40px;
+        width:80px;
     }
     .second-hero{
         width:100px;

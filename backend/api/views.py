@@ -210,6 +210,8 @@ class TrainInfoViewSet(viewsets.ViewSet):
                 labels.append(n.name.lower() + '_npc')
             for a in h.abilities.filter(deniable=True).all():
                 labels.append(a.name.lower() + '_npc')
+            if h.name.lower() == 'sigma':
+                labels.append('environmental')
         heroes = [x.name.lower() for x in heroes]
         while len(heroes) < max_heroes:
             heroes.append('')
@@ -1768,8 +1770,14 @@ class RoundViewSet(viewsets.ModelViewSet):
 
     @action(methods=['get'], detail=True)
     def kill_feed_items(self, request, pk=None):
+        import time
+        beg = time.time()
         r = self.get_object()
-        return Response(r.get_kill_feed_events())
+        print('ROUND GETTING', time.time()-beg)
+        beg = time.time()
+        kill_feed = r.get_kill_feed_events()
+        print('Overall kill feed', time.time()-beg)
+        return Response(kill_feed)
 
     @action(methods=['get'], detail=True)
     def player_states(self, request, pk=None):
@@ -2008,6 +2016,8 @@ class KillFeedEventViewSet(viewsets.ModelViewSet):
         if event_type in ['kill', 'revive', 'deny']:
             m.killing_player_id = request.data['killing_player']
             m.ability_id = request.data['ability']
+        if event_type in ['kill', 'death']:
+            m.environmental = request.data.get('environmental', False)
         if event_type == 'kill':
             if m.ability.headshot_capable:
                 m.headshot = request.data.get('headshot', False)
@@ -2033,6 +2043,8 @@ class KillFeedEventViewSet(viewsets.ModelViewSet):
             instance.assists.clear()
             instance.killing_player = None
             instance.ability = None
+
+        instance.environmental = request.data['environmental']
         if request.data['assists']:
             current_assists = instance.assists.all()
             for c in current_assists:
