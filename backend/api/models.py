@@ -684,7 +684,7 @@ class Game(models.Model):
                     hero_name = hp['hero'].name
                     pause_duration = 0
                     for pause in pauses:
-                        if pause.start_time >= hp.time_point and pause.end_time <= hp.end_time_point:
+                        if pause.start_time >= hp['begin'] and pause.end_time <= hp['end']:
                             pause_duration += pause.end_time - pause.start_time
                     if hero_name not in hero_stats[side][p.name]:
                         hero_stats[side][p.name][hero_name] = Counter()
