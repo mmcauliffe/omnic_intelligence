@@ -717,6 +717,9 @@ class Game(models.Model):
                                                                      denied_ult__isnull=False, time_point__gte=hp['begin'],
                                                                      time_point__lte=hp['end'])
                             hero_stats[side][p.name][hp['hero'].name]['ults_denied'] += len(ults_denied)
+
+                        environmental_kills = r.killfeedevent_set.filter(killing_player=p, environmental=True)
+                        hero_stats[side][p.name][hero_name]['environmental_kills'] += len(environmental_kills)
                         if hero_name.lower() == 'd.va':
                             mech_deaths = r.killfeedevent_set.filter(dying_player=p, ability__type=Ability.DAMAGING_TYPE,
                                                                      dying_npc__isnull=False, denied_ult__isnull=True,
