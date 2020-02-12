@@ -660,6 +660,7 @@ class Game(models.Model):
         left_team_players = self.left_team.players.all()
         right_team_players = self.right_team.players.all()
         for r in self.round_set.prefetch_related('ultimate_set', 'killfeedevent_set__ability').all():
+            pauses = r.pause_set.all()
             for i, p in enumerate(list(left_team_players) + list(right_team_players)):
                 if i < 6:
                     side = left_team_name
@@ -681,9 +682,13 @@ class Game(models.Model):
                 hero_picks = p.get_hero_states(r)
                 for hp in hero_picks:
                     hero_name = hp['hero'].name
+                    pause_duration = 0
+                    for pause in pauses:
+                        if pause.start_time >= hp.time_point and pause.end_time <= hp.end_time_point:
+                            pause_duration += pause.end_time - pause.start_time
                     if hero_name not in hero_stats[side][p.name]:
                         hero_stats[side][p.name][hero_name] = Counter()
-                    hero_stats[side][p.name][hero_name]['play_time'] += hp['end'] - hp['begin']
+                    hero_stats[side][p.name][hero_name]['play_time'] += hp['end'] - hp['begin'] - pause_duration
 
                     ultimates = r.ultimate_set.filter(player=p, gained__lte=hp['end'], gained__gte=hp['begin'])
                     hero_stats[side][p.name][hero_name]['ults_gained'] += len(ultimates)
@@ -748,6 +753,12 @@ class Game(models.Model):
                                                                   start_time__lte=hp['end'])
                             hero_stats[side][p.name][hero_name]['number_of_hacks'] += len(hacks)
                             hero_stats[side][p.name][hero_name]['hacked_duration'] += sum([x.end_time - x.start_time for x in hacks])
+                        elif hero_name.lower() == 'zenyatta':
+                            discords = r.statuseffect_set.filter(status__causing_hero=hp['hero'], player__in=enemy_team,
+                                                                  status__name='Discord', start_time__gte=hp['begin'],
+                                                                  start_time__lte=hp['end'])
+                            hero_stats[side][p.name][hero_name]['number_of_discords'] += len(discords)
+                            hero_stats[side][p.name][hero_name]['discord_duration'] += sum([x.end_time - x.start_time for x in discords])
                         elif hero_name.lower() == 'baptiste':
                             immortality_deaths = r.killfeedevent_set.filter(dying_player=p,
                                                                              ability__type=Ability.DAMAGING_TYPE,
