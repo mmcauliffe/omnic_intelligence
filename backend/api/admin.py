@@ -163,10 +163,10 @@ class MatchAdmin(admin.ModelAdmin):
     get_event_name.short_description = 'Event name'  # Renames column head
 
     def get_event_spectator_mode(self, obj):
-        return obj.event.get_spectator_mode_display()
+        return str(obj.event.spectator_mode)
 
-    get_event_spectator_mode.admin_order_field = 'event__spectator_mode'  # Allows column order sorting
-    get_event_spectator_mode.short_description = 'Event spectator'  # Renames column head
+    get_event_spectator_mode.admin_order_field = 'event__spectator_mode__name'  # Allows column order sorting
+    get_event_spectator_mode.short_description = 'Spectator'  # Renames column head
 
     def get_team_description(self, obj):
         return obj.team_description
