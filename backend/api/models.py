@@ -824,6 +824,9 @@ class TeamParticipation(models.Model):
     subpoints = models.CharField(max_length=128, null=True, blank=True)
     players = models.ManyToManyField(Player, through='PlayerParticipation')
 
+    def player_count(self):
+        return len(set(x.name for x in self.players.all()))
+
     def get_color_hex(self, spectator_mode):
         if spectator_mode.uses_team_colors:
             if self.color == 'W':

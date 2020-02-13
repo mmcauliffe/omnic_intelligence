@@ -882,7 +882,7 @@ class GameParsingErrorViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         rounds = []
 
-        rq = models.Round.objects.all()
+        rq = models.Round.objects.filter(exclude_for_training=False).prefetch_relate('game').all()
 
         annotation_status = self.request.query_params.get('annotation_status', None)
         if annotation_status is not None:
@@ -892,6 +892,10 @@ class GameParsingErrorViewSet(viewsets.ModelViewSet):
             rq = rq.filter(game__match__event__spectator_mode=spectator_mode)
         for r in rq:
             if not r.has_overlapping_heroes() and not r.has_many_empty_deaths():
+                continue
+            if r.game.left_team.player_count() == 6:
+                continue
+            if r.game.right_team.player_count() == 6:
                 continue
             rounds.append(r.id)
         queryset = models.Round.objects.filter(id__in=rounds).all()
