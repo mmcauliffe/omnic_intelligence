@@ -882,7 +882,7 @@ class GameParsingErrorViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         rounds = []
 
-        rq = models.Round.objects.filter(exclude_for_training=False).prefetch_relate('game').all()
+        rq = models.Round.objects.filter(exclude_for_training=False).prefetch_related('game').all()
 
         annotation_status = self.request.query_params.get('annotation_status', None)
         if annotation_status is not None:
