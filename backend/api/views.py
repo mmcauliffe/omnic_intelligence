@@ -1908,6 +1908,12 @@ class HeroPickViewSet(viewsets.ModelViewSet):
         instance.round.fix_switch_end_points()
         return Response(self.serializer_class(instance).data)
 
+    def destroy(self, request, *args, **kwargs):
+        r = self.get_object().round
+        resp = super(HeroPickViewSet, self).destroy(request, *args, **kwargs)
+        r.fix_switch_end_points()
+        return resp
+
 
 class PauseViewSet(viewsets.ModelViewSet):
     model = models.Pause
