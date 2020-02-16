@@ -1438,6 +1438,7 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                     dying_player = instance.get_player_of_hero(npc.spawning_hero.name, time_point, side)
                     kill_feed_events.append(
                         models.KillFeedEvent(round=instance, time_point=time_point, dying_player=dying_player,
+                                             environmental=event.get('environmental', False),
                                              dying_npc=npc))
                 except models.NPC.DoesNotExist:
                     # Hero death
@@ -1446,7 +1447,9 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                         print('ERROR', instance.id, time_point, 'death', event['second_hero'], side)
                         continue
                     kill_feed_events.append(
-                        models.KillFeedEvent(round=instance, time_point=time_point, dying_player=dying_player))
+                        models.KillFeedEvent(round=instance, time_point=time_point,
+                                             environmental=event.get('environmental', False),
+                                             dying_player=dying_player))
             else:
                 # kills
                 killing_side = event['first_side']
@@ -1476,11 +1479,13 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                                 models.KillFeedEvent(round=instance, time_point=time_point,
                                                      killing_player=killing_player,
                                                      dying_npc=npc, dying_player=dying_player, ability=ability,
+                                                     environmental=event.get('environmental', False),
                                                      headshot=headshot))
                         else:
                             m = models.KillFeedEvent.objects.create(round=instance, time_point=time_point,
                                                                     killing_player=killing_player,
                                                                     dying_npc=npc, dying_player=dying_player,
+                                                                    environmental=event.get('environmental', False),
                                                                     ability=ability, headshot=headshot)
                             for i, a in enumerate(assists):
                                 assisting_player = instance.get_player_of_hero(a, time_point, killing_side)
@@ -1511,12 +1516,14 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                                 kill_feed_events.append(models.KillFeedEvent(round=instance, time_point=time_point,
                                                                              killing_player=killing_player,
                                                                              dying_player=dying_player, ability=ability,
+                                                                             environmental=event.get('environmental', False),
                                                                              headshot=headshot))
                             else:
                                 try:
                                     m = models.KillFeedEvent.objects.create(round=instance, time_point=time_point,
                                                                             killing_player=killing_player,
                                                                             dying_player=dying_player, ability=ability,
+                                                                            environmental=event.get('environmental', False),
                                                                             headshot=headshot)
                                     print(m)
                                     for i,a in enumerate(assists):
