@@ -1009,6 +1009,14 @@ class TrainRoundViewSet(viewsets.ModelViewSet):
                                            id__gte=9359).exclude(exclude_for_training=True).order_by('pk').all()
     serializer_class = serializers.RoundDisplaySerializer
 
+    def get_queryset(self):
+        queryset = models.Round.objects.filter(annotation_status__in=['M', 'O'],
+                                           id__gte=9359).exclude(exclude_for_training=True).order_by('pk').all()
+        spectator_mode = self.request.query_params.get('spectator_mode', None)
+        if spectator_mode:
+            queryset = queryset.filter(game__match__event__spectator_mode__code=spectator_mode)
+        return queryset
+
 
 class ExampleRoundViewSet(viewsets.ModelViewSet):
     model = models.Round
