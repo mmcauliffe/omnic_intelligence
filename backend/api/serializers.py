@@ -78,6 +78,7 @@ class AbilitySerializer(serializers.ModelSerializer):
         model = models.Ability
         fields = '__all__'
 
+
 class StatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Status
@@ -118,6 +119,7 @@ class SubmapSerializer(serializers.ModelSerializer):
 
 class NPCSerializer(serializers.ModelSerializer):
     spawning_hero = HeroSerializer()
+
     class Meta:
         model = models.NPC
         fields = '__all__'
@@ -150,7 +152,7 @@ class PlayerStatusSerializer(serializers.ModelSerializer):
 
     def get_heroes(self, obj):
         d = obj.get_hero_play_time()
-        return [{'name': x[0], 'play_time':x[1]} for x in sorted(d.items(), key=lambda x: -x[1])][:5]
+        return [{'name': x[0], 'play_time': x[1]} for x in sorted(d.items(), key=lambda x: -x[1])][:5]
 
     def get_position(self, obj):
         return obj.get_position()
@@ -291,7 +293,7 @@ class MatchEditSerializer(serializers.ModelSerializer):
 
     def get_teams(self, obj):
         teams = obj.teams.all()
-        return {i:x.id for i,x in enumerate(teams)}
+        return {i: x.id for i, x in enumerate(teams)}
 
 
 class GameDisplaySerializer(serializers.ModelSerializer):
@@ -418,6 +420,7 @@ class RoundSerializer(serializers.ModelSerializer):
             'begin', 'end', 'stream_vod', 'annotation_status', 'exclude_for_training',
             'sequences')
 
+
 class RoundAnalysisSerializer(serializers.ModelSerializer):
     film_format = serializers.SerializerMethodField()
     spectator_mode = serializers.SerializerMethodField()
@@ -437,6 +440,7 @@ class RoundAnalysisSerializer(serializers.ModelSerializer):
 
     def get_map(self, obj):
         return obj.game.map.name
+
 
 class StreamVodSerializer(serializers.ModelSerializer):
     rounds = RoundSerializer(many=True)
@@ -495,14 +499,15 @@ class AnnotateVodSerializer(serializers.ModelSerializer):
                        'CHE': 'Chengdu Hunters', 'GUA': 'Guangzhou Charge', 'HAN': 'Hangzhou Spark'}
         patterns = []
         if obj.channel.name.lower() in ['overwatchcontenders', 'overwatchcontendersbr']:
-            patterns.append(r'''(?P<team_one>[-\w ']+) (vs|V) (?P<team_two>[-\w ']+) \| (?P<desc>[\w ]+) Game (?P<game_num>\d) \| ((?P<sub>[\w :]+) \| )?(?P<main>[\w ]+)''')
+            patterns.append(
+                r'''(?P<team_one>[-\w ']+) (vs|V) (?P<team_two>[-\w ']+) \| (?P<desc>[\w ]+) Game (?P<game_num>\d) \| ((?P<sub>[\w :]+) \| )?(?P<main>[\w ]+)''')
         elif obj.channel.name.lower() == 'overwatch contenders':
             patterns.append(r'''(?P<team_one>[-\w .']+) (vs|V) (?P<team_two>[-\w .']+) (\(Part)?.*''')
         elif obj.channel.name.lower() == 'overwatchleague':
             patterns.append(r'Game [#]?(\d+) (?P<team_one>\w+) @ (?P<team_two>\w+) \| ([\w ]+)')
         elif obj.channel.name.lower() == 'owlettournament':
             patterns.append(r'''.* - (?P<team_one>[-\w ']+) (vs[.]?|V) (?P<team_two>[-\w ']+)''')
-        elif obj.channel.name.lower() =='owlet tournament':
+        elif obj.channel.name.lower() == 'owlet tournament':
             patterns.append(r'''.*: (?P<team_one>[-\w ']+) (vs[.]?|V) (?P<team_two>[-\w ']+)''')
         elif obj.channel.name.lower() == 'rivalcade':
             patterns.append(r'''.*, (?P<team_one>[-\w '?]+) (vs[.]?|VS) (?P<team_two>[-\w '?]+)''')
@@ -599,13 +604,14 @@ class RoundDisplaySerializer(serializers.ModelSerializer):
 
 
 class RoundEditSerializer(serializers.ModelSerializer):
-    #game = GameDisplaySerializer()
+    # game = GameDisplaySerializer()
     stream_vod = StreamVodSerializer()
 
     class Meta:
         model = models.Round
         fields = (
-            'id', 'round_number', 'game', 'attacking_side', 'begin', 'end', 'stream_vod', 'annotation_status', 'exclude_for_training',
+            'id', 'round_number', 'game', 'attacking_side', 'begin', 'end', 'stream_vod', 'annotation_status',
+            'exclude_for_training',
             'sequences')
 
 
@@ -648,6 +654,7 @@ class SimpleRoundStatusSerializer(serializers.ModelSerializer):
     def get_duration(self, obj):
         return obj.end - obj.begin
 
+
 class RoundStatusSerializer(serializers.ModelSerializer):
     stream_vod = EventVodDisplaySerializer()
     annotation_status = serializers.SerializerMethodField()
@@ -665,7 +672,7 @@ class RoundStatusSerializer(serializers.ModelSerializer):
 
     def get_heroes_used(self, obj):
         d = obj.get_hero_play_time()
-        return [{'name': x[0], 'play_time':x[1]} for x in sorted(d.items(), key=lambda x: -x[1])]
+        return [{'name': x[0], 'play_time': x[1]} for x in sorted(d.items(), key=lambda x: -x[1])]
 
     def get_annotation_status(self, obj):
         return obj.get_annotation_status_display()
@@ -730,7 +737,7 @@ class ZoomSerializer(serializers.ModelSerializer):
 class KillFeedEventSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.KillFeedEvent
-        fields = ('id', 'time_point', 'killing_player', 'ability', 'dying_player', )
+        fields = ('id', 'time_point', 'killing_player', 'ability', 'dying_player',)
 
 
 class KillFeedSerializer(serializers.ModelSerializer):
@@ -819,6 +826,7 @@ class StatusEffectEditSerializer(serializers.ModelSerializer):
         model = models.StatusEffect
         fields = ('id', 'start_time', 'end_time', 'round', 'status', 'player')
 
+
 class UltimateSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Ultimate
@@ -846,18 +854,62 @@ class PointFlipSerializer(serializers.ModelSerializer):
 
 
 class TeamFightSerializer(serializers.ModelSerializer):
-    attacking_team = TeamParticipationSerializer()
-    defending_team = TeamParticipationSerializer()
-    attacking_composition = HeroSerializer(many=True)
-    defending_composition = HeroSerializer(many=True)
-    attacking_ults_used = PlayerSerializer(many=True)
+    left_composition = HeroSerializer(many=True)
+    right_composition = HeroSerializer(many=True)
+    left_ults_used = PlayerSerializer(many=True)
+    right_ults_used = PlayerSerializer(many=True)
 
     class Meta:
         model = models.TeamFight
-        fields = ('id', 'start_time', 'end_time',
-                  'attacking_team', 'defending_team', 'attacking_deaths',
-                  'defending_deaths', 'attacking_composition', 'defending_composition',
-                  'winning_side', 'attacking_ults_used')
+        fields = ('id', 'start_time', 'end_time', 'winning_side',
+                  'left_deaths', 'right_deaths',
+                  'left_ults_used', 'right_ults_used',
+                  'left_composition', 'right_composition')
+
+
+class TeamFightDisplaySerializer(serializers.ModelSerializer):
+    left_composition = serializers.StringRelatedField(many=True)
+    right_composition = serializers.StringRelatedField(many=True)
+    left_pre_fight_ults = serializers.SerializerMethodField()
+    right_pre_fight_ults = serializers.SerializerMethodField()
+    left_ults_used = serializers.SerializerMethodField()
+    right_ults_used = serializers.SerializerMethodField()
+    left_deaths = serializers.SerializerMethodField()
+    right_deaths = serializers.SerializerMethodField()
+    kill_feed_events = KillFeedEventDisplaySerializer(many=True)
+
+    class Meta:
+        model = models.TeamFight
+        fields = ('id', 'start_time', 'end_time', 'winning_side',
+                  'left_deaths', 'right_deaths',
+                  'left_pre_fight_ults', 'right_pre_fight_ults',
+                  'left_ults_used', 'right_ults_used',
+                  'left_composition', 'right_composition',
+                  'kill_feed_events',)
+
+    def get_left_deaths(self, obj):
+        deaths = obj.left_deaths
+        return [x.dying_player.get_hero_at_timepoint(obj.round, obj.start_time).name for x in deaths]
+
+    def get_right_deaths(self, obj):
+        deaths = obj.right_deaths
+        return [x.dying_player.get_hero_at_timepoint(obj.round, obj.start_time).name for x in deaths]
+
+    def get_left_ults_used(self, obj):
+        ults = obj.left_ults_used
+        return [x.get_hero_at_timepoint(obj.round, obj.start_time).name for x in ults]
+
+    def get_left_pre_fight_ults(self, obj):
+        ults = obj.left_pre_fight_ults
+        return [x.get_hero_at_timepoint(obj.round, obj.start_time).name for x in ults]
+
+    def get_right_pre_fight_ults(self, obj):
+        ults = obj.right_pre_fight_ults
+        return [x.get_hero_at_timepoint(obj.round, obj.start_time).name for x in ults]
+
+    def get_right_ults_used(self, obj):
+        ults = obj.right_ults_used
+        return [x.get_hero_at_timepoint(obj.round, obj.start_time).name for x in ults]
 
 
 # AUTH
@@ -883,4 +935,3 @@ class UnauthorizedUserSerializer(serializers.ModelSerializer):
         model = User
         depth = 2
         fields = ('id', 'first_name', 'last_name', 'username', 'is_superuser')
-

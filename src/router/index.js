@@ -21,6 +21,8 @@ import TeamDetailPage from '../views/reporter/TeamDetailPage'
 import TeamListPage from '../views/reporter/TeamListPage'
 import PlayerListPage from '../views/reporter/PlayerListPage'
 import PlayerDetailPage from '../views/reporter/PlayerDetailPage'
+import MatchReportPage from '../views/reporter/MatchReportPage'
+import GameReportPage from '../views/reporter/GameReportPage'
 import BroadcastEventSearchPage from "../views/annotator/BroadcastEventSearchPage";
 
 
@@ -55,6 +57,16 @@ export const router = new Router({
                     path: 'player/:id',
                     component: PlayerDetailPage,
                     name: 'player-detail'
+                },
+                {
+                    path: 'match/:id',
+                    component: MatchReportPage,
+                    name: 'match-report'
+                },
+                {
+                    path: 'game/:id',
+                    component: GameReportPage,
+                    name: 'game-report'
                 },
                 ]
         },

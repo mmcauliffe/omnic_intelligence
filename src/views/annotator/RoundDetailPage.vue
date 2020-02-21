@@ -39,11 +39,16 @@
                             </v-card-title>
                             <v-card-text>
                                 <div v-if="round.item">
+                                    <v-btn :to="{ name: 'vod-detail', params:{id: round.item.stream_vod.id}}">
+                                        VOD
+                                    </v-btn>
+                                    <v-btn :to="{ name: 'game-report', params:{id: round.item.game.id}}">
+                                        Game report
+                                    </v-btn>
+                                    <v-btn :to="{ name: 'match-report', params:{id: round.item.game.match.id}}">
+                                        Match report
+                                    </v-btn>
 
-                <router-link :to="{name: 'vod-detail', params:{id: round.item.stream_vod.id}}">
-                    {{round.item.stream_vod.title }}
-
-                </router-link>
                                     <p></p>
                                     <div>
                                         <label>Begin
