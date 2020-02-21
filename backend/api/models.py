@@ -1329,10 +1329,12 @@ class Round(models.Model):
         print('hero pick query:', time.time() - beg)
 
         def lookup_hero(player_id, time_point):
+            hp = None
             for hp in hero_pick_mapping[player_id]:
-                print(hp)
                 if hp.time_point <= time_point <= hp.end_time_point:
                     return hp.new_hero
+            if hp:
+                return hp.new_hero
         for event in items:
             event_beg = time.time()
             print(event)
