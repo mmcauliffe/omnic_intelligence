@@ -1411,6 +1411,7 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
 
         if not request.data.get('ignore_switches', False):
             models.HeroPick.objects.bulk_create(hero_picks)
+        instance.fix_switch_end_points()
         models.Ultimate.objects.bulk_create(ultimates)
         models.StatusEffect.objects.bulk_create(status_effects)
 
@@ -1551,7 +1552,6 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
         models.Assist.objects.bulk_create(assist_objects)
         instance.annotation_status = 'O'
         instance.save()
-        instance.fix_switch_end_points()
         return Response({'success': True})
 
 
