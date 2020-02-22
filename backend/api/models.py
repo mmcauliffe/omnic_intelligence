@@ -1309,7 +1309,7 @@ class Round(models.Model):
         potential_killfeed = []
         beg = time.time()
         items = self.killfeedevent_set.prefetch_related('killing_player', 'dying_player', 'ability').all()
-        print('item query:', time.time() - beg)
+        #print('item query:', time.time() - beg)
 
         beg = time.time()
         side_mapping = {}
@@ -1317,7 +1317,7 @@ class Round(models.Model):
             side_mapping[p.id] = 'left'
         for p in self.game.right_team.players.all():
             side_mapping[p.id] = 'right'
-        print('side query:', time.time() - beg)
+        #print('side query:', time.time() - beg)
 
         beg = time.time()
         hero_picks = self.heropick_set.prefetch_related('player', 'new_hero').all()
@@ -1326,7 +1326,7 @@ class Round(models.Model):
             if hp.player.id not in hero_pick_mapping:
                 hero_pick_mapping[hp.player.id] = []
             hero_pick_mapping[hp.player.id].append(hp)
-        print('hero pick query:', time.time() - beg)
+        #print('hero pick query:', time.time() - beg)
 
         def lookup_hero(player_id, time_point):
             hp = None
@@ -1337,7 +1337,7 @@ class Round(models.Model):
                 return hp.new_hero
         for event in items:
             event_beg = time.time()
-            print(event)
+            #print(event)
             killing_hero = 'N/A'
             killing_color = 'N/A'
             killing_color_hex = 'N/A'
@@ -1347,7 +1347,7 @@ class Round(models.Model):
             if event.killing_player is not None:
                 beg = time.time()
                 killing_hero = lookup_hero(event.killing_player_id, event.time_point).name
-                print('get_hero:', time.time()-beg)
+                #print('get_hero:', time.time()-beg)
                 killing_player = event.killing_player.name
                 killing_side = side_mapping[event.killing_player.id]
                 if killing_side == 'left':
@@ -1357,12 +1357,12 @@ class Round(models.Model):
 
                 killing_color = killing_team.get_color_display().lower()
                 killing_color_hex = killing_team.get_color_hex(self.game.match.event.spectator_mode)
-                print('killing player time:', time.time() - beg)
+                #print('killing player time:', time.time() - beg)
                 beg = time.time()
                 assists = Assist.objects.filter(kill=event)
                 for a in assists:
                     assisting_heroes.append(lookup_hero(a.player_id, event.time_point).name)
-                print('assist time:', time.time() - beg)
+                #print('assist time:', time.time() - beg)
 
 
             beg = time.time()
@@ -1379,7 +1379,7 @@ class Round(models.Model):
                 dying_hero = event.dying_npc.name
             else:
                 dying_hero = lookup_hero(event.dying_player_id, event.time_point).name
-            print('dying player time:', time.time() - beg)
+            #print('dying player time:', time.time() - beg)
             ability_name = 'N/A'
             if event.ability is not None:
                 ability_name = event.ability.name
@@ -1391,7 +1391,7 @@ class Round(models.Model):
                  'ability': ability_name, 'headshot': event.headshot, 'environmental': event.environmental,
                  'second_hero': dying_hero, 'second_player': event.dying_player.name,
             'second_color': dying_color, 'second_color_hex': dying_color_hex, 'second_side': dying_side})
-            print('overall event', time.time() - event_beg)
+            #print('overall event', time.time() - event_beg)
         #potential_killfeed = sorted(potential_killfeed, key=lambda x: x['time_point'])
         return potential_killfeed
 

@@ -339,10 +339,18 @@ class GameSerializer(serializers.ModelSerializer):
     left_team = TeamParticipationSerializer()
     right_team = TeamParticipationSerializer()
     name = serializers.SerializerMethodField()
+    stream_vod = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Game
-        fields = ('id', 'name', 'game_number', 'match', 'left_team', 'right_team', 'map')
+        fields = ('id', 'name', 'game_number', 'match', 'left_team', 'right_team', 'map',
+                  'stream_vod')
+
+    def get_stream_vod(self, obj):
+        r = obj.round_set.prefetch_related('stream_vod').first()
+        if r is not None:
+            return StreamVodSerializer(r.stream_vod).data
+        return None
 
     def get_name(self, obj):
         teams = obj.match.teams.all()

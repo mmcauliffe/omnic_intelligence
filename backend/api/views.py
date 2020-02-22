@@ -1551,6 +1551,7 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
         models.Assist.objects.bulk_create(assist_objects)
         instance.annotation_status = 'O'
         instance.save()
+        instance.fix_switch_end_points()
         return Response({'success': True})
 
 
