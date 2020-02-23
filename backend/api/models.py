@@ -1762,7 +1762,14 @@ class TeamFight(models.Model):
                                          dying_npc__isnull=True)
         kill = q.first()
         if kill is not None:
-            return kill.dying_player
+            return kill.killing_player
+        return None
+
+    @property
+    def first_ult(self):
+        q = self.ultimates.first()
+        if q is not None:
+            return q.player
         return None
 
     @property

@@ -876,6 +876,9 @@ class TeamFightSerializer(serializers.ModelSerializer):
 
 
 class TeamFightDisplaySerializer(serializers.ModelSerializer):
+    first_kill = serializers.SerializerMethodField()
+    first_death = serializers.SerializerMethodField()
+    first_ult = serializers.SerializerMethodField()
     left_composition = serializers.StringRelatedField(many=True)
     right_composition = serializers.StringRelatedField(many=True)
     left_pre_fight_ults = serializers.SerializerMethodField()
@@ -889,11 +892,31 @@ class TeamFightDisplaySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.TeamFight
         fields = ('id', 'start_time', 'end_time', 'winning_side',
+                  'first_kill', 'first_death',
+                  'first_ult',
                   'left_deaths', 'right_deaths',
                   'left_pre_fight_ults', 'right_pre_fight_ults',
                   'left_ults_used', 'right_ults_used',
                   'left_composition', 'right_composition',
                   'kill_feed_events',)
+
+    def get_first_kill(self, obj):
+        kill = obj.first_kill
+        if kill is None:
+            return None
+        return kill.get_hero_at_timepoint(obj.round, obj.start_time).name
+
+    def get_first_death(self, obj):
+        d = obj.first_death
+        if d is None:
+            return None
+        return d.get_hero_at_timepoint(obj.round, obj.start_time).name
+
+    def get_first_ult(self, obj):
+        d = obj.first_ult
+        if d is None:
+            return None
+        return d.get_hero_at_timepoint(obj.round, obj.start_time).name
 
     def get_left_deaths(self, obj):
         deaths = obj.left_deaths
