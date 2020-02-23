@@ -679,14 +679,15 @@ class Game(models.Model):
                 else:
                     team_fight_stats[right_team_name]['ultimates'] += 1
             for tf in team_fights:
-                team_fight_count += 1
                 winner = tf.winning_side
+                first_death = tf.first_death
+                if first_death is None:
+                    continue
+                team_fight_count += 1
                 if winner == 'left':
                     team_fight_stats[left_team_name]['wins'] += 1
                 elif winner == 'right':
                     team_fight_stats[right_team_name]['wins'] += 1
-
-                first_death = tf.first_death
                 if first_death in left_team_players:
                     team_fight_stats[left_team_name]['first_deaths'] += 1
                 else:
@@ -1750,13 +1751,19 @@ class TeamFight(models.Model):
         q = self.kill_feed_events.filter(denied_ult__isnull=True,
                                          dying_npc__isnull=True)
         print(self.start_time, self.end_time)
-        return q.first().dying_player
+        death = q.first()
+        if death is not None:
+            return death.dying_player
+        return None
 
     @property
     def first_kill(self):
         q = self.kill_feed_events.filter(denied_ult__isnull=True,
                                          dying_npc__isnull=True)
-        return q.first().killing_player
+        kill = q.first()
+        if kill is not None:
+            return kill.dying_player
+        return None
 
     @property
     def winning_side(self):

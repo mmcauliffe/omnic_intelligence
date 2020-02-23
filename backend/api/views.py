@@ -896,13 +896,9 @@ class GameParsingErrorViewSet(viewsets.ModelViewSet):
         if spectator_mode is not None:
             rq = rq.filter(game__match__event__spectator_mode=spectator_mode)
         for r in rq:
-            if not r.has_overlapping_heroes() and not r.has_many_empty_deaths():
-                continue
-            if r.game.left_team.player_count() == 6:
-                continue
-            if r.game.right_team.player_count() == 6:
-                continue
-            rounds.append(r.id)
+            if r.has_overlapping_heroes() or r.has_many_empty_deaths() or \
+                    r.game.left_team.player_count() < 6 or r.game.right_team.player_count() < 6:
+                rounds.append(r.id)
         queryset = models.Round.objects.filter(id__in=rounds).all()
         return queryset
 
