@@ -636,7 +636,6 @@ class MatchViewSet(viewsets.ModelViewSet):
         instance.vod = request.data['vod']
         instance.film_format = request.data['film_format']
         diff = Decimal(round(float(instance.start_time) - request.data['start_time'], 1))
-        print(diff)
         if abs(diff) > 1:
             rounds = models.Round.objects.filter(game__match=instance).all()
             for r in rounds:
@@ -758,7 +757,6 @@ class GameViewSet(viewsets.ModelViewSet):
         game.save()
         for old_p, new_p in player_mapping.items():
             models.HeroPick.objects.filter(round__game=game, player_id=old_p).update(player_id=new_p)
-            print(models.HeroPick.objects.filter(round__game=game, player_id=new_p))
             models.Ultimate.objects.filter(round__game=game, player_id=old_p).update(player_id=new_p)
             models.StatusEffect.objects.filter(round__game=game, player_id=old_p).update(player_id=new_p)
             models.KillFeedEvent.objects.filter(round__game=game, killing_player_id=old_p).update(killing_player_id=new_p)
@@ -849,7 +847,6 @@ class BroadcastEventViewSet(viewsets.ModelViewSet):
             if type_id is None:
                 rq = rq.filter(pause__start_time__gte=0, pause__type__isnull=True)
             else:
-                print(models.PauseType.objects.filter(id=type_id))
                 rq = rq.filter(pause__type_id=type_id)
         elif event_type == 'replay':
             if type_id is None:
@@ -926,8 +923,6 @@ class PossibleDenySearchViewSet(viewsets.ModelViewSet):
         else:
             heroes = models.Hero.objects.filter(abilities__deniable=True).distinct()
         deniers = models.Hero.objects.filter(abilities__type=models.Ability.DENYING_TYPE).distinct()
-        print(heroes)
-        print(deniers)
         ultimates = models.Ultimate.objects.prefetch_related('round', 'player').filter(
             ended__lte=F('used') + Decimal(max_ult_duration),
             ended__gte=F('used') + Decimal(min_ult_duration))
@@ -1341,6 +1336,7 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
 
         sequences = instance.sequences
 
+        instance.teamfight_set.all().delete()
         instance.pointgain_set.all().delete()
         instance.pointflip_set.all().delete()
         instance.overtime_set.all().delete()
@@ -1416,7 +1412,6 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
         kill_feed_events = []
         assist_objects = []
         for event in request.data['kill_feed']:
-            print(event)
             time_point = round(event['time_point'], 1)
             for seq in sequences:
                 if seq[0] - Decimal('0.5') <= time_point <= seq[1] + Decimal('0.5'):
@@ -1535,10 +1530,8 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                                                                             dying_player=dying_player, ability=ability,
                                                                             environmental=event.get('environmental', False),
                                                                             headshot=headshot)
-                                    print(m)
                                     for i,a in enumerate(assists):
                                         assisting_player = instance.get_player_of_hero(a, time_point, killing_side)
-                                        print('assisting_player', assisting_player)
                                         if assisting_player is None:
                                             continue
                                         assist_objects.append(models.Assist(player=assisting_player, kill=m, order=i))

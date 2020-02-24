@@ -655,61 +655,88 @@ class Game(models.Model):
         left_team_players = self.left_team.players.all()
         right_team_name = self.right_team.team.name
         right_team_players = self.right_team.players.all()
-        stats = ['kills', 'deaths', 'ultimates', 'wins', 'first_kills', 'first_deaths']
-        team_fight_stats = {left_team_name: {x: 0 for x in stats}, right_team_name: {x: 0 for x in stats}}
-        team_fight_count = 0
+        stats = ['total_team_fights', 'kills', 'deaths', 'ultimates', 'wins', 'first_kills', 'first_deaths',
+                 'first_kill_wins', 'first_death_wins']
+        team_fight_stats = {left_team_name: {}, right_team_name: {}}
         for r in self.round_set.prefetch_related('ultimate_set', 'killfeedevent_set__ability').all():
             team_fights = r.teamfight_set.all()
             if not team_fights:
                 r.generate_team_fights()
-            for kfe in r.killfeedevent_set.all():
-                if kfe.is_kill:
-                    if kfe.is_left_kill:
-                        team_fight_stats[left_team_name]['kills'] += 1
-                    else:
-                        team_fight_stats[right_team_name]['kills'] += 1
-                if kfe.is_kill or kfe.is_death:
-                    if kfe.is_left_death:
-                        team_fight_stats[left_team_name]['deaths'] += 1
-                    else:
-                        team_fight_stats[right_team_name]['deaths'] += 1
-            for u in r.ultimate_set.filter(used__isnull=False).all():
-                if u.is_left_player:
-                    team_fight_stats[left_team_name]['ultimates'] += 1
-                else:
-                    team_fight_stats[right_team_name]['ultimates'] += 1
             for tf in team_fights:
                 winner = tf.winning_side
                 first_death = tf.first_death
                 if first_death is None:
                     continue
-                team_fight_count += 1
+                left_comp = tuple(x.name for x in tf.left_composition)
+                right_comp = tuple(x.name for x in tf.right_composition)
+                if left_comp not in team_fight_stats[left_team_name]:
+                    team_fight_stats[left_team_name][left_comp] = {x: 0 for x in stats}
+                if right_comp not in team_fight_stats[right_team_name]:
+                    team_fight_stats[right_team_name][right_comp] = {x: 0 for x in stats}
+                for kfe in tf.kill_feed_events.all():
+                    if kfe.is_kill:
+                        if kfe.is_left_kill:
+                            team_fight_stats[left_team_name][left_comp]['kills'] += 1
+                        else:
+                            team_fight_stats[right_team_name][right_comp]['kills'] += 1
+                    if kfe.is_kill or kfe.is_death:
+                        if kfe.is_left_death:
+                            team_fight_stats[left_team_name][left_comp]['deaths'] += 1
+                        else:
+                            team_fight_stats[right_team_name][right_comp]['deaths'] += 1
+                for u in tf.ultimates.filter(used__isnull=False).all():
+                    if u.is_left_player:
+                        team_fight_stats[left_team_name][left_comp]['ultimates'] += 1
+                    else:
+                        team_fight_stats[right_team_name][right_comp]['ultimates'] += 1
+                team_fight_stats[left_team_name][left_comp]['total_team_fights'] += 1
+                team_fight_stats[right_team_name][right_comp]['total_team_fights'] += 1
                 if winner == 'left':
-                    team_fight_stats[left_team_name]['wins'] += 1
+                    team_fight_stats[left_team_name][left_comp]['wins'] += 1
                 elif winner == 'right':
-                    team_fight_stats[right_team_name]['wins'] += 1
+                    team_fight_stats[right_team_name][right_comp]['wins'] += 1
                 if first_death in left_team_players:
-                    team_fight_stats[left_team_name]['first_deaths'] += 1
+                    team_fight_stats[left_team_name][left_comp]['first_deaths'] += 1
+                    if winner == 'left':
+                        team_fight_stats[left_team_name][left_comp]['first_death_wins'] += 1
                 else:
-                    team_fight_stats[right_team_name]['first_deaths'] += 1
+                    team_fight_stats[right_team_name][right_comp]['first_deaths'] += 1
+                    if winner == 'right':
+                        team_fight_stats[right_team_name][right_comp]['first_death_wins'] += 1
 
                 first_kill = tf.first_kill
                 if first_kill in left_team_players:
-                    team_fight_stats[left_team_name]['first_kills'] += 1
+                    team_fight_stats[left_team_name][left_comp]['first_kills'] += 1
+                    if winner == 'left':
+                        team_fight_stats[left_team_name][left_comp]['first_kill_wins'] += 1
                 else:
-                    team_fight_stats[right_team_name]['first_kills'] += 1
+                    team_fight_stats[right_team_name][right_comp]['first_kills'] += 1
+                    if winner == 'right':
+                        team_fight_stats[right_team_name][right_comp]['first_kill_wins'] += 1
 
-                print(winner, first_death, first_kill)
+
         # Normalization
-        team_fight_stats['team_fight_count'] = team_fight_count
+        output_stats = {}
         for tn in [left_team_name, right_team_name]:
-            team_fight_stats[tn]['average_kills'] = team_fight_stats[tn]['kills'] / team_fight_count
-            team_fight_stats[tn]['average_deaths'] = team_fight_stats[tn]['deaths'] / team_fight_count
-            team_fight_stats[tn]['average_ultimates_used'] = team_fight_stats[tn]['ultimates'] / team_fight_count
-        return team_fight_stats
+            output_stats[tn] = []
+            for k in sorted(team_fight_stats[tn].keys(), key=lambda x: team_fight_stats[tn][x]['total_team_fights'], reverse=True):
+                team_fight_count = team_fight_stats[tn][k]['total_team_fights']
+                team_fight_stats[tn][k]['average_kills'] = team_fight_stats[tn][k]['kills'] / team_fight_count
+                team_fight_stats[tn][k]['average_deaths'] = team_fight_stats[tn][k]['deaths'] / team_fight_count
+                team_fight_stats[tn][k]['average_ultimates_used'] = team_fight_stats[tn][k]['ultimates'] / team_fight_count
+                team_fight_stats[tn][k]['first_kill_win_rate'] = None
+                team_fight_stats[tn][k]['first_death_win_rate'] = None
+                if team_fight_stats[tn][k]['first_kills']:
+                    team_fight_stats[tn][k]['first_kill_win_rate'] = team_fight_stats[tn][k]['first_kill_wins'] / team_fight_stats[tn][k]['first_kills']
+                if team_fight_stats[tn][k]['first_deaths']:
+                    team_fight_stats[tn][k]['first_death_win_rate'] = team_fight_stats[tn][k]['first_death_wins'] / team_fight_stats[tn][k]['first_deaths']
+                output_stats[tn].append({'composition': k, 'stats': team_fight_stats[tn][k]})
+        return output_stats
 
     def generate_stats(self, all_stats=False):
-        stat_types = ['final_blows', 'assists', 'deaths', 'ults_gained', 'ults_used']
+        stat_types = ['final_blows', 'assists', 'deaths', 'ults_gained', 'ults_used',
+                      'total_team_fights', 'first_kills', 'first_deaths', 'team_fight_wins',
+                      'ult_fights', 'ult_fight_wins']
         #stat_types += [x + '_per10' for x in stat_types]
         left_team_name = self.left_team.team.name
         right_team_name = self.right_team.team.name
@@ -734,10 +761,12 @@ class Game(models.Model):
 
             for i, p in enumerate(list(left_team_players) + list(right_team_players)):
                 if i < 6:
+                    side = 'left'
                     team_name = left_team_name
                     friendly_team = left_team_players
                     enemy_team = right_team_players
                 else:
+                    side = 'right'
                     team_name = right_team_name
                     friendly_team = right_team_players
                     enemy_team = left_team_players
@@ -752,6 +781,29 @@ class Game(models.Model):
                     if hero_name not in hero_stats[team_name][p.name]:
                         hero_stats[team_name][p.name][hero_name] = Counter()
                     hero_stats[team_name][p.name][hero_name]['play_time'] += hp['end'] - hp['begin'] - pause_duration
+
+                    # team fight stats
+                    for tf in [x for x in team_fights if hp['begin'] <= x.start_time <= hp['end']]:
+                        first_death = tf.first_death
+                        if first_death is None:
+                            continue
+                        hero_stats[team_name][p.name][hero_name]['total_team_fights'] += 1
+                        stats[team_name][p.name]['total_team_fights'] += 1
+                        if first_death == p:
+                            hero_stats[team_name][p.name][hero_name]['first_deaths'] += 1
+                            stats[team_name][p.name]['first_deaths'] += 1
+                        if tf.first_kill == p:
+                            hero_stats[team_name][p.name][hero_name]['first_kills'] += 1
+                            stats[team_name][p.name]['first_kills'] += 1
+                        if tf.winning_side == side:
+                            hero_stats[team_name][p.name][hero_name]['team_fight_wins'] += 1
+                            stats[team_name][p.name]['team_fight_wins'] += 1
+                        if p in tf.ults_used:
+                            hero_stats[team_name][p.name][hero_name]['ult_fights'] += 1
+                            stats[team_name][p.name]['ult_fights'] += 1
+                            if tf.winning_side == side:
+                                hero_stats[team_name][p.name][hero_name]['ult_fight_wins'] += 1
+                                stats[team_name][p.name]['ult_fight_wins'] += 1
 
                     ultimates = r.ultimate_set.filter(player=p, gained__lte=hp['end'], gained__gte=hp['begin'])
                     hero_stats[team_name][p.name][hero_name]['ults_gained'] += len(ultimates)
@@ -863,6 +915,29 @@ class Game(models.Model):
                             hero_stats[team_name][p.name][hero_name]['ultimate_final_blows'] = len(ultimate_kills)
                         except Ability.DoesNotExist:
                             pass
+        # normalization
+
+        for tn in hero_stats.keys():
+            for pn in hero_stats[tn].keys():
+                stats[tn][pn]['first_kill_%'] = None
+                stats[tn][pn]['first_death_%'] = None
+                if stats[tn][pn]['total_team_fights']:
+                    stats[tn][pn]['first_kill_%'] = stats[tn][pn]['first_kills'] / stats[tn][pn]['total_team_fights']
+                    stats[tn][pn]['first_death_%'] = stats[tn][pn]['first_deaths'] / stats[tn][pn]['total_team_fights']
+                stats[tn][pn]['ult_win_%'] = None
+                if stats[tn][pn]['ult_fights']:
+                    stats[tn][pn]['ult_win_%'] = stats[tn][pn]['ult_fight_wins'] / stats[tn][pn]['ult_fights']
+
+                for hn in hero_stats[tn][pn].keys():
+                    hero_stats[tn][pn][hn]['first_kill_%'] = None
+                    hero_stats[tn][pn][hn]['first_death_%'] = None
+                    if hero_stats[tn][pn][hn]['total_team_fights']:
+                        hero_stats[tn][pn][hn]['first_kill_%'] = hero_stats[tn][pn][hn]['first_kills'] / hero_stats[tn][pn][hn]['total_team_fights']
+                        hero_stats[tn][pn][hn]['first_death_%'] = hero_stats[tn][pn][hn]['first_deaths'] / hero_stats[tn][pn][hn]['total_team_fights']
+                    hero_stats[tn][pn][hn]['ult_win_%'] = None
+                    if hero_stats[tn][pn][hn]['ult_fights']:
+                        hero_stats[tn][pn][hn]['ult_win_%'] = hero_stats[tn][pn][hn]['ult_fight_wins'] / hero_stats[tn][pn][hn]['ult_fights']
+
         team_fight_stats = self.generate_team_fight_summary()
         d = {'stats': stats, 'hero_stats': hero_stats, 'team_fight_summary': team_fight_stats}
         return d
@@ -976,12 +1051,11 @@ class Round(models.Model):
                 if tp not in time_points:
                     time_points.append(tp)
                 tp = u.ended
-                if tp not in time_points:
+                if tp is not None and tp not in time_points:
                     time_points.append(tp)
         cur_team_fight = None
         team_fights = []
         for i, tp in enumerate(sorted(time_points)):
-            print(tp)
             if cur_team_fight is None:
                 cur_team_fight = {'begin': tp, 'end': tp}
             if tp - cur_team_fight['end'] > 10:
@@ -993,7 +1067,6 @@ class Round(models.Model):
             team_fights.append(cur_team_fight)
         team_fight_objects = []
         for tm in team_fights:
-            print(tm['begin'], tm['end'])
             if tm['begin'] == tm['end']:
                 continue
             team_fight_objects.append(TeamFight(round=self, start_time=tm['begin'],
@@ -1737,6 +1810,10 @@ class TeamFight(models.Model):
         return self.right_deaths.count() - (res_q.count() * 2)
 
     @property
+    def ults_used(self):
+        return [x.player for x in self.ultimates.all()]
+
+    @property
     def left_ults_used(self):
         q = self.ultimates.filter(player__in=self.round.game.left_team.players.all())
         return [x.player for x in q.all()]
@@ -1750,7 +1827,6 @@ class TeamFight(models.Model):
     def first_death(self):
         q = self.kill_feed_events.filter(denied_ult__isnull=True,
                                          dying_npc__isnull=True)
-        print(self.start_time, self.end_time)
         death = q.first()
         if death is not None:
             return death.dying_player
