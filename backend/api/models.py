@@ -72,6 +72,7 @@ class StreamVod(models.Model):
     GAME_TYPE = 'G'
     TYPE_CHOICES = (
         (MATCH_TYPE, 'Match'),
+        ('S', 'Multiple matches'),
         (GAME_TYPE, 'Game'),
         ('R', 'Round')
     )
@@ -81,7 +82,7 @@ class StreamVod(models.Model):
     broadcast_date = models.DateTimeField(blank=True, null=True)
     film_format = models.ForeignKey(FilmFormat, blank=True, null=True, on_delete=models.SET_NULL)
     status = models.CharField(max_length=1, choices=STATUS_CHOICES, default='N')
-    type = models.CharField(max_length=1, choices=TYPE_CHOICES, default='M')
+    type = models.CharField(max_length=1, choices=TYPE_CHOICES, default=MATCH_TYPE)
     last_modified = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
