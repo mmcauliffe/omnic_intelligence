@@ -559,7 +559,7 @@ class Team(models.Model):
                     continue
                 if p.end and date > p.end:
                     continue
-            players.append(p)
+            players.append(p.player)
         return players
 
 
