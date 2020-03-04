@@ -551,6 +551,17 @@ class Team(models.Model):
     class Meta:
         ordering = ['name']
 
+    def get_players_at_date(self, date):
+        players = []
+        for p in self.affiliation_set.all():
+            if p.start is not None:
+                if date < p.start:
+                    continue
+                if p.end and date > p.end:
+                    continue
+            players.append(p)
+        return players
+
 
 class Affiliation(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)

@@ -248,14 +248,8 @@ class MatchSerializer(serializers.ModelSerializer):
     def get_teams(self, obj):
         teams = []
         for t in obj.teams.all():
-            d = {'id': t.id, 'name': t.name, 'players': []}
-            for p in t.affiliation_set.all():
-                if p.start is not None:
-                    if obj.date < p.start:
-                        continue
-                    if p.end and obj.date > p.end:
-                        continue
-                d['players'].append(PlayerSerializer(p.player).data)
+            d = {'id': t.id, 'name': t.name,
+                 'players': PlayerSerializer(t.get_players_at_date(obj.date), many=True).data}
             teams.append(d)
         return teams
 
@@ -496,6 +490,16 @@ class AnnotateVodSerializer(serializers.ModelSerializer):
         return e.spectator_mode.name
 
     def get_teams(self, obj):
+        if obj.type == 'S':
+            e = obj.event
+            teams = []
+            for t in e.teams.all():
+                d = {'id': t.id, 'name': t.name,
+                     'home_color': t.home_color,
+                     'away_color': t.away_color,
+                     'players': PlayerSerializer(t.get_players_at_date(obj.broadcast_date), many=True).data}
+                teams.append(d)
+            return teams
         owl_mapping = {'DAL': 'Dallas Fuel',
                        'PHI': 'Philadelphia Fusion', 'SEO': 'Seoul Dynasty',
                        'LDN': 'London Spitfire', 'SFS': 'San Francisco Shock', 'HOU': 'Houston Outlaws',
