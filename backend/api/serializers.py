@@ -497,7 +497,7 @@ class AnnotateVodSerializer(serializers.ModelSerializer):
                 d = {'id': t.id, 'name': t.name,
                      'home_color': t.home_color,
                      'away_color': t.away_color,
-                     'players': PlayerSerializer(t.get_players_at_date(obj.broadcast_date), many=True).data}
+                     'players': PlayerSerializer(t.get_players_at_date(obj.broadcast_date.date()), many=True).data}
                 teams.append(d)
             return teams
         owl_mapping = {'DAL': 'Dallas Fuel',
