@@ -1131,32 +1131,31 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
         if event is None:
             return Response('Could not find an event for the vod',
                             status=status.HTTP_400_BAD_REQUEST)
+        if vod.type != 'S':
+            try:
+                team_one = event.teams.get(name=request.data['team_one'])
+            except models.Team.DoesNotExist:
+                return Response('Team "{}" is not participating in {}'.format(request.data['team_one'], event.name),
+                                status=status.HTTP_400_BAD_REQUEST)
+            try:
+                team_two = event.teams.get(name=request.data['team_two'])
+            except models.Team.DoesNotExist:
+                return Response('Team "{}" is not participating in {}'.format(request.data['team_two'], event.name),
+                                status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            team_one = event.teams.get(name=request.data['team_one'])
-        except models.Team.DoesNotExist:
-            return Response('Team "{}" is not participating in {}'.format(request.data['team_one'], event.name),
-                            status=status.HTTP_400_BAD_REQUEST)
-        try:
-            team_two = event.teams.get(name=request.data['team_two'])
-        except models.Team.DoesNotExist:
-            return Response('Team "{}" is not participating in {}'.format(request.data['team_two'], event.name),
-                            status=status.HTTP_400_BAD_REQUEST)
-
-        print(vod, event, team_one, team_two)
-        matches = models.Match.objects.filter(teams__id__in=[team_one.id, team_two.id], event=event,
-                                              date=vod.broadcast_date.date())
-        match = None
-        for m in matches:
-            if len(m.teams.filter(id__in=[team_one.id, team_two.id])) == 2:
-                match = m
-                break
-        print(match)
-        if match is None:
-            match = models.Match.objects.create(event=event, date=vod.broadcast_date.date())
-            match.teams.add(team_one)
-            match.teams.add(team_two)
-        print(match)
+            print(vod, event, team_one, team_two)
+            matches = models.Match.objects.filter(teams__id__in=[team_one.id, team_two.id], event=event,
+                                                  date=vod.broadcast_date.date())
+            match = None
+            for m in matches:
+                if len(m.teams.filter(id__in=[team_one.id, team_two.id])) == 2:
+                    match = m
+                    break
+            if match is None:
+                match = models.Match.objects.create(event=event, date=vod.broadcast_date.date())
+                match.teams.add(team_one)
+                match.teams.add(team_two)
+            print(match)
         if vod.type == 'G':
             game_number = 1
             num_previous_games = 0
@@ -1167,7 +1166,39 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
         elif vod.type == 'M':
             games = request.data['games']
             num_previous_games = match.game_set.count()
+        else:
+            num_previous_games = 0
+            games = []
+            for m in request.data['matches']:
+                for g in m['games']:
+                    g['match'] = m
+                    games.append(g)
         for g in games:
+            if vod.type == 'S':
+                try:
+                    team_one = event.teams.get(name=g['match']['team_one'])
+                except models.Team.DoesNotExist:
+                    return Response('Team "{}" is not participating in {}'.format(request.data['team_one'], event.name),
+                                    status=status.HTTP_400_BAD_REQUEST)
+                try:
+                    team_two = event.teams.get(name=g['match']['team_two'])
+                except models.Team.DoesNotExist:
+                    return Response('Team "{}" is not participating in {}'.format(request.data['team_two'], event.name),
+                                    status=status.HTTP_400_BAD_REQUEST)
+
+                print(vod, event, team_one, team_two)
+                matches = models.Match.objects.filter(teams__id__in=[team_one.id, team_two.id], event=event,
+                                                      date=vod.broadcast_date.date())
+                match = None
+                for m in matches:
+                    if len(m.teams.filter(id__in=[team_one.id, team_two.id])) == 2:
+                        match = m
+                        break
+                if match is None:
+                    match = models.Match.objects.create(event=event, date=vod.broadcast_date.date())
+                    match.teams.add(team_one)
+                    match.teams.add(team_two)
+
             player_names = g['rounds'][0]['players']
             left_color = g['left_color']
             right_color = g['right_color']
