@@ -1359,6 +1359,10 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
         print(left)
         right = [x.player for x in instance.game.right_team.playerparticipation_set.all()]
         print(right)
+        if instance.game.left_team.player_count() < 6 or instance.game.right_team.player_count() < 6:
+            instance.annotation_status = 'O'
+            instance.save()
+            return Response({'success': False, 'errors': True})
         if not request.data.get('ignore_switches', False):
             instance.heropick_set.all().delete()
 
@@ -1432,11 +1436,6 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
         if not request.data.get('ignore_switches', False):
             models.HeroPick.objects.bulk_create(hero_picks)
         instance.fix_switch_end_points()
-        if instance.has_overlapping_heroes() or  \
-                instance.game.left_team.player_count() < 6 or instance.game.right_team.player_count() < 6:
-            instance.annotation_status = 'O'
-            instance.save()
-            return Response({'success': False, 'errors': True})
         models.Ultimate.objects.bulk_create(ultimates)
         models.StatusEffect.objects.bulk_create(status_effects)
 
