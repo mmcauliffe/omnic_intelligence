@@ -22,8 +22,6 @@
                     <v-tab v-for="m in vod.item.matches">
                         {{m.name}}
                     </v-tab>
-
-                </v-tabs>
                 <v-tabs-items>
                     <v-tab-item v-for="m in vod.item.matches">
                         <v-card>
@@ -143,6 +141,8 @@
                         </v-card>
                     </v-tab-item>
                 </v-tabs-items>
+
+                </v-tabs>
             </v-layout>
         </v-flex>
     </v-layout>
