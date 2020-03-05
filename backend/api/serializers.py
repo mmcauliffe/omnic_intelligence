@@ -254,6 +254,65 @@ class MatchSerializer(serializers.ModelSerializer):
         return teams
 
 
+
+class RoundSerializer(serializers.ModelSerializer):
+    # game = GameSerializer()
+    class Meta:
+        model = models.Round
+        fields = (
+            'id', 'round_number', 'game', 'attacking_side', 'submap',
+            'begin', 'end', 'stream_vod', 'annotation_status', 'exclude_for_training',
+            'sequences')
+
+
+class RoundVodSerializer(serializers.ModelSerializer):
+    # game = GameSerializer()
+    class Meta:
+        model = models.Round
+        fields = (
+            'id', 'round_number', 'game', 'attacking_side', 'submap',
+            'begin', 'end', 'stream_vod', 'annotation_status', 'exclude_for_training')
+
+
+class GameVodSerializer(serializers.ModelSerializer):
+    left_team = TeamParticipationEditSerializer()
+    right_team = TeamParticipationEditSerializer()
+    name = serializers.SerializerMethodField()
+    rounds = RoundVodSerializer(many=True)
+
+    class Meta:
+        model = models.Game
+        fields = ('id', 'name', 'game_number', 'match', 'left_team', 'right_team', 'map', 'rounds')
+
+    def get_name(self, obj):
+        teams = obj.match.teams.all()
+        return 'Game {} of {} vs {} on {}'.format(obj.game_number, teams[0].name, teams[1].name, obj.map.name)
+
+
+class MatchVodSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+    teams = serializers.SerializerMethodField()
+    games = GameVodSerializer(many=True)
+
+    start_time = serializers.DecimalField(10, 1)
+
+    class Meta:
+        model = models.Match
+        fields = ('id',  'date', 'teams', 'start_time', 'name', 'games')
+
+    def get_name(self, obj):
+        teams = obj.teams.all()
+        return '{} vs {}'.format(teams[0].name, teams[1].name)
+
+    def get_teams(self, obj):
+        teams = []
+        for t in obj.teams.all():
+            d = {'id': t.id, 'name': t.name,
+                 'players': PlayerSerializer(t.get_players_at_date(obj.date), many=True).data}
+            teams.append(d)
+        return teams
+
+
 class MatchDisplaySerializer(serializers.ModelSerializer):
     event = EventDisplaySerializer()
     teams = serializers.StringRelatedField(many=True)
@@ -413,16 +472,6 @@ class StreamChannelSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class RoundSerializer(serializers.ModelSerializer):
-    # game = GameSerializer()
-    class Meta:
-        model = models.Round
-        fields = (
-            'id', 'round_number', 'game', 'attacking_side', 'submap',
-            'begin', 'end', 'stream_vod', 'annotation_status', 'exclude_for_training',
-            'sequences')
-
-
 class RoundAnalysisSerializer(serializers.ModelSerializer):
     film_format = serializers.SerializerMethodField()
     spectator_mode = serializers.SerializerMethodField()
@@ -445,15 +494,13 @@ class RoundAnalysisSerializer(serializers.ModelSerializer):
 
 
 class StreamVodSerializer(serializers.ModelSerializer):
-    rounds = RoundSerializer(many=True)
-    games = GameEditSerializer(many=True)
-    matches = MatchSerializer(many=True)
+    matches = MatchVodSerializer(many=True)
     channel = StreamChannelSerializer()
 
     class Meta:
         model = models.StreamVod
         fields = ('id', 'title', 'url', 'broadcast_date', 'vod_link', 'film_format', 'sequences',
-                  'channel', 'status', 'type', 'rounds', 'games', 'matches')
+                  'channel', 'status', 'type', 'matches')
 
 
 class VodDisplaySerializer(serializers.ModelSerializer):

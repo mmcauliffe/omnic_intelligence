@@ -1,7 +1,7 @@
 <template>
 
     <v-layout row>
-        <vue-headful :title="title" />
+        <vue-headful :title="title"/>
         <div class="vod-column" v-if="vod.item">
             <TeamBar :game="selectedGame" :match="selectedMatch"></TeamBar>
             <Vod :vod_type="vod.item.vod_link[0]" :id="vod.item.vod_link[1]"></Vod>
@@ -19,162 +19,130 @@
                     </v-select>
                 </v-flex>
                 <v-tabs md-border-bottom md-dynamic-height>
-                    <v-tab v-if="vod.item.type === 'M'">
-                        Matches
-                    </v-tab>
-                    <v-tab>
-                        Games
-                    </v-tab>
-                    <v-tab>
-                        Rounds
+                    <v-tab v-for="m in vod.item.matches">
+                        {{m.name}}
                     </v-tab>
 
-                    <v-tabs-items>
-                        <v-tab-item v-if="vod.item.type === 'M'">
-                            <v-card>
-                <v-flex>
-
-                <v-data-table
-                        :items="matches.items" v-if="matches.items"
-                        :headers="matchHeaders" :rows-per-page-items="rowsPerPage">
-
-                    <template slot="items" slot-scope="props">
-                        <td>
-                            <v-select v-model="props.item.teams[0]" v-on:change="changeMatch(props.item)" :items="props.item.event.teams"
-                                                  item-text="name" item-value="id">
-
-                            </v-select>
-                        </td>
-                        <td>
-                            <v-select v-model="props.item.teams[1]" v-on:change="changeMatch(props.item)" :items="props.item.event.teams"
-                                                  item-text="name" item-value="id">
-
-                            </v-select>
-
-                        </td>
-                        <td>
-                    <v-tooltip bottom>
-                        <v-icon class="clickable" slot="activator" v-on:click="removeMatch(props.item.id)">
-                            remove_circle
-                        </v-icon>
-                        <span>Delete</span>
-                    </v-tooltip>
-                        </td>
-                    </template>
-                </v-data-table>
-                </v-flex>
-                            </v-card>
-                        </v-tab-item>
-                        <v-tab-item>
-                            <v-card>
-
-                            <v-flex>
-                    <v-select label="Match" :items="event_matches.items" v-model="newGame.match"
-                              item-text="name" item-value="id"></v-select>
-                    <v-text-field label="Game number" v-model="newGame.game_number"></v-text-field>
-                    <v-select label="Map" :items="maps.items" v-model="newGame.map"
-                              item-text="name" item-value="id"></v-select>
-                    <v-btn v-on:click="addGame()">Add game</v-btn>
-                </v-flex>
-                <v-flex>
-
-                <v-data-table
-                        :items="vod.item.games" v-if="vod.item.games"
-                        :headers="gameHeaders" :rows-per-page-items="rowsPerPage">
-
-                    <template slot="items" slot-scope="props">
-                        <td>
-                                <v-text-field v-model="props.item.game_number" v-on:change="changeGame(props.item)"></v-text-field>
-                        </td>
-                        <td>
-                    <v-select :items="maps.items" v-model="props.item.map" v-on:change="changeGame(props.item)"
-                              item-text="name" item-value="id"></v-select>
-                        </td>
-                        <td>
-                            <v-tooltip bottom>
-                                <v-icon class="clickable" slot="activator" v-on:click="selectGame(props.item)">
-                            build
-                                </v-icon>
-                                <span>Edit game</span>
-                            </v-tooltip>
-                            <v-tooltip bottom>
-                                <v-icon class="clickable" slot="activator" v-on:click="removeGame(props.item.id)">
-                            remove_circle
-                                </v-icon>
-                                <span>Delete</span>
-                            </v-tooltip>
-                        </td>
-                    </template>
-                </v-data-table>
-                </v-flex>
-                            </v-card>
-                        </v-tab-item>
-                        <v-tab-item>
-                            <v-card>
-
-                            <v-flex>
-                    <v-btn v-on:click="addRound()">Add round</v-btn>
-                </v-flex>
-                <v-flex>
-
-                <v-data-table
-                        :items="vod.item.rounds" v-if="vod.item.rounds"
-                        :headers="headers" :rows-per-page-items="rowsPerPage">
-
-                    <template slot="items" slot-scope="props">
-                        <td>
-                    <v-select v-model="props.item.game" :items="vod.item.games" item-text="game_number" item-value="id" v-on:change="changeRound(props.item)"></v-select>
-
-                        </td>
-                        <td>
-                                <v-text-field v-model="props.item.round_number" v-on:change="changeRound(props.item)"></v-text-field>
-                        </td>
-                        <td>
-                    <v-select  v-model="props.item.attacking_side" :items="sides.items" item-text="name" item-value="id" v-on:change="changeRound(props.item)"></v-select>
-                        </td>
-                        <td class="clickable" v-on:click="seekTo(props.item.begin)"
-                            v-bind:class="{ active: isCurrentRound(props.item) }">
-                            {{ props.item.begin | secondsToMoment | moment('HH:mm:ss.S') }}
-                        </td>
-                        <td class="clickable" v-on:click="seekTo(props.item.end)"
-                            v-bind:class="{ active: isCurrentRound(props.item) }">
-                            {{ props.item.end | secondsToMoment | moment('HH:mm:ss.S') }}
-                        </td>
-                        <td>
-                            <v-select  v-model="props.item.annotation_status" :items="annotation_source_choices.items"
-                                       item-text="name" item-value="id" v-on:change="changeRound(props.item)"></v-select>
-                        </td>
-                        <td>
-                            <router-link :to="{name: 'round-detail', params: {id: props.item.id}}">
-                                View
-                            </router-link>
-                            <v-tooltip bottom>
-                                <v-icon class="clickable" slot="activator" v-on:click="updateRoundBegin(props.item)">
-                                    access_time
-                                </v-icon>
-                                <span>Update begin to current</span>
-                            </v-tooltip>
-                            <v-tooltip bottom>
-                                <v-icon class="clickable" slot="activator" v-on:click="updateRoundEnd(props.item)">
-                                    access_time
-                                </v-icon>
-                                <span>Update end to current</span>
-                            </v-tooltip>
-                            <v-tooltip bottom v-if="props.item.annotation_status == 'N'">
-                                <v-icon class="clickable" slot="activator" v-on:click="removeRound(props.item.id)">
-                            remove_circle
-                                </v-icon>
-                                <span>Delete</span>
-                            </v-tooltip>
-                        </td>
-                    </template>
-                </v-data-table>
-                </v-flex>
-                            </v-card>
-                        </v-tab-item>
-                    </v-tabs-items>
                 </v-tabs>
+                <v-tabs-items>
+                    <v-tab-item v-for="m in vod.item.matches">
+                        <v-card>
+                            <v-flex>
+                                {{m.date}}
+                                <v-flex xs4>
+                                    <v-btn v-on:click="addGame(m)">
+                                    <v-icon flat icon>add_circle</v-icon>
+                                    </v-btn>
 
+                                </v-flex>
+                                <v-expansion-panel v-if="m.games">
+                                    <v-expansion-panel-content v-for="g in m.games" :key="g.id">
+                                        <div slot="header" v-on:click="selectGame(g)">Game {{g.game_number}}</div>
+                                        <v-form>
+                                            <v-container>
+                                                <v-layout row>
+                                            <v-flex xs3>
+                                        <v-text-field label="Game number" v-model="g.game_number" v-on:change="changeGame(g)"></v-text-field>
+
+                                            </v-flex>
+                                            <v-flex xs3>
+                                    <v-select label="Map" :items="maps.items" v-model="g.map" v-on:change="changeGame(g)"
+                              item-text="name" item-value="id"></v-select>
+
+                                            </v-flex>
+                                            <v-flex xs3>
+                                                <v-btn v-on:click="addRound(g)">
+                                                <v-icon flat icon>add_circle</v-icon>
+                                                </v-btn>
+
+                                            </v-flex>
+                                                    <v-flex xs3>
+
+                                                <v-btn v-on:click="removeGame(g.id)">
+                                                <v-icon flat icon>remove_circle</v-icon>
+                                                </v-btn>
+                                                    </v-flex>
+
+                                        </v-layout>
+                                            </v-container>
+                                        </v-form>
+
+                                        <v-data-table
+                                                :items="g.rounds" v-if="g.rounds"
+                                                :headers="headers" :rows-per-page-items="rowsPerPage">
+
+                                            <template slot="items" slot-scope="props">
+                                                <td>
+                                                    <v-select v-model="props.item.game" :items="m.games"
+                                                              item-text="game_number" item-value="id"
+                                                              v-on:change="changeRound(props.item)"></v-select>
+
+                                                </td>
+                                                <td>
+                                                    <v-text-field v-model="props.item.round_number"
+                                                                  v-on:change="changeRound(props.item)"></v-text-field>
+                                                </td>
+                                                <td>
+                                                    <v-select v-model="props.item.attacking_side" :items="sides.items"
+                                                              item-text="name" item-value="id"
+                                                              v-on:change="changeRound(props.item)"></v-select>
+                                                </td>
+                                                <td class="unclickable" v-if="isDifferentVod(props.item)">
+                                                    {{ props.item.begin | secondsToMoment | moment('HH:mm:ss.S') }}
+                                                </td>
+                                                <td v-else class="clickable" v-on:click="seekTo(props.item.begin)"
+                                                    v-bind:class="{ active: isCurrentRound(props.item)}">
+                                                    {{ props.item.begin | secondsToMoment | moment('HH:mm:ss.S') }}
+                                                </td>
+                                                <td class="unclickable" v-if="isDifferentVod(props.item)">
+                                                    {{ props.item.end | secondsToMoment | moment('HH:mm:ss.S') }}
+                                                </td>
+                                                <td v-else class="clickable" v-on:click="seekTo(props.item.end)"
+                                                    v-bind:class="{ active: isCurrentRound(props.item) }">
+                                                    {{ props.item.end | secondsToMoment | moment('HH:mm:ss.S') }}
+                                                </td>
+                                                <td>
+                                                    <v-select v-model="props.item.annotation_status"
+                                                              :items="annotation_source_choices.items"
+                                                              item-text="name" item-value="id"
+                                                              v-on:change="changeRound(props.item)"></v-select>
+                                                </td>
+                                                <td>
+                                                    <router-link
+                                                            :to="{name: 'round-detail', params: {id: props.item.id}}">
+                                                        View
+                                                    </router-link>
+                                                    <v-tooltip bottom>
+                                                        <v-icon class="clickable" slot="activator"
+                                                                v-on:click="updateRoundBegin(props.item)">
+                                                            access_time
+                                                        </v-icon>
+                                                        <span>Update begin to current</span>
+                                                    </v-tooltip>
+                                                    <v-tooltip bottom>
+                                                        <v-icon class="clickable" slot="activator"
+                                                                v-on:click="updateRoundEnd(props.item)">
+                                                            access_time
+                                                        </v-icon>
+                                                        <span>Update end to current</span>
+                                                    </v-tooltip>
+                                                    <v-tooltip bottom v-if="props.item.annotation_status === 'N'">
+                                                        <v-icon class="clickable" slot="activator"
+                                                                v-on:click="removeRound(props.item.id)">
+                                                            remove_circle
+                                                        </v-icon>
+                                                        <span>Delete</span>
+                                                    </v-tooltip>
+                                                </td>
+                                            </template>
+                                        </v-data-table>
+
+                                    </v-expansion-panel-content>
+                                </v-expansion-panel>
+                            </v-flex>
+                        </v-card>
+                    </v-tab-item>
+                </v-tabs-items>
             </v-layout>
         </v-flex>
     </v-layout>
@@ -182,6 +150,7 @@
 
 <script>
     import {mapState, mapActions, mapGetters} from 'vuex'
+
     const Vod = resolve => {
         // require.ensure is Webpack's special syntax for a code-split point.
         require.ensure(['../../components/Vod'], () => {
@@ -205,7 +174,8 @@
         require.ensure(['vuetify/es5/components/VTextField/VTextField'], () => {
             resolve(require('vuetify/es5/components/VTextField/VTextField'))
         })
-    };const VTabs = resolve => {
+    };
+    const VTabs = resolve => {
         // require.ensure is Webpack's special syntax for a code-split point.
         require.ensure(['vuetify/es5/components/VTabs/VTabs'], () => {
             resolve(require('vuetify/es5/components/VTabs/VTabs'))
@@ -249,10 +219,10 @@
             VTabsItems,
             TeamBar
         },
-        data(){
+        data() {
             return {
                 newRound: {},
-                newMatch:{teams:{}},
+                newMatch: {teams: {}},
                 newGame: {},
                 match: 0,
                 rowsPerPage: [10],
@@ -261,10 +231,10 @@
             }
         },
         computed: {
-            title(){
-               if (this.vod.item){
-                   return this.vod.item.title + ' | Omnic Intelligence'
-               }
+            title() {
+                if (this.vod.item) {
+                    return this.vod.item.title + ' | Omnic Intelligence'
+                }
             },
             ...mapState({
                 account: state => state.account,
@@ -294,7 +264,7 @@
                     {text: 'Annotations', sortable: false},
                     {text: 'Actions', sortable: false}]
             },
-            gameHeaders(){
+            gameHeaders() {
                 return [
                     {text: 'Game number', sortable: false},
                     {text: 'Map', sortable: false},
@@ -302,7 +272,7 @@
 
                 ]
             },
-            matchHeaders(){
+            matchHeaders() {
                 return [
                     {text: 'Team one', sortable: false},
                     {text: 'Team two', sortable: false},
@@ -358,52 +328,87 @@
 
                 return this.currentTime >= round.begin && this.currentTime <= round.end
             },
+            isDifferentVod(round) {
+
+                return round.stream_vod !== this.vod.item.id
+            },
             seekTo(time) {
                 this.updateTimestamp(time);
-                let r = this.vod.item.rounds.filter(x => {return (x.begin <= time && x.end >= time)})[0];
-                this.selectedGame = this.vod.item.games.filter(x => {return x.id === r.game})[0];
-                this.selectedMatch = this.vod.item.matches.filter(x => {return x.id === this.selectedGame.match})[0];
+                let m, g;
+                let found = false;
+                for (let mi = 0; mi < this.vod.item.matches.length; mi++) {
+                    m = this.vod.item.matches[mi];
+                    for (let gi = 0; gi < m.games.length; gi++) {
+                        g = m.games[gi];
+                        if (g.rounds[0].begin <= time && time <= g.rounds[g.rounds.length - 1].end) {
+                            this.selectedGame = g;
+                            this.selectedMatch = m;
+                            this.found = true;
+                            break
+                        }
+                    }
+                    if (found) {
+                        break
+                    }
+                }
             },
-            selectGame(game){
-                this.selectedMatch = this.vod.item.matches.filter(x => {return x.id === game.match})[0];
+            selectGame(game) {
+                let m, g;
+                let found = false;
+                for (let mi = 0; mi < this.vod.item.matches.length; mi++) {
+                    m = this.vod.item.matches[mi];
+                    for (let gi = 0; gi < m.games.length; gi++) {
+                        g = m.games[gi];
+                        if (g.id === game.id){
+                            this.selectedMatch = m;
+                            found = true;
+                            break
+                        }
+                    }
+                    if (found){
+                        break
+                    }
+                }
                 this.selectedGame = game;
-                this.updateTimestamp(this.vod.item.rounds.filter(x=> {return x.game === game.id})[0].begin);
+                if (game.rounds.length > 0){
+                    this.updateTimestamp(game.rounds[0].begin);
+
+                }
 
             },
-            addMatch(){
-                this.createMatch(this.newMatch).then(x=>this.getOne(this.$route.params.id));
+            addMatch() {
+                this.createMatch(this.newMatch).then(x => this.getOne(this.$route.params.id));
             },
-            addGame(){
+            addGame(match) {
+                this.newGame.game_number = 1;
+                if (match.games.length > 0){
+                    this.newGame.game_number += parseInt(match.games[match.games.length - 1].game_number);
+                    this.newGame.left_team = match.games[match.games.length - 1].left_team;
+                    this.newGame.right_team = match.games[match.games.length - 1].right_team;
+                }
+                this.newGame.map = this.maps.items[0].id;
+                this.newGame.match = match.id;
                 console.log(this.newGame)
-                this.createGame(this.newGame).then(x=>this.getOne(this.$route.params.id));
+                this.createGame(this.newGame).then(x => this.getOne(this.$route.params.id));
             },
-            addRound(){
+            addRound(game) {
+                console.log('CLICKSDISJFSOIHG')
                 this.newRound.vod = this.$route.params.id;
                 this.newRound.begin = this.currentTime;
                 this.newRound.end = this.currentTime;
                 this.newRound.attacking_side = 'N';
+                this.newRound.game = game.id;
+                this.newRound.round_number = 1;
+                if (game.rounds.length > 0){
+                    this.newRound.round_number += parseInt(game.rounds[game.rounds.length - 1].round_number);
+                }
                 console.log(this.newRound)
                 console.log(this.currentTime)
-                if (this.vod.item.type === 'G'){
-                    this.newRound.game = this.vod.item.games[0].id;
-                    if (this.vod.item.rounds.length > 0){
-                        this.newRound.round_number = this.vod.item.rounds[this.vod.item.rounds.length - 1].round_number + 1;
-                    }
-                    else {
-                        this.newRound.round_number = 1;
-                    }
-                }
-                else if (this.vod.item.type === 'M'){
-                    this.newRound.game = this.vod.item.games[this.vod.item.games.length - 1].id;
-                    if (this.vod.item.rounds.length > 0){
-                        this.newRound.round_number = this.vod.item.rounds[this.vod.item.rounds.length - 1].round_number + 1;
-                    }
-                    else {
-                        this.newRound.round_number = 1;
-                    }
-
-                }
-                this.createRound(this.newRound).then(x =>{this.getOne(this.$route.params.id)});
+                this.selectedGame = {};
+                this.selectedMatch = {};
+                this.createRound(this.newRound).then(x => {
+                    this.getOne(this.$route.params.id)
+                });
             },
             updateRoundBegin(round) {
                 round.begin = this.currentTime;
@@ -413,29 +418,31 @@
                 round.end = this.currentTime;
                 this.updateRound({data: round, refresh: false});
             },
-            changeRound(round){
-                if (!round.round_number){
+            changeRound(round) {
+                if (!round.round_number) {
                     return
                 }
                 this.updateRound({data: round, refresh: false});
             },
-            changeGame(game){
-                if (!game.game_number){
+            changeGame(game) {
+                if (!game.game_number) {
                     return
                 }
                 this.updateGame(game);
             },
-            changeMatch(match){
+            changeMatch(match) {
                 this.updateMatch(match);
             },
-            removeMatch(id){
-                this.deleteMatch(id).then(x=>this.getOneMatches(this.$route.params.id));
+            removeMatch(id) {
+                this.deleteMatch(id).then(x => this.getOne(this.$route.params.id));
             },
-            removeGame(id){
-                this.deleteGame(id).then(x=>this.getOneGames(this.$route.params.id));
+            removeGame(id) {
+                this.deleteGame(id).then(x => this.getOne(this.$route.params.id));
             },
-            removeRound(id){
-                this.deleteRound(id).then(x=>this.getOne(this.$route.params.id));
+            removeRound(id) {
+                this.selectedGame = {};
+                this.selectedMatch = {};
+                this.deleteRound(id).then(x => this.getOne(this.$route.params.id));
             }
         },
     }
@@ -452,5 +459,9 @@
 
     td.clickable {
         cursor: pointer;
+    }
+
+    td.unclickable {
+        background-color: darkgrey;
     }
 </style>

@@ -619,6 +619,10 @@ class Match(models.Model):
         verbose_name_plural = "matches"
 
     @property
+    def games(self):
+        return self.game_set.all()
+
+    @property
     def team_description(self):
         return ' and '.join(x.name for x in self.teams.all())
 
@@ -661,6 +665,10 @@ class Game(models.Model):
     class Meta:
         unique_together = (("match", "game_number"),)
         ordering = ['-match__id', 'game_number']
+
+    @property
+    def rounds(self):
+        return self.round_set.all()
 
     def generate_team_fight_summary(self):
         left_team_name = self.left_team.team.name

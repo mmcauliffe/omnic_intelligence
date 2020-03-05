@@ -279,7 +279,7 @@ const mutations = {
     },
 
     updateTimestampSuccess(state, timestamp){
-        state.timestamp = timestamp
+        state.timestamp = timestamp;
         console.log('UPDATED TO', state.timestamp)
     },
 

@@ -663,22 +663,19 @@ class GameViewSet(viewsets.ModelViewSet):
 
         if 'left_team' in request.data:
             print(request.data)
-            left_team_participation = models.TeamParticipation.objects.create(team_id=request.data['left_team'],
-                                                                              color='B')
-            do_subtract = min([int(i) for i in request.data['left_players'].keys()]) == 1
-            for i, p in request.data['left_players'].items():
-                if do_subtract:
-                    i -= 1
-                pp = models.PlayerParticipation.objects.create(team_participation=left_team_participation, player_id=p,
-                                                               player_index=int(i))
+            left_team_participation = models.TeamParticipation.objects.create(team_id=request.data['left_team']['team'],
+                                                                              color=request.data['left_team']['color'])
+            pps = []
+            for p in request.data['left_team']['players']:
+                pps.append(models.PlayerParticipation(team_participation=left_team_participation, player_id=p['player'],
+                                                               player_index=p['player_index']))
 
-            right_team_participation = models.TeamParticipation.objects.create(team_id=request.data['right_team'],
-                                                                               color='R')
-            for i, p in request.data['right_players'].items():
-                if do_subtract:
-                    i -= 1
-                pp = models.PlayerParticipation.objects.create(team_participation=right_team_participation, player_id=p,
-                                                               player_index=int(i))
+            right_team_participation = models.TeamParticipation.objects.create(team_id=request.data['right_team']['team'],
+                                                                               color=request.data['right_team']['color'])
+            for p in request.data['right_team']['players']:
+                pps.append(models.PlayerParticipation(team_participation=right_team_participation, player_id=p['player'],
+                                                               player_index=p['player_index']))
+            models.PlayerParticipation.objects.bulk_create(pps)
         else:
             teams = match.teams.all()
             left_team_participation = models.TeamParticipation.objects.create(team=teams[0], color='B')

@@ -140,9 +140,36 @@
                 }
             }
         },
+        destroyed() {
+            window.removeEventListener('keypress', this.doCommand);
+        },
           created() {
-            window.addEventListener('keydown', (e) => {
-              if (e.key === 'w') {
+            window.addEventListener('keypress', this.doCommand);
+        },
+        methods: {
+            ...mapActions('vods', {
+                updateTimestamp: 'updateTimestamp',
+            }),
+            seekBackward(time) {
+                console.log('SEEKBACKWARD', this.timestamp, time)
+                let new_timestamp = this.timestamp - time;
+                new_timestamp = Math.round(new_timestamp * 10) / 10;
+                if (this.roundLock && this.round_begin && new_timestamp < this.round_begin) {
+                    new_timestamp = this.round_begin;
+                }
+                this.timestamp = new_timestamp;
+            },
+            seekForward(time) {
+                console.log('SEEKFORWARD', this.timestamp, time)
+                let new_timestamp = this.timestamp + time;
+                new_timestamp = Math.round(new_timestamp * 10) / 10;
+                if (this.roundLock && this.round_end && new_timestamp > this.round_end) {
+                    new_timestamp = this.round_end;
+                }
+                this.timestamp = new_timestamp;
+            },
+            doCommand(e){
+                if (e.key === 'w') {
                 this.seekForward(1);
               }
               else if (e.key === 's') {
@@ -166,29 +193,6 @@
               else if (e.key === 'ArrowDown') {
                 this.seekBackward(60);
               }
-            })
-        },
-        methods: {
-            ...mapActions('vods', {
-                updateTimestamp: 'updateTimestamp',
-            }),
-            seekBackward(time) {
-                console.log('SEEKBACKWARD', this.timestamp, time)
-                let new_timestamp = this.timestamp - time;
-                new_timestamp = Math.round(new_timestamp * 10) / 10;
-                if (this.roundLock && this.round_begin && new_timestamp < this.round_begin) {
-                    new_timestamp = this.round_begin;
-                }
-                this.timestamp = new_timestamp;
-            },
-            seekForward(time) {
-                console.log('SEEKFORWARD', this.timestamp, time)
-                let new_timestamp = this.timestamp + time;
-                new_timestamp = Math.round(new_timestamp * 10) / 10;
-                if (this.roundLock && this.round_end && new_timestamp > this.round_end) {
-                    new_timestamp = this.round_end;
-                }
-                this.timestamp = new_timestamp;
             }
         }
     }
