@@ -601,6 +601,8 @@ class AnnotateVodSerializer(serializers.ModelSerializer):
                     team_two = models.Team.objects.filter(name__iexact=team_two).first()
                     team_two_data = TeamSerializer(team_two).data
                 break
+        team_one_data['players'] = PlayerSerializer(team_one.get_players_at_date(obj.broadcast_date.date()), many=True).data
+        team_two_data['players'] = PlayerSerializer(team_two.get_players_at_date(obj.broadcast_date.date()), many=True).data
         return team_one_data, team_two_data
 
 
