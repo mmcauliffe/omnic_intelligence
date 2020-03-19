@@ -95,8 +95,10 @@ class StreamVod(models.Model):
 
     @property
     def event(self):
-        events = self.channel.events.filter(end_date__gte=self.broadcast_date, start_date__lte=self.broadcast_date).all()
-        for e in events:
+        events = self.channel.events.filter(end_date__gte=self.broadcast_date,
+                                            start_date__lte=self.broadcast_date,
+                                            channel_query_string__isnull=False).all()
+        for e in sorted(events, key=lambda x: -1*len(x.channel_query_string)):
             if e.channel_query_string is not None:
                 if e.channel_query_string not in self.title:
                     continue
