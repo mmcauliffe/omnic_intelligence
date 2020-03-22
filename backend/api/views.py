@@ -1111,19 +1111,7 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
     def upload_in_out_game(self, request):
         print(request.data)
         vod = models.StreamVod.objects.get(id=request.data['vod_id'])
-        event = None
-        for e in vod.channel.events.all():
-            if e.start_date is None or e.end_date is None:
-                continue
-
-            if vod.broadcast_date.date() < e.start_date:
-                continue
-            if vod.broadcast_date.date() > e.end_date:
-                continue
-            if e.channel_query_string is not None and e.channel_query_string not in vod.title:
-                continue
-            event = e
-            break
+        event = vod.event
 
         if event is None:
             return Response('Could not find an event for the vod',
@@ -1175,12 +1163,12 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
                 try:
                     team_one = event.teams.get(name=g['match']['team_one'])
                 except models.Team.DoesNotExist:
-                    return Response('Team "{}" is not participating in {}'.format(request.data['team_one'], event.name),
+                    return Response('Team "{}" is not participating in {}'.format(g['match']['team_one'], event.name),
                                     status=status.HTTP_400_BAD_REQUEST)
                 try:
                     team_two = event.teams.get(name=g['match']['team_two'])
                 except models.Team.DoesNotExist:
-                    return Response('Team "{}" is not participating in {}'.format(request.data['team_two'], event.name),
+                    return Response('Team "{}" is not participating in {}'.format(g['match']['team_two'], event.name),
                                     status=status.HTTP_400_BAD_REQUEST)
 
                 print(vod, event, team_one, team_two)
