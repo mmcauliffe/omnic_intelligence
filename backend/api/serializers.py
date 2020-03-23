@@ -62,7 +62,7 @@ class NPCHerolessSerializer(serializers.ModelSerializer):
 
 
 class HeroAbilitySerializer(serializers.ModelSerializer):
-    abilities = AbilityDisplaySerializer(many=True)
+    abilities = serializers.SerializerMethodField()
     npc_set = NPCHerolessSerializer(many=True)
 
     class Meta:
@@ -71,6 +71,13 @@ class HeroAbilitySerializer(serializers.ModelSerializer):
                   'abilities',
                   'npc_set'
                   )
+
+    def get_abilities(self, obj):
+        if obj.name == 'Echo':
+            abilities = models.Ability.objects.all()
+        else:
+            abilities = obj.abilities.all()
+        return AbilityDisplaySerializer(abilities, many=True).data
 
 
 class AbilitySerializer(serializers.ModelSerializer):
