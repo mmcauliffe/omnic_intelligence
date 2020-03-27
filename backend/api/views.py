@@ -1152,7 +1152,7 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
             games = request.data['games']
             num_previous_games = match.game_set.count()
         else:
-            num_previous_games = 0
+            num_previous_games = None
             games = []
             for m in request.data['matches']:
                 for g in m['games']:
@@ -1183,7 +1183,8 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
                     match = models.Match.objects.create(event=event, date=vod.broadcast_date.date())
                     match.teams.add(team_one)
                     match.teams.add(team_two)
-                num_previous_games = match.game_set.count()
+                if num_previous_games is None:
+                    num_previous_games = match.game_set.count()
 
             player_names = g['rounds'][0]['players']
             left_color = g['left_color']
