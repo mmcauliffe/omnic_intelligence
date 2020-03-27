@@ -1183,6 +1183,7 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
                     match = models.Match.objects.create(event=event, date=vod.broadcast_date.date())
                     match.teams.add(team_one)
                     match.teams.add(team_two)
+                num_previous_games = match.game_set.count()
 
             player_names = g['rounds'][0]['players']
             left_color = g['left_color']
