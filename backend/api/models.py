@@ -98,12 +98,17 @@ class StreamVod(models.Model):
         events = self.channel.events.filter(end_date__gte=self.broadcast_date,
                                             start_date__lte=self.broadcast_date,
                                             channel_query_string__isnull=False).all()
+        event = None
         for e in sorted(events, key=lambda x: -1*len(x.channel_query_string)):
             if e.channel_query_string is not None:
                 if e.channel_query_string not in self.title:
                     continue
-            return e
-        return None
+            event = e
+        if event is None:
+            event = self.channel.events.filter(end_date__gte=self.broadcast_date,
+                                                start_date__lte=self.broadcast_date,
+                                                channel_query_string__isnull=True).first()
+        return event
 
     @property
     def games(self):
