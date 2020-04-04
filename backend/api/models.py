@@ -104,6 +104,7 @@ class StreamVod(models.Model):
                 if e.channel_query_string not in self.title:
                     continue
             event = e
+            break
         if event is None:
             event = self.channel.events.filter(end_date__gte=self.broadcast_date,
                                                 start_date__lte=self.broadcast_date,
