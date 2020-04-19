@@ -147,13 +147,20 @@
             },
             generate_killable_npcs(player_id) {
                 console.log(this.currentTime, player_id)
-                let hero_ids;
                 if (!this.currentTime || !player_id) {
                     this.killableNPCs = []
                 }
-                hero_ids = [this.heroAtTime(player_id, this.currentTime).id]
+                let h = this.heroAtTime(player_id, this.currentTime);
+                if (h.name === 'Echo'){
 
-                this.killableNPCs = this.availableNPCs(hero_ids)
+                    this.killableNPCs = this.availableNPCs([])
+
+                }
+                else{
+
+                    this.killableNPCs = this.availableNPCs([h.id])
+
+                }
                 console.log('killable npcs', this.killableNPCs)
             },
         },

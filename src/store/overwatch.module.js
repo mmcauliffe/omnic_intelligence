@@ -178,6 +178,9 @@ const getters = {
     },
     availableNPCs: (state, getters) => (hero_id_list) => {
         let hero, i, npcs=[], j;
+        if (hero_id_list.length === 0){
+            return state.npcs.items
+        }
         for (i=0; i<state.npcs.items.length; i++){
             if (hero_id_list.indexOf(state.npcs.items[i].spawning_hero.id) >= 0){
                 npcs.push(state.npcs.items[i])
