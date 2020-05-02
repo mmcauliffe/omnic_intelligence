@@ -1498,6 +1498,11 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                     npc = models.NPC.objects.get(name__iexact=event['second_hero'])
                     side = event['second_side']
                     dying_player = instance.get_player_of_hero(npc.spawning_hero.name, time_point, side)
+                    if dying_player is None:
+                        dying_player = instance.get_player_of_hero('Echo', time_point, side)
+                        if dying_player is not None:
+                            if dying_player.get_ult_state_at_timepoint(instance, time_point) != 'using_ult':
+                                dying_player = None
                     if ability is not None and dying_player is not None:
                         if ability.type != models.Ability.DAMAGING_TYPE:
                             ability = models.Ability.objects.get(name='Primary')
@@ -1527,6 +1532,11 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                         dying_player = instance.get_player_of_hero(denied_ult.heroes.first().name, time_point, side)
                         if ability is None:
                             ability = hero.abilities.filter(type=models.Ability.DENYING_TYPE).first()
+                        if dying_player is None:
+                            dying_player = instance.get_player_of_hero('Echo', time_point, side)
+                            if dying_player is not None:
+                                if dying_player.get_ult_state_at_timepoint(instance, time_point) != 'using_ult':
+                                    dying_player = None
                         if ability is not None and dying_player is not None:
                             kill_feed_events.append(
                                 models.KillFeedEvent(round=instance, time_point=time_point,

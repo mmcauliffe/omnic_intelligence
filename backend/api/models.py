@@ -423,6 +423,17 @@ class Player(models.Model):
             return s.new_hero
         return ''
 
+    def get_ult_state_at_timepoint(self, round_object, time_point):
+        time_point = round(time_point, 1)
+
+        u = round_object.ultimate_set.filter(gained__lte=time_point, player=self).last()
+        if u is not None:
+            if u.used is None or time_point < u.used:
+                return 'has_ult'
+            if u.used <= time_point < u.ended:
+                return 'using_ult'
+        return 'no_ult'
+
     def get_ult_states(self, round_object):
         ultimates = self.ultimate_set.filter(round=round_object).all()
         round_end = round(round_object.end - round_object.begin, 1)
