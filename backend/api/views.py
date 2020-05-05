@@ -1434,12 +1434,15 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
         kill_feed_events = []
         assist_objects = []
         for event in request.data['kill_feed']:
+            #DEBUG
+            print(event)
             time_point = round(event['time_point'], 1)
             for seq in sequences:
                 if seq[0] - Decimal('0.5') <= time_point <= seq[1] + Decimal('0.5'):
                     break
             else:
                 continue
+            print('PROCESSING')
             event = event['event']
             if event['first_side'] == event['second_side'] and event['ability'] != 'resurrect':
                 event['first_hero'] = 'n/a'
@@ -1479,9 +1482,11 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                                              dying_player=dying_player))
             else:
                 # kills
+                print('KILL')
                 killing_side = event['first_side']
                 killed_side = event['second_side']
                 killing_player = instance.get_player_of_hero(event['first_hero'], time_point, killing_side)
+                print(event['first_hero'], killing_player)
                 if killing_player is None:
                     print('ERROR', instance.id, time_point, 'kill', event['first_hero'], killing_side)
                     continue
