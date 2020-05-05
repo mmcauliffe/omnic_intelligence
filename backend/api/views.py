@@ -1491,6 +1491,12 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                 ability = hero.abilities.filter(name__iexact=ability).first()
                 if ability is None and event['first_hero'].lower() == 'echo':
                     ability = models.Ability.objects.filter(name__iexact=ability).first()
+                # DEBUG
+                if event['first_hero'].lower() == 'echo':
+
+                    print(event)
+                    print(hero)
+                    print(ability)
                 assists = []
                 for a in event['assisting_heroes']:
                     hero = models.Hero.objects.get(name__iexact=a.replace('_assist', ''))
@@ -1505,6 +1511,9 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                         if dying_player is not None:
                             if dying_player.get_ult_state_at_timepoint(instance, time_point) != 'using_ult':
                                 dying_player = None
+                    if event['first_hero'].lower() == 'echo':
+                        print(npc)
+                        print(dying_player)
                     if ability is not None and dying_player is not None:
                         if ability.type != models.Ability.DAMAGING_TYPE:
                             ability = models.Ability.objects.get(name='Primary')
@@ -1550,6 +1559,9 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                         if dying_player is None:
                             print('ERROR', instance.id, time_point, 'kill', event['second_hero'], killed_side)
                             continue
+                        if event['first_hero'].lower() == 'echo':
+                            print('kill')
+                            print(dying_player)
                         if ability is not None:
                             if not assists:
                                 kill_feed_events.append(models.KillFeedEvent(round=instance, time_point=time_point,
