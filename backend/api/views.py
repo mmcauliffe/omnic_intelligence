@@ -1492,10 +1492,10 @@ class AnnotateRoundViewSet(viewsets.ModelViewSet):
                     continue
                 hero = models.Hero.objects.get(name__iexact=event['first_hero'])
                 headshot = event['headshot']
-                ability = event['ability'].replace(' headshot', '')
-                ability = hero.abilities.filter(name__iexact=ability).first()
+                ability_name = event['ability'].replace(' headshot', '')
+                ability = hero.abilities.filter(name__iexact=ability_name).first()
                 if ability is None and event['first_hero'].lower() == 'echo':
-                    ability = models.Ability.objects.filter(name__iexact=ability).first()
+                    ability = models.Ability.objects.filter(name__iexact=ability_name).first()
                 # DEBUG
                 if event['first_hero'].lower() == 'echo':
 
