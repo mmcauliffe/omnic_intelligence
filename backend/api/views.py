@@ -1199,11 +1199,12 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
             left_players = []
             right_players = []
             for n in left_names:
-                try:
+                if team_one.has_player_at_date(n, match.date):
                     player = team_one.players.get(name__iexact=n)
                     left_players.append(player)
-                except models.Player.DoesNotExist:
+                else:
                     is_team_one_left = False
+                    left_players = []
                     break
             if is_team_one_left:
                 for n in right_names:

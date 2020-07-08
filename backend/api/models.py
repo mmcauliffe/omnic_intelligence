@@ -581,6 +581,17 @@ class Team(models.Model):
             players.append(p.player)
         return players
 
+    def has_player_at_date(self, name, date):
+        players = []
+        for p in self.affiliation_set.filter(player__name__iexact=name).all():
+            if p.start is not None:
+                if date < p.start:
+                    continue
+                if p.end and date > p.end:
+                    continue
+            players.append(p.player)
+        return len(players) > 0
+
 
 class Affiliation(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
