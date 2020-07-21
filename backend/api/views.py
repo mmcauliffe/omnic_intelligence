@@ -192,7 +192,7 @@ class TrainInfoViewSet(viewsets.ViewSet):
             name = jamotools.split_syllables(name)
             characters.update(name)
         npcs = []
-        labels = ['neither', 'left', 'right']
+        labels = ['neither', 'left', 'right', 'headshot', 'environmental']
         #for c in colors + ['nonwhite']:
         #    labels.append(c)
         for h in heroes:
@@ -202,16 +202,11 @@ class TrainInfoViewSet(viewsets.ViewSet):
                 name = a.name.lower()
                 if name not in labels:
                     labels.append(name)
-                headshot_name = name + ' headshot'
-                if a.headshot_capable and headshot_name not in labels:
-                    labels.append(headshot_name)
             for n in h.npc_set.all():
                 npcs.append(n.name.lower())
                 labels.append(n.name.lower() + '_npc')
             for a in h.abilities.filter(deniable=True).all():
                 labels.append(a.name.lower() + '_npc')
-            if h.name.lower() == 'sigma':
-                labels.append('environmental')
         heroes = [x.name.lower() for x in heroes]
         while len(heroes) < max_heroes:
             heroes.append('')
