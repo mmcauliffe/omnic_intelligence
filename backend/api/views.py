@@ -994,12 +994,12 @@ class RoundStatusViewSet(viewsets.ModelViewSet):
 class TrainRoundViewSet(viewsets.ModelViewSet):
     model = models.Round
     queryset = models.Round.objects.filter(annotation_status__in=['M', 'O'],
-                                           stream_vod__id__gte=3847).exclude(exclude_for_training=True).order_by('pk').all()
+                                           stream_vod__id__gte=2290).exclude(exclude_for_training=True).order_by('pk').all()
     serializer_class = serializers.RoundDisplaySerializer
 
     def get_queryset(self):
         queryset = models.Round.objects.filter(annotation_status__in=['M', 'O'],
-                                           stream_vod__id__gte=3847).exclude(exclude_for_training=True).order_by('pk').all()
+                                           stream_vod__id__gte=2290).exclude(exclude_for_training=True).order_by('pk').all()
         spectator_mode = self.request.query_params.get('spectator_mode', None)
         if spectator_mode:
             queryset = queryset.filter(game__match__event__spectator_mode__code=spectator_mode)
