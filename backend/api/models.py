@@ -1072,6 +1072,15 @@ class Round(models.Model):
                                                                self.game.left_team.team, self.game.right_team.team,
                                                                self.game.match.event)
 
+    def get_train_set(self, spectator_mode=None):
+        queryset = models.Round.objects.filter(annotation_status__in=['M', 'O'],
+                                               game__match__date__isnull=False
+                                               )
+        if spectator_mode is not None:
+            queryset = queryset.filter(game__match__event__spectator_mode__code=spectator_mode)
+        queryset = queryset.exclude(exclude_for_training=True).order_by('annotation_status', '-game__match__date')
+        return queryset[:1000]
+
     def reset(self):
         self.annotation_status = 'N'
         self.heropick_set.all().delete()

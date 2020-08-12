@@ -998,11 +998,8 @@ class TrainRoundViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.RoundDisplaySerializer
 
     def get_queryset(self):
-        queryset = models.Round.objects.filter(annotation_status__in=['M', 'O'],
-                                           stream_vod__id__gte=2290).exclude(exclude_for_training=True).order_by('pk').all()
         spectator_mode = self.request.query_params.get('spectator_mode', None)
-        if spectator_mode:
-            queryset = queryset.filter(game__match__event__spectator_mode__code=spectator_mode)
+        queryset = models.Round.get_train_set(spectator_mode)
         return queryset
 
 
@@ -1034,9 +1031,12 @@ class TrainVodViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.VodDisplaySerializer
 
     def get_queryset(self):
-        round_queryset = models.Round.objects.filter(annotation_status__in=['M', 'O'],
-                                           stream_vod__id__gte=3847).exclude(exclude_for_training=True).order_by('pk').all()
-        return models.StreamVod.objects.filter(round__in=round_queryset).distinct()
+        vods = []
+        spec_modes = models.SpectatorMode.objects.all()
+        for sp in spec_modes:
+            round_queryset = models.Round.get_train_set(sp)
+            vods.extend(models.StreamVod.objects.filter(round__in=round_queryset).distinct())
+        return vods
 
     @action(methods=['get'], detail=False)
     def stats(self, request):
