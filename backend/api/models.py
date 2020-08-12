@@ -1073,12 +1073,14 @@ class Round(models.Model):
                                                                self.game.match.event)
 
     def get_train_set(self, spectator_mode=None):
-        queryset = models.Round.objects.filter(annotation_status__in=['M', 'O'],
+        queryset = Round.objects.filter(annotation_status__in=['M', 'O'],
                                                game__match__date__isnull=False
                                                )
         if spectator_mode is not None:
             queryset = queryset.filter(game__match__event__spectator_mode__code=spectator_mode)
         queryset = queryset.exclude(exclude_for_training=True).order_by('annotation_status', '-game__match__date')
+        if spectator_mode.endswith('2020'):
+            return queryset
         return queryset[:1000]
 
     def reset(self):
