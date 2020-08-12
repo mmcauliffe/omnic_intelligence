@@ -1075,7 +1075,8 @@ class Round(models.Model):
     @classmethod
     def get_train_set(cls, spectator_mode=None):
         queryset = cls.objects.filter(annotation_status__in=['M', 'O'],
-                                               game__match__date__isnull=False
+                                               game__match__date__isnull=False,
+                                            game__match__date__year__gte='2019'
                                                )
         if spectator_mode is not None:
             queryset = queryset.filter(game__match__event__spectator_mode__code=spectator_mode)
