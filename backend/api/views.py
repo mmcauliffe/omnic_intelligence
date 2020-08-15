@@ -1003,6 +1003,7 @@ class TrainRoundViewSet(viewsets.ModelViewSet):
         return queryset
 
     def retrieve(self, request, pk=None):
+        from django.shortcuts import get_object_or_404
         queryset = models.Round.objects.all()
         round = get_object_or_404(queryset, pk=pk)
         serializer = self.serializer_class(round)
