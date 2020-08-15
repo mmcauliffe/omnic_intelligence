@@ -1002,6 +1002,12 @@ class TrainRoundViewSet(viewsets.ModelViewSet):
         queryset = models.Round.get_train_set(spectator_mode)
         return queryset
 
+    def retrieve(self, request, pk=None):
+        queryset = models.Round.objects.all()
+        round = get_object_or_404(queryset, pk=pk)
+        serializer = self.serializer_class(round)
+        return Response(serializer.data)
+
 
 class ExampleRoundViewSet(viewsets.ModelViewSet):
     model = models.Round
