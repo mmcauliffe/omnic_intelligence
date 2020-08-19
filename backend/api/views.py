@@ -1310,7 +1310,7 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
 
     @action(methods=['get'], detail=False)
     def round_events(self, request):
-        vods = models.StreamVod.objects.filter(status='T', pk__gte=3847).all()
+        vods = models.StreamVod.objects.filter(status='T', pk__gte=3847, round_set__annotation_status='N').distinct().all()
         print(vods)
         return Response(serializers.VodAnnotateSerializer(vods, many=True).data)
 
