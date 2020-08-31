@@ -69,10 +69,11 @@ class StreamVod(models.Model):
         ('M', 'Round events manually corrected')
                       )
     MATCH_TYPE = 'M'
+    MULTIPLE_MATCH_TYPE = 'S'
     GAME_TYPE = 'G'
     TYPE_CHOICES = (
         (MATCH_TYPE, 'Match'),
-        ('S', 'Multiple matches'),
+        (MULTIPLE_MATCH_TYPE, 'Multiple matches'),
         (GAME_TYPE, 'Game'),
         ('R', 'Round')
     )
