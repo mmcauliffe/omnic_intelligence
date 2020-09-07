@@ -1082,7 +1082,7 @@ class Round(models.Model):
         if spectator_mode is not None:
             queryset = queryset.filter(game__match__event__spectator_mode__code=spectator_mode)
         queryset = queryset.exclude(exclude_for_training=True).order_by('annotation_status', '-game__match__date')
-        if spectator_mode is not None and spectator_mode.endswith('2020'):
+        if spectator_mode is not None and spectator_mode.code.endswith('2020'):
             return queryset
         return queryset[:1000]
 
