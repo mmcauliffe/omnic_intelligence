@@ -1041,7 +1041,7 @@ class TrainVodViewSet(viewsets.ModelViewSet):
         vods = []
         spec_modes = models.SpectatorMode.objects.all()
         for sp in spec_modes:
-            round_queryset = models.Round.get_train_set(sp)
+            round_queryset = models.Round.get_train_set(sp.code)
             vods.extend(models.StreamVod.objects.filter(round__in=round_queryset).distinct())
         return vods
 
