@@ -1202,7 +1202,7 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
             right_players = []
             for n in left_names:
                 if team_one.has_player_at_date(n, match.date):
-                    player = team_one.players.get(name__iexact=n)
+                    player = team_one.players.filter(name__iexact=n).first()
                     left_players.append(player)
                 else:
                     is_team_one_left = False
@@ -1211,7 +1211,7 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
             if is_team_one_left:
                 for n in right_names:
                     try:
-                        player = team_two.players.get(name__iexact=n)
+                        player = team_two.players.filter(name__iexact=n).first()
                         right_players.append(player)
                     except models.Player.DoesNotExist:
                         return Response('Team "{}" does not have player "{}" ()'.format(team_two.name, n,
@@ -1221,7 +1221,7 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
             else:
                 for n in left_names:
                     try:
-                        player = team_two.players.get(name__iexact=n)
+                        player = team_two.players.filter(name__iexact=n).first()
                         left_players.append(player)
                     except models.Player.DoesNotExist:
                         return Response('Team "{}" does not have player "{}" ()'.format(team_two.name, n,
@@ -1230,7 +1230,7 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
                                         status=status.HTTP_400_BAD_REQUEST)
                 for n in right_names:
                     try:
-                        player = team_one.players.get(name__iexact=n)
+                        player = team_one.players.filter(name__iexact=n).first()
                         right_players.append(player)
                     except models.Player.DoesNotExist:
                         return Response('Team "{}" does not have player "{}" ()'.format(team_one.name, n,
