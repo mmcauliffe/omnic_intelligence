@@ -1212,6 +1212,8 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
                 for n in right_names:
                     try:
                         player = team_two.players.filter(name__iexact=n).first()
+                        if player is None:
+                            raise models.Player.DoesNotExist
                         right_players.append(player)
                     except models.Player.DoesNotExist:
                         return Response('Team "{}" does not have player "{}" ()'.format(team_two.name, n,
@@ -1222,6 +1224,8 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
                 for n in left_names:
                     try:
                         player = team_two.players.filter(name__iexact=n).first()
+                        if player is None:
+                            raise models.Player.DoesNotExist
                         left_players.append(player)
                     except models.Player.DoesNotExist:
                         return Response('Team "{}" does not have player "{}" ()'.format(team_two.name, n,
@@ -1231,6 +1235,8 @@ class AnnotateVodViewSet(viewsets.ModelViewSet):
                 for n in right_names:
                     try:
                         player = team_one.players.filter(name__iexact=n).first()
+                        if player is None:
+                            raise models.Player.DoesNotExist
                         right_players.append(player)
                     except models.Player.DoesNotExist:
                         return Response('Team "{}" does not have player "{}" ()'.format(team_one.name, n,
